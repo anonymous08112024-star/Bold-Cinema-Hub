@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Bold Cinema Hub</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Telegram WebApp SDK -->
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <!-- Custom Fonts & Styling -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      background-color: #0b0c0e;
+      color: #f3f4f6;
+      font-family: 'Inter', sans-serif;
+    }
+    .font-impact {
+      font-family: 'Oswald', sans-serif;
+      text-transform: uppercase;
+      letter-spacing: -0.02em;
+    }
+    .glass-card {
+      background: rgba(22, 24, 29, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(12px);
+      transition: all 0.3s ease;
+    }
+    .highlight-card {
+      border-color: #f59e0b !important;
+      box-shadow: 0 0 25px rgba(245, 158, 11, 0.35) !important;
+      transform: scale(1.02);
+    }
+  </style>
+</head>
+<body class="pb-12 max-w-md mx-auto min-h-screen flex flex-col relative">
+
+  <!-- FORCE JOIN OVERLAY -->
+  <div id="joinModal" class="fixed inset-0 z-50 bg-[#0b0c0e]/95 backdrop-blur-xl flex flex-col items-center justify-center p-6 text-center">
+    <!-- Round Channel Logo Container -->
+    <div class="relative mb-6">
+      <div class="w-28 h-28 rounded-full overflow-hidden border-2 border-red-600/80 shadow-2xl shadow-red-900/40 flex items-center justify-center bg-[#14161b]">
+        <div class="w-full h-full bg-gradient-to-tr from-amber-600 via-orange-600 to-amber-900 flex items-center justify-center text-white font-black text-2xl font-impact tracking-wider">
+          BOLD
+        </div>
+      </div>
+      <span class="absolute bottom-0 right-0 w-6 h-6 bg-red-600 border-2 border-[#0b0c0e] rounded-full flex items-center justify-center text-white text-[10px]">✓</span>
+    </div>
+
+    <h2 class="text-3xl font-bold text-white font-impact tracking-wide mb-2">JOIN OUR CHANNEL</h2>
+    <p class="text-xs text-gray-400 max-w-xs leading-relaxed mb-8">
+      To unlock the movie catalog and access direct Telegram download links, please join our official updates channel first.
+    </p>
+
+    <div class="w-full space-y-3 max-w-xs">
+      <button 
+        onclick="openChannel()" 
+        class="w-full bg-red-600 hover:bg-red-700 active:scale-[0.98] transition-all text-white font-bold py-3 px-4 rounded-xl text-xs flex items-center justify-center space-x-2 shadow-lg shadow-red-900/30">
+        <span>📢 Join Channel Now</span>
+      </button>
+
+      <button 
+        onclick="confirmJoined()" 
+        class="w-full bg-gray-800 hover:bg-gray-700 active:scale-[0.98] transition-all text-gray-200 font-semibold py-3 px-4 rounded-xl text-xs border border-gray-700/60">
+        <span>Already Joined</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- MOVIE REQUEST MODAL -->
+  <div id="requestModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-5">
+    <div class="glass-card w-full max-w-xs p-5 rounded-2xl border border-gray-700/80 shadow-2xl">
+      <div class="flex justify-between items-center mb-3">
+        <h3 class="text-sm font-bold text-white font-impact tracking-wider">REQUEST A MOVIE</h3>
+        <button onclick="toggleRequestModal(false)" class="text-gray-400 hover:text-white text-lg font-bold px-2">&times;</button>
+      </div>
+      <p class="text-[11px] text-gray-400 mb-4">Can't find what you're looking for? Send your request safely to our bot.</p>
+      
+      <input 
+        type="text" 
+        id="movieRequestInput" 
+        placeholder="Enter movie name & year..." 
+        class="w-full bg-[#14161b] text-white text-xs rounded-xl py-3 px-3.5 focus:outline-none focus:ring-2 focus:ring-red-600 border border-gray-800 placeholder-gray-500 mb-4"
+      />
+
+      <div class="flex space-x-2">
+        <button onclick="submitRequest()" class="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-2.5 rounded-xl text-xs shadow-lg shadow-red-900/20 active:scale-[0.98] transition-all">
+          Send via Bot
+        </button>
+        <button onclick="toggleRequestModal(false)" class="bg-gray-800 text-gray-300 font-semibold py-2.5 px-4 rounded-xl text-xs hover:bg-gray-700">
+          Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- HERO SECTION -->
+  <header class="relative px-5 pt-8 pb-6 border-b border-gray-800/60 overflow-hidden">
+    <div class="absolute -top-10 left-1/2 -translate-x-1/2 w-72 h-36 bg-red-600/10 rounded-full blur-3xl pointer-events-none"></div>
+
+    <div class="flex items-center justify-between mb-1">
+      <div class="flex items-center space-x-2 text-[11px] font-semibold text-blue-400 tracking-widest uppercase">
+        <span class="w-2 h-2 rounded-full bg-blue-500 inline-block animate-pulse"></span>
+        <span>Bold Cinema</span>
+      </div>
+      <!-- Request Button in Header -->
+      <button onclick="toggleRequestModal(true)" class="text-[10px] bg-red-600/20 text-red-400 border border-red-600/40 px-2.5 py-1 rounded-full font-semibold hover:bg-red-600/30 transition-all flex items-center space-x-1">
+        <span>+ Request Movie</span>
+      </button>
+    </div>
+
+    <h1 class="text-4xl font-black text-white font-impact leading-none tracking-tight my-2">
+      BOLD CINEMA HUB
+    </h1>
+
+    <p class="text-xs text-gray-400 leading-relaxed font-normal max-w-xs mb-4">
+      Discover films by title, year, or quality — then continue to their direct Telegram file links.
+    </p>
+
+    <!-- SEARCH & SURPRISE ME CONTROLS -->
+    <div class="space-y-2.5 mt-2">
+      <div class="relative">
+        <input 
+          type="text" 
+          id="searchInput" 
+          placeholder='Try title, year, or 1080p...' 
+          class="w-full bg-[#14161b] text-white text-xs rounded-xl py-3.5 pl-10 pr-4 focus:outline-none focus:ring-2 focus:ring-red-600 border border-gray-800/80 placeholder-gray-500 shadow-xl transition-all"
+          oninput="filterMovies()"
+        />
+        <svg class="w-4 h-4 absolute left-3.5 top-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+        </svg>
+      </div>
+
+      <!-- Surprise Me Button -->
+      <button 
+        onclick="surpriseMe()" 
+        class="w-full bg-gradient-to-r from-amber-600 via-orange-600 to-red-600 hover:opacity-95 active:scale-[0.98] transition-all text-white font-bold py-3 px-4 rounded-xl text-xs flex items-center justify-center space-x-2 shadow-lg shadow-orange-900/30">
+        <span>🎲 Surprise Me! (Random Movie)</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- MAIN CATALOG AREA -->
+  <main class="px-5 pt-6 flex-1">
+    <div class="flex items-center justify-between mb-3">
+      <div>
+        <span class="text-[10px] font-bold text-blue-400 tracking-widest uppercase block">The Catalog</span>
+        <h2 class="text-2xl font-bold text-white font-impact tracking-wide">FIND YOUR NEXT FILM</h2>
+      </div>
+      <span id="movieCount" class="text-[11px] bg-gray-800/80 text-gray-300 font-medium px-2.5 py-1 rounded-full border border-gray-700/50">
+        0 movies
+      </span>
+    </div>
+
+    <!-- Dynamic Movie List Cards -->
+    <div id="movieContainer" class="space-y-3.5 mt-4">
+      <div class="text-center text-gray-500 py-12 text-xs">Loading catalog...</div>
+    </div>
+  </main>
+
+  <script>
+    // 1. Initialize Telegram WebApp SDK
+    const tg = window.Telegram?.WebApp;
+    if (tg) tg.expand();
+
+    // CONFIGURATION
+    const SHEET_ID = '1YQX-1EmNUGOU3BhChV0qIeq1Afu4xlvf2BTp3YuyLtI'; 
+    const CHANNEL_INVITE_LINK = 'https://t.me/+-HxYFImrFsU3OGZl';
+    const BOT_USERNAME = 'boldcinema_bot';
+
+    let allMovies = [];
+    let displayedMovies = [];
+
+    // Check membership storage on load
+    function checkChannelJoinStatus() {
+      const isJoined = localStorage.getItem('bold_cinema_joined');
+      const modal = document.getElementById('joinModal');
+      if (isJoined === 'true') {
+        modal.classList.add('hidden');
+      } else {
+        modal.classList.remove('hidden');
+      }
+    }
+
+    function openChannel() {
+      if (tg && tg.openTelegramLink) {
+        tg.openTelegramLink(CHANNEL_INVITE_LINK);
+      } else {
+        window.open(CHANNEL_INVITE_LINK, "_blank");
+      }
+    }
+
+    function confirmJoined() {
+      localStorage.setItem('bold_cinema_joined', 'true');
+      document.getElementById('joinModal').classList.add('hidden');
+    }
+
+    // Movie Request Handlers
+    function toggleRequestModal(show) {
+      const modal = document.getElementById('requestModal');
+      if (show) {
+        modal.classList.remove('hidden');
+      } else {
+        modal.classList.add('hidden');
+      }
+    }
+
+    function submitRequest() {
+      const movieName = document.getElementById('movieRequestInput').value.trim();
+      if (!movieName) {
+        alert('Please enter a movie name.');
+        return;
+      }
+      const message = encodeURIComponent(`Request: ${movieName}`);
+      const botUrl = `https://t.me/${BOT_USERNAME}?start=${message}`;
+
+      if (tg && tg.openTelegramLink) {
+        tg.openTelegramLink(botUrl);
+      } else {
+        window.open(botUrl, '_blank');
+      }
+      toggleRequestModal(false);
+      document.getElementById('movieRequestInput').value = '';
+    }
+
+    // 2. Fetch Live Data directly from Google Sheet
+    async function loadSheetData() {
+      const container = document.getElementById("movieContainer");
+      const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json`;
+
+      try {
+        const response = await fetch(url);
+        const text = await response.text();
+        
+        const jsonMatch = text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\);/);
+        if (!jsonMatch) throw new Error("Format error");
+        
+        const data = JSON.parse(jsonMatch[1]);
+        const rows = data.table.rows;
+
+        allMovies = rows.map((row, index) => {
+          const caption = row.c && row.c[0] ? row.c[0].v : '';
+          const link = row.c && row.c[1] ? row.c[1].v : '';
+          return { id: index, caption, link };
+        }).filter(item => item.caption && item.link);
+
+        // Reverse array so latest entries added at bottom of Sheet appear at top of App
+        allMovies.reverse();
+        displayedMovies = [...allMovies];
+
+        document.getElementById("movieCount").innerText = `${allMovies.length} movies`;
+        renderMovies(displayedMovies);
+      } catch (error) {
+        console.error("Error loading Sheet:", error);
+        container.innerHTML = `<div class="text-center text-red-500 py-10 text-xs">Failed to load data. Please ensure your Google Sheet is set to public.</div>`;
+      }
+    }
+
+    // 3. Render Movie Cards
+    function renderMovies(data) {
+      const container = document.getElementById("movieContainer");
+      container.innerHTML = "";
+
+      if (data.length === 0) {
+        container.innerHTML = `<div class="text-center text-gray-500 py-12 text-xs">No matching movies found</div>`;
+        return;
+      }
+
+      data.forEach(movie => {
+        const card = document.createElement("div");
+        card.id = `movie-card-${movie.id}`;
+        card.className = "glass-card p-4 rounded-2xl flex flex-col justify-between shadow-xl border border-gray-800/80 hover:border-gray-700/60 transition-all";
+
+        card.innerHTML = `
+          <div class="text-xs font-semibold text-gray-100 leading-relaxed mb-3.5 tracking-tight">
+            ${movie.caption}
+          </div>
+          <button 
+            onclick="openTelegramFile('${movie.link}')" 
+            class="w-full bg-red-600 hover:bg-red-700 active:scale-[0.98] transition-all text-white font-bold py-2.5 px-4 rounded-xl text-xs flex items-center justify-center space-x-2 shadow-lg shadow-red-900/20">
+            <span>Watch Now</span>
+          </button>
+        `;
+
+        container.appendChild(card);
+      });
+    }
+
+    // 4. Live Search Filter
+    function filterMovies() {
+      const query = document.getElementById("searchInput").value.toLowerCase().trim();
+      displayedMovies = allMovies.filter(movie => movie.caption.toLowerCase().includes(query));
+      renderMovies(displayedMovies);
+    }
+
+    // 5. Surprise Me! (Random Movie Picker)
+    function surpriseMe() {
+      if (allMovies.length === 0) return;
+
+      // Clear search if any so random picker pulls from full database
+      document.getElementById("searchInput").value = "";
+      displayedMovies = [...allMovies];
+      renderMovies(displayedMovies);
+
+      // Pick a random index
+      const randomIndex = Math.floor(Math.random() * allMovies.length);
+      const selectedMovie = allMovies[randomIndex];
+
+      // Scroll smoothly to the element
+      const cardElement = document.getElementById(`movie-card-${selectedMovie.id}`);
+      if (cardElement) {
+        cardElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        
+        // Add temporary golden highlight ring animation
+        cardElement.classList.add('highlight-card');
+        setTimeout(() => {
+          cardElement.classList.remove('highlight-card');
+        }, 2200);
+      }
+    }
+
+    // 6. Native Telegram Link Redirect
+    function openTelegramFile(url) {
+      if (tg && tg.openTelegramLink) {
+        tg.openTelegramLink(url);
+      } else {
+        window.open(url, "_blank");
+      }
+    }
+
+    // Initializations
+    checkChannelJoinStatus();
+    loadSheetData();
+  </script>
+</body>
+</html>
