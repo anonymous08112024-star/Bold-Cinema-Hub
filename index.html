@@ -363,11 +363,14 @@
       switchTab('home');
     }
 
-    function filterByGenre(genre) {
+        function filterByGenre(genre) {
       playClickSound();
       activeGenreFilter = genre;
       updateGenrePillsUI();
-      document.getElementById('searchInput.value') = '';
+      
+      // FIX: Reset search input correctly
+      const searchInputEl = document.getElementById('searchInput');
+      if (searchInputEl) searchInputEl.value = '';
       
       const defaultFeed = document.getElementById("defaultHomeFeed");
       const searchFeed = document.getElementById("searchResultsFeed");
@@ -384,14 +387,14 @@
 
       defaultFeed.classList.add("hidden");
       searchFeed.classList.remove("hidden");
-      subTitle.innerText = "Genre Filter";
-      feedTitle.innerText = `${genre.toUpperCase()} FILMS`;
+      if (subTitle) subTitle.innerText = "Genre Filter";
+      if (feedTitle) feedTitle.innerText = `${genre.toUpperCase()} FILMS`;
 
       const filtered = allMovies.filter(movie => 
-        movie.genres.toLowerCase().includes(genre.toLowerCase())
+        movie.genres && movie.genres.toLowerCase().includes(genre.toLowerCase())
       );
 
-      searchCount.innerText = `${filtered.length} movies`;
+      if (searchCount) searchCount.innerText = `${filtered.length} movies`;
       searchContainer.innerHTML = "";
 
       if (filtered.length === 0) {
@@ -402,7 +405,8 @@
       filtered.forEach(movie => {
         searchContainer.appendChild(createMovieCard(movie));
       });
-    }
+        }
+      
 
     function updateGenrePillsUI() {
       const pills = document.querySelectorAll('.genre-pill');
