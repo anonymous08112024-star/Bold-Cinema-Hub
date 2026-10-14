@@ -131,9 +131,9 @@
           <input 
             type="text" 
             id="searchInput" 
-            placeholder='Try title, year, or 1080p...' 
+            placeholder='Search any movie in catalog...' 
             class="w-full bg-[#14161b] text-white text-xs rounded-xl py-3.5 pl-10 pr-4 focus:outline-none focus:ring-2 focus:ring-red-600 border border-gray-800/80 placeholder-gray-500 shadow-xl transition-all"
-            oninput="filterMovies()"
+            oninput="handleSearchInput()"
           />
           <svg class="w-4 h-4 absolute left-3.5 top-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
@@ -148,24 +148,49 @@
       </div>
     </header>
 
-    <main class="px-5 pt-6 flex-1">
-      <div class="flex items-center justify-between mb-3">
-        <div>
-          <span class="text-[10px] font-bold text-blue-400 tracking-widest uppercase block">The Catalog</span>
-          <h2 class="text-2xl font-bold text-white font-impact tracking-wide">FIND YOUR NEXT FILM</h2>
+    <!-- DEFAULT HOME FEED (Personalized & Latest Drops) -->
+    <main id="defaultHomeFeed" class="px-5 pt-6 flex-1 space-y-6">
+      <!-- Section 1: Recommendations based on history -->
+      <div>
+        <div class="flex items-center justify-between mb-3">
+          <div>
+            <span class="text-[10px] font-bold text-amber-400 tracking-widest uppercase block">Curated For You</span>
+            <h2 class="text-xl font-bold text-white font-impact tracking-wide">RECOMMENDED PICKS</h2>
+          </div>
         </div>
-        <span id="movieCount" class="text-[11px] bg-gray-800/80 text-gray-300 font-medium px-2.5 py-1 rounded-full border border-gray-700/50">
-          0 movies
-        </span>
+        <div id="recommendationsContainer" class="space-y-3.5">
+          <div class="text-center text-gray-500 py-6 text-xs">Loading recommendations...</div>
+        </div>
       </div>
 
-      <div id="movieContainer" class="space-y-3.5 mt-4">
-        <div class="text-center text-gray-500 py-12 text-xs">Loading catalog...</div>
+      <!-- Section 2: Latest 10-15 Drops -->
+      <div>
+        <div class="flex items-center justify-between mb-3">
+          <div>
+            <span class="text-[10px] font-bold text-red-500 tracking-widest uppercase block">Fresh Uploads</span>
+            <h2 class="text-xl font-bold text-white font-impact tracking-wide">LATEST DROPS</h2>
+          </div>
+        </div>
+        <div id="latestContainer" class="space-y-3.5">
+          <div class="text-center text-gray-500 py-6 text-xs">Loading latest drops...</div>
+        </div>
       </div>
+    </main>
+
+    <!-- LIVE SEARCH RESULTS VIEW (Appears when typing in search box) -->
+    <main id="searchResultsFeed" class="px-5 pt-6 flex-1 hidden">
+      <div class="flex items-center justify-between mb-3">
+        <div>
+          <span class="text-[10px] font-bold text-blue-400 tracking-widest uppercase block">Search Results</span>
+          <h2 class="text-2xl font-bold text-white font-impact tracking-wide">MATCHING FILMS</h2>
+        </div>
+        <span id="searchCount" class="text-[11px] bg-gray-800/80 text-gray-300 font-medium px-2.5 py-1 rounded-full border border-gray-700/50">0 movies</span>
+      </div>
+      <div id="searchContainer" class="space-y-3.5 mt-4"></div>
     </main>
   </div>
 
-  <!-- LIBRARY VIEW CONTAINER (Watch History) -->
+  <!-- LIBRARY VIEW CONTAINER -->
   <div id="libraryView" class="flex-1 flex flex-col hidden px-5 pt-6">
     <div class="mb-4">
       <span class="text-[10px] font-bold text-amber-400 tracking-widest uppercase block">Your Watchlist</span>
@@ -173,9 +198,7 @@
       <p class="text-xs text-gray-400 mt-1">Here are the last 10 movies you opened.</p>
     </div>
 
-    <div id="libraryContainer" class="space-y-3.5 mt-2 flex-1">
-      <!-- Dynamically populated watch history -->
-    </div>
+    <div id="libraryContainer" class="space-y-3.5 mt-2 flex-1"></div>
   </div>
 
   <!-- FIXED FOOTER NAVIGATION -->
@@ -214,7 +237,6 @@
     const CHANNEL_INVITE_LINK = 'https://t.me/+-HxYFImrFsU3OGZl';
 
     let allMovies = [];
-    let displayedMovies = [];
 
     function playClickSound() {
       try {
@@ -268,7 +290,6 @@
       } catch (e) {}
     }
 
-    // Tab Navigation Logic
     function switchTab(tab) {
       playClickSound();
       const homeView = document.getElementById('homeView');
@@ -292,19 +313,14 @@
       }
     }
 
-    // Watch History Management (LocalStorage - Max 10)
     function addToHistory(caption, link) {
       let history = JSON.parse(localStorage.getItem('bold_cinema_history')) || [];
-      // Remove duplicate if already exists
       history = history.filter(item => item.link !== link);
-      // Add to front
       history.unshift({ caption, link, time: new Date().toLocaleDateString() });
-      // Keep only last 10
       if (history.length > 10) history.pop();
       localStorage.setItem('bold_cinema_history', JSON.stringify(history));
     }
-
-    function renderLibrary() {
+        function renderLibrary() {
       const container = document.getElementById('libraryContainer');
       const history = JSON.parse(localStorage.getItem('bold_cinema_history')) || [];
 
@@ -339,6 +355,213 @@
         container.appendChild(card);
       });
     }
+
+    async function loadSheetData() {
+      const recContainer = document.getElementById("recommendationsContainer");
+      const latestContainer = document.getElementById("latestContainer");
+      const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json`;
+
+      try {
+        const response = await fetch(url);
+        const text = await response.text();
+        
+        const jsonMatch = text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\);/);
+        if (!jsonMatch) throw new Error("Format error");
+        
+        const data = JSON.parse(jsonMatch[1]);
+        const rows = data.table.rows;
+
+        allMovies = rows.map((row, index) => {
+          const caption = row.c && row.c[0] ? row.c[0].v : '';
+          const link = row.c && row.c[1] ? row.c[1].v : '';
+          return { id: index, caption, link };
+        }).filter(item => item.caption && item.link);
+
+        allMovies.reverse(); // Newest first
+
+        renderHomeFeed();
+      } catch (error) {
+        console.error("Error loading Sheet:", error);
+        recContainer.innerHTML = `<div class="text-center text-red-500 py-6 text-xs">Failed to load data.</div>`;
+      }
+    }
+
+    // Render Home Feed (Recommendations + Latest Drops)
+    function renderHomeFeed() {
+      const recContainer = document.getElementById("recommendationsContainer");
+      const latestContainer = document.getElementById("latestContainer");
+
+      // 1. Render Latest Drops (First 12 movies)
+      const latestMovies = allMovies.slice(0, 12);
+      latestContainer.innerHTML = "";
+      latestMovies.forEach(movie => {
+        latestContainer.appendChild(createMovieCard(movie));
+      });
+
+      // 2. Render Personalized Recommendations based on Watch History
+      const history = JSON.parse(localStorage.getItem('bold_cinema_history')) || [];
+      let recommendedMovies = [];
+
+      if (history.length > 0) {
+        // Extract words from history titles to find similar films
+        const lastWatched = history[0].caption.toLowerCase();
+        recommendedMovies = allMovies.filter(m => {
+          const cap = m.caption.toLowerCase();
+          return !history.some(h => h.link === m.link) && (
+            cap.includes('1080p') && lastWatched.includes('1080p') ||
+            cap.includes('dual audio') && lastWatched.includes('dual audio') ||
+            cap.includes('hindi') && lastWatched.includes('hindi')
+          );
+        });
+      }
+
+      // Fallback: If not enough matches or empty history, pick random/trending movies
+      if (recommendedMovies.length < 5) {
+        const remaining = allMovies.filter(m => !recommendedMovies.some(r => r.link === m.link));
+        // Shuffle remaining
+        const shuffled = [...remaining].sort(() => 0.5 - Math.random());
+        recommendedMovies = [...recommendedMovies, ...shuffled].slice(0, 5);
+      } else {
+        recommendedMovies = recommendedMovies.slice(0, 5);
+      }
+
+      recContainer.innerHTML = "";
+      recommendedMovies.forEach(movie => {
+        recContainer.appendChild(createMovieCard(movie));
+      });
+    }
+
+    function createMovieCard(movie) {
+      const card = document.createElement("div");
+      card.id = `movie-card-${movie.id}`;
+      card.className = "glass-card p-4 rounded-2xl flex flex-col justify-between shadow-xl border border-gray-800/80 hover:border-gray-700/60 transition-all";
+
+      const badges = generateBadges(movie.caption);
+
+      card.innerHTML = `
+        <div>
+          ${badges}
+          <div class="text-xs font-semibold text-gray-100 leading-relaxed mb-3.5 tracking-tight">
+            ${movie.caption}
+          </div>
+        </div>
+        <button 
+          onclick="playClickSound(); openTelegramFile('${movie.link}', '${movie.caption.replace(/'/g, "\\'")}')" 
+          class="w-full bg-red-600 hover:bg-red-700 active:scale-[0.98] transition-all text-white font-bold py-2.5 px-4 rounded-xl text-xs flex items-center justify-center space-x-2 shadow-lg shadow-red-900/20 mt-1 cursor-pointer">
+          <span>Watch Now</span>
+        </button>
+      `;
+      return card;
+    }
+
+    function generateBadges(caption) {
+      const lower = caption.toLowerCase();
+      let badgesHtml = '<div class="flex flex-wrap gap-1.5 mb-2.5">';
+      let tagCount = 0;
+
+      if (lower.includes('4k') || lower.includes('2160p') || lower.includes('hdr')) {
+        badgesHtml += `<span class="bg-amber-500/20 text-amber-400 border border-amber-500/40 text-[9px] font-bold px-2 py-0.5 rounded-md uppercase">4K / HDR</span>`;
+        tagCount++;
+      } else if (lower.includes('1080p') || lower.includes('1080')) {
+        badgesHtml += `<span class="bg-blue-500/20 text-blue-400 border border-blue-500/40 text-[9px] font-bold px-2 py-0.5 rounded-md uppercase">1080p FHD</span>`;
+        tagCount++;
+      } else if (lower.includes('720p') || lower.includes('720')) {
+        badgesHtml += `<span class="bg-indigo-500/20 text-indigo-400 border border-indigo-500/40 text-[9px] font-bold px-2 py-0.5 rounded-md uppercase">720p HD</span>`;
+        tagCount++;
+      } else if (lower.includes('480p')) {
+        badgesHtml += `<span class="bg-gray-500/20 text-gray-400 border border-gray-500/40 text-[9px] font-bold px-2 py-0.5 rounded-md uppercase">480p</span>`;
+        tagCount++;
+      }
+
+      if (lower.includes('dual audio') || lower.includes('dual') || lower.includes('multi')) {
+        badgesHtml += `<span class="bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 text-[9px] font-bold px-2 py-0.5 rounded-md uppercase">Dual Audio</span>`;
+        tagCount++;
+      }
+
+      if (lower.includes('hindi')) {
+        badgesHtml += `<span class="bg-orange-500/20 text-orange-400 border border-orange-500/40 text-[9px] font-bold px-2 py-0.5 rounded-md uppercase">Hindi</span>`;
+        tagCount++;
+      }
+
+      if (lower.includes('english') || lower.includes('eng') || lower.includes('hin-eng')) {
+        badgesHtml += `<span class="bg-teal-500/20 text-teal-400 border border-teal-500/40 text-[9px] font-bold px-2 py-0.5 rounded-md uppercase">English</span>`;
+        tagCount++;
+      }
+
+      if (lower.includes('esub') || lower.includes('sub') || lower.includes('subtitles')) {
+        badgesHtml += `<span class="bg-purple-500/20 text-purple-400 border border-purple-500/40 text-[9px] font-bold px-2 py-0.5 rounded-md uppercase">ESub</span>`;
+        tagCount++;
+      }
+
+      badgesHtml += '</div>';
+      return tagCount > 0 ? badgesHtml : '';
+    }
+
+    // Handle Live Search Input
+    function handleSearchInput() {
+      const query = document.getElementById("searchInput").value.toLowerCase().trim();
+      const defaultFeed = document.getElementById("defaultHomeFeed");
+      const searchFeed = document.getElementById("searchResultsFeed");
+      const searchContainer = document.getElementById("searchContainer");
+      const searchCount = document.getElementById("searchCount");
+
+      if (query.length === 0) {
+        searchFeed.classList.add("hidden");
+        defaultFeed.classList.remove("hidden");
+        return;
+      }
+
+      defaultFeed.classList.add("hidden");
+      searchFeed.classList.remove("hidden");
+
+      const filtered = allMovies.filter(movie => movie.caption.toLowerCase().includes(query));
+      searchCount.innerText = `${filtered.length} movies`;
+      searchContainer.innerHTML = "";
+
+      if (filtered.length === 0) {
+        searchContainer.innerHTML = `<div class="text-center text-gray-500 py-12 text-xs">No matching movies found</div>`;
+        return;
+      }
+
+      filtered.forEach(movie => {
+        searchContainer.appendChild(createMovieCard(movie));
+      });
+    }
+
+    function surpriseMe() {
+      playChimeSound();
+      if (allMovies.length === 0) return;
+
+      document.getElementById("searchInput").value = "";
+      handleSearchInput();
+
+      const randomIndex = Math.floor(Math.random() * allMovies.length);
+      const selectedMovie = allMovies[randomIndex];
+
+      const cardElement = document.getElementById(`movie-card-${selectedMovie.id}`);
+      if (cardElement) {
+        cardElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        cardElement.classList.add('highlight-card');
+        setTimeout(() => {
+          cardElement.classList.remove('highlight-card');
+        }, 2200);
+      }
+    }
+
+    function scrollToSearch() {
+      playClickSound();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      document.getElementById('searchInput').focus();
+    }
+
+    window.addEventListener('scroll', () => {
+      const btn = document.getElementById('backToSearchBtn');
+      if (window.scrollY > 300) {
+        btn.classList.remove('translate-y-20', 'opacity-0', 'pointer-events-none');
+      } else {
+        btn.classList.add('translate-y-20', 'opacity-0', 'pointer-events-none');
+      }
+    });
 
     function checkChannelJoinStatus() {
       const isJoined = localStorage.getItem('bold_cinema_joined');
@@ -426,156 +649,6 @@
         feedbackEl.classList.add('text-red-400');
       }
     }
-        async function loadSheetData() {
-      const container = document.getElementById("movieContainer");
-      const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json`;
-
-      try {
-        const response = await fetch(url);
-        const text = await response.text();
-        
-        const jsonMatch = text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\);/);
-        if (!jsonMatch) throw new Error("Format error");
-        
-        const data = JSON.parse(jsonMatch[1]);
-        const rows = data.table.rows;
-
-        allMovies = rows.map((row, index) => {
-          const caption = row.c && row.c[0] ? row.c[0].v : '';
-          const link = row.c && row.c[1] ? row.c[1].v : '';
-          return { id: index, caption, link };
-        }).filter(item => item.caption && item.link);
-
-        allMovies.reverse();
-        displayedMovies = [...allMovies];
-
-        document.getElementById("movieCount").innerText = `${allMovies.length} movies`;
-        renderMovies(displayedMovies);
-      } catch (error) {
-        console.error("Error loading Sheet:", error);
-        container.innerHTML = `<div class="text-center text-red-500 py-10 text-xs">Failed to load data. Please ensure your Google Sheet is set to public viewer mode.</div>`;
-      }
-    }
-
-    function generateBadges(caption) {
-      const lower = caption.toLowerCase();
-      let badgesHtml = '<div class="flex flex-wrap gap-1.5 mb-2.5">';
-      let tagCount = 0;
-
-      if (lower.includes('4k') || lower.includes('2160p') || lower.includes('hdr')) {
-        badgesHtml += `<span class="bg-amber-500/20 text-amber-400 border border-amber-500/40 text-[9px] font-bold px-2 py-0.5 rounded-md uppercase">4K / HDR</span>`;
-        tagCount++;
-      } else if (lower.includes('1080p') || lower.includes('1080')) {
-        badgesHtml += `<span class="bg-blue-500/20 text-blue-400 border border-blue-500/40 text-[9px] font-bold px-2 py-0.5 rounded-md uppercase">1080p FHD</span>`;
-        tagCount++;
-      } else if (lower.includes('720p') || lower.includes('720')) {
-        badgesHtml += `<span class="bg-indigo-500/20 text-indigo-400 border border-indigo-500/40 text-[9px] font-bold px-2 py-0.5 rounded-md uppercase">720p HD</span>`;
-        tagCount++;
-      } else if (lower.includes('480p')) {
-        badgesHtml += `<span class="bg-gray-500/20 text-gray-400 border border-gray-500/40 text-[9px] font-bold px-2 py-0.5 rounded-md uppercase">480p</span>`;
-        tagCount++;
-      }
-
-      if (lower.includes('dual audio') || lower.includes('dual') || lower.includes('multi')) {
-        badgesHtml += `<span class="bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 text-[9px] font-bold px-2 py-0.5 rounded-md uppercase">Dual Audio</span>`;
-        tagCount++;
-      }
-
-      if (lower.includes('hindi')) {
-        badgesHtml += `<span class="bg-orange-500/20 text-orange-400 border border-orange-500/40 text-[9px] font-bold px-2 py-0.5 rounded-md uppercase">Hindi</span>`;
-        tagCount++;
-      }
-
-      if (lower.includes('english') || lower.includes('eng') || lower.includes('hin-eng')) {
-        badgesHtml += `<span class="bg-teal-500/20 text-teal-400 border border-teal-500/40 text-[9px] font-bold px-2 py-0.5 rounded-md uppercase">English</span>`;
-        tagCount++;
-      }
-
-      if (lower.includes('esub') || lower.includes('sub') || lower.includes('subtitles')) {
-        badgesHtml += `<span class="bg-purple-500/20 text-purple-400 border border-purple-500/40 text-[9px] font-bold px-2 py-0.5 rounded-md uppercase">ESub</span>`;
-        tagCount++;
-      }
-
-      badgesHtml += '</div>';
-      return tagCount > 0 ? badgesHtml : '';
-    }
-
-    function renderMovies(data) {
-      const container = document.getElementById("movieContainer");
-      container.innerHTML = "";
-
-      if (data.length === 0) {
-        container.innerHTML = `<div class="text-center text-gray-500 py-12 text-xs">No matching movies found</div>`;
-        return;
-      }
-
-      data.forEach(movie => {
-        const card = document.createElement("div");
-        card.id = `movie-card-${movie.id}`;
-        card.className = "glass-card p-4 rounded-2xl flex flex-col justify-between shadow-xl border border-gray-800/80 hover:border-gray-700/60 transition-all";
-
-        const badges = generateBadges(movie.caption);
-
-        card.innerHTML = `
-          <div>
-            ${badges}
-            <div class="text-xs font-semibold text-gray-100 leading-relaxed mb-3.5 tracking-tight">
-              ${movie.caption}
-            </div>
-          </div>
-          <button 
-            onclick="playClickSound(); openTelegramFile('${movie.link}', '${movie.caption.replace(/'/g, "\\'")}')" 
-            class="w-full bg-red-600 hover:bg-red-700 active:scale-[0.98] transition-all text-white font-bold py-2.5 px-4 rounded-xl text-xs flex items-center justify-center space-x-2 shadow-lg shadow-red-900/20 mt-1 cursor-pointer">
-            <span>Watch Now</span>
-          </button>
-        `;
-
-        container.appendChild(card);
-      });
-    }
-
-    function filterMovies() {
-      const query = document.getElementById("searchInput").value.toLowerCase().trim();
-      displayedMovies = allMovies.filter(movie => movie.caption.toLowerCase().includes(query));
-      renderMovies(displayedMovies);
-    }
-
-    function surpriseMe() {
-      playChimeSound();
-      if (allMovies.length === 0) return;
-
-      document.getElementById("searchInput").value = "";
-      displayedMovies = [...allMovies];
-      renderMovies(displayedMovies);
-
-      const randomIndex = Math.floor(Math.random() * allMovies.length);
-      const selectedMovie = allMovies[randomIndex];
-
-      const cardElement = document.getElementById(`movie-card-${selectedMovie.id}`);
-      if (cardElement) {
-        cardElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        
-        cardElement.classList.add('highlight-card');
-        setTimeout(() => {
-          cardElement.classList.remove('highlight-card');
-        }, 2200);
-      }
-    }
-
-    function scrollToSearch() {
-      playClickSound();
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      document.getElementById('searchInput').focus();
-    }
-
-    window.addEventListener('scroll', () => {
-      const btn = document.getElementById('backToSearchBtn');
-      if (window.scrollY > 300) {
-        btn.classList.remove('translate-y-20', 'opacity-0', 'pointer-events-none');
-      } else {
-        btn.classList.add('translate-y-20', 'opacity-0', 'pointer-events-none');
-      }
-    });
 
     function openTelegramFile(url, caption) {
       addToHistory(caption, url);
