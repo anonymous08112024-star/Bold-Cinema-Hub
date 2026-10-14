@@ -540,53 +540,75 @@
         .toLowerCase();
     }
 
-    function renderHomeFeed() {
+        function renderHomeFeed() {
       const recContainer = document.getElementById("recommendationsContainer");
       const latestContainer = document.getElementById("latestContainer");
 
+      // 1. Render Latest Drops (First 12 movies)
       const latestMovies = allMovies.slice(0, 12);
       latestContainer.innerHTML = "";
       latestMovies.forEach(movie => {
         latestContainer.appendChild(createMovieCard(movie));
       });
 
+      // 2. Render Dynamic Rotating Recommendations
       const history = JSON.parse(localStorage.getItem('bold_cinema_history')) || [];
       let recommendedMovies = [];
 
       if (history.length > 0) {
         const watchedTitles = history.map(h => h.title);
-        const lastWatched = history[0];
-        const lastCoreName = getCoreFranchiseName(lastWatched.title);
 
-        const franchiseMatches = allMovies.filter(m => {
-          if (watchedTitles.includes(m.title)) return false;
-          const core = getCoreFranchiseName(m.title);
-          return core.length > 3 && core === lastCoreName;
-        });
-
-        const watchedGenres = new Set();
+        // A. Calculate Genre Frequency Scores across entire watch history
+        const genreCounts = {};
         history.forEach(h => {
           const matched = allMovies.find(m => m.title === h.title);
           if (matched && matched.genres) {
-            matched.genres.split(',').forEach(g => watchedGenres.add(g.trim().toLowerCase()));
+            matched.genres.split(',').forEach(g => {
+              const cleanG = g.trim().toLowerCase();
+              genreCounts[cleanG] = (genreCounts[cleanG] || 0) + 1;
+            });
           }
         });
 
+        // Top genres sorted by frequency
+        const topGenres = Object.keys(genreCounts).sort((a, b) => genreCounts[b] - genreCounts[a]);
+
+        // B. Franchise/Sequel Pool (Capped at 2 max)
+        const lastWatched = history[0];
+        const lastCoreName = getCoreFranchiseName(lastWatched.title);
+        let franchiseMatches = [];
+
+        if (lastCoreName.length > 3) {
+          const rawFranchise = allMovies.filter(m => {
+            if (watchedTitles.includes(m.title)) return false;
+            const core = getCoreFranchiseName(m.title);
+            return core === lastCoreName;
+          });
+          // Randomly shuffle franchise matches if there are multiple seasons/parts
+          franchiseMatches = rawFranchise.sort(() => 0.5 - Math.random()).slice(0, 2);
+        }
+
+        // C. Top Genre Pool (e.g. Horror pool)
         const genreMatches = allMovies.filter(m => {
           if (watchedTitles.includes(m.title)) return false;
           if (franchiseMatches.some(f => f.title === m.title)) return false;
           if (!m.genres) return false;
           const movieGenres = m.genres.split(',').map(g => g.trim().toLowerCase());
-          return movieGenres.some(g => watchedGenres.has(g));
+          return movieGenres.some(g => topGenres.includes(g));
         });
 
-        recommendedMovies = [...franchiseMatches, ...genreMatches];
+        // D. Randomize/Shuffle the Genre Pool on EVERY refresh!
+        const shuffledGenrePicks = genreMatches.sort(() => 0.5 - Math.random());
+
+        // Combine max 2 franchise picks with fresh randomized genre picks
+        recommendedMovies = [...franchiseMatches, ...shuffledGenrePicks];
       }
 
+      // E. Fallback fill if recommendations pool is under 5
       if (recommendedMovies.length < 5) {
         const remaining = allMovies.filter(m => !recommendedMovies.some(r => r.title === m.title));
-        const shuffled = [...remaining].sort(() => 0.5 - Math.random());
-        recommendedMovies = [...recommendedMovies, ...shuffled].slice(0, 5);
+        const shuffledRemaining = [...remaining].sort(() => 0.5 - Math.random());
+        recommendedMovies = [...recommendedMovies, ...shuffledRemaining].slice(0, 5);
       } else {
         recommendedMovies = recommendedMovies.slice(0, 5);
       }
@@ -595,7 +617,8 @@
       recommendedMovies.forEach(movie => {
         recContainer.appendChild(createMovieCard(movie));
       });
-    }
+        }
+      
 
     function createMovieCard(movie) {
       const card = document.createElement("div");
