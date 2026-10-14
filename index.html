@@ -40,7 +40,6 @@
 
   <!-- FORCE JOIN OVERLAY -->
   <div id="joinModal" class="fixed inset-0 z-50 bg-[#0b0c0e]/95 backdrop-blur-xl flex flex-col items-center justify-center p-6 text-center">
-    <!-- Round Channel Logo Container -->
     <div class="relative mb-6">
       <div class="w-28 h-28 rounded-full overflow-hidden border-2 border-red-600/80 shadow-2xl shadow-red-900/40 flex items-center justify-center bg-[#14161b]">
         <div class="w-full h-full bg-gradient-to-tr from-red-600 via-orange-600 to-amber-700 flex items-center justify-center text-white font-black text-3xl font-impact tracking-wider shadow-inner">
@@ -55,16 +54,16 @@
       To unlock the movie catalog and access direct Telegram download links, please join our official updates channel first.
     </p>
 
-    <div class="w-full space-y-3 max-w-xs">
+    <div class="w-full space-y-3 max-w-xs relative z-50">
       <button 
-        onclick="playClickSound(); openChannel()" 
-        class="w-full bg-red-600 hover:bg-red-700 active:scale-[0.98] transition-all text-white font-bold py-3 px-4 rounded-xl text-xs flex items-center justify-center space-x-2 shadow-lg shadow-red-900/30">
+        onclick="openChannel()" 
+        class="w-full bg-red-600 hover:bg-red-700 active:scale-[0.98] transition-all text-white font-bold py-3 px-4 rounded-xl text-xs flex items-center justify-center space-x-2 shadow-lg shadow-red-900/30 cursor-pointer">
         <span>📢 Join Channel Now</span>
       </button>
 
       <button 
-        onclick="playClickSound(); confirmJoined()" 
-        class="w-full bg-gray-800 hover:bg-gray-700 active:scale-[0.98] transition-all text-gray-200 font-semibold py-3 px-4 rounded-xl text-xs border border-gray-700/60">
+        onclick="confirmJoined()" 
+        class="w-full bg-gray-800 hover:bg-gray-700 active:scale-[0.98] transition-all text-gray-200 font-semibold py-3 px-4 rounded-xl text-xs border border-gray-700/60 cursor-pointer">
         <span>Already Joined</span>
       </button>
     </div>
@@ -75,7 +74,7 @@
     <div class="glass-card w-full max-w-xs p-5 rounded-2xl border border-gray-700/80 shadow-2xl">
       <div class="flex justify-between items-center mb-3">
         <h3 class="text-sm font-bold text-white font-impact tracking-wider">REQUEST A MOVIE</h3>
-        <button onclick="playClickSound(); toggleRequestModal(false)" class="text-gray-400 hover:text-white text-lg font-bold px-2">&times;</button>
+        <button onclick="toggleRequestModal(false)" class="text-gray-400 hover:text-white text-lg font-bold px-2 cursor-pointer">&times;</button>
       </div>
       <p class="text-[11px] text-gray-400 mb-4">Can't find what you're looking for? Submit your request directly to our admins.</p>
       
@@ -89,10 +88,10 @@
       <div id="requestFeedback" class="text-[10px] text-amber-400 mb-3 hidden text-center font-medium"></div>
 
       <div class="space-y-2">
-        <button onclick="playClickSound(); submitRequest()" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2.5 rounded-xl text-xs shadow-lg shadow-red-900/20 active:scale-[0.98] transition-all">
+        <button onclick="submitRequest()" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2.5 rounded-xl text-xs shadow-lg shadow-red-900/20 active:scale-[0.98] transition-all cursor-pointer">
           Send Request
         </button>
-        <button onclick="playClickSound(); toggleRequestModal(false)" class="w-full bg-gray-800 text-gray-300 font-semibold py-2.5 rounded-xl text-xs hover:bg-gray-700">
+        <button onclick="toggleRequestModal(false)" class="w-full bg-gray-800 text-gray-300 font-semibold py-2.5 rounded-xl text-xs hover:bg-gray-700 cursor-pointer">
           Cancel
         </button>
       </div>
@@ -108,12 +107,11 @@
         <span class="w-2 h-2 rounded-full bg-blue-500 inline-block animate-pulse"></span>
         <span>Bold Cinema</span>
       </div>
-      <!-- Header Action Buttons (Join Channel & Request Movie) -->
       <div class="flex items-center space-x-2">
-        <button onclick="playClickSound(); openChannel()" class="text-[10px] bg-amber-600/20 text-amber-400 border border-amber-600/40 px-2.5 py-1 rounded-full font-semibold hover:bg-amber-600/30 transition-all flex items-center space-x-1">
+        <button onclick="openChannel()" class="text-[10px] bg-amber-600/20 text-amber-400 border border-amber-600/40 px-2.5 py-1 rounded-full font-semibold hover:bg-amber-600/30 transition-all flex items-center space-x-1 cursor-pointer">
           <span>📢 Join Channel</span>
         </button>
-        <button onclick="playClickSound(); toggleRequestModal(true)" class="text-[10px] bg-red-600/20 text-red-400 border border-red-600/40 px-2.5 py-1 rounded-full font-semibold hover:bg-red-600/30 transition-all flex items-center space-x-1">
+        <button onclick="toggleRequestModal(true)" class="text-[10px] bg-red-600/20 text-red-400 border border-red-600/40 px-2.5 py-1 rounded-full font-semibold hover:bg-red-600/30 transition-all flex items-center space-x-1 cursor-pointer">
           <span>+ Request</span>
         </button>
       </div>
@@ -127,7 +125,6 @@
       Discover films by title, year, or quality — then continue to their direct Telegram file links.
     </p>
 
-    <!-- SEARCH & SURPRISE ME CONTROLS -->
     <div class="space-y-2.5 mt-2">
       <div class="relative">
         <input 
@@ -142,10 +139,9 @@
         </svg>
       </div>
 
-      <!-- Surprise Me Button with Golden Chime -->
       <button 
-        onclick="playChimeSound(); surpriseMe()" 
-        class="w-full bg-gradient-to-r from-amber-600 via-orange-600 to-red-600 hover:opacity-95 active:scale-[0.98] transition-all text-white font-bold py-3 px-4 rounded-xl text-xs flex items-center justify-center space-x-2 shadow-lg shadow-orange-900/30">
+        onclick="surpriseMe()" 
+        class="w-full bg-gradient-to-r from-amber-600 via-orange-600 to-red-600 hover:opacity-95 active:scale-[0.98] transition-all text-white font-bold py-3 px-4 rounded-xl text-xs flex items-center justify-center space-x-2 shadow-lg shadow-orange-900/30 cursor-pointer">
         <span>🎲 Surprise Me! (Random Movie)</span>
       </button>
     </div>
@@ -163,7 +159,6 @@
       </span>
     </div>
 
-    <!-- Dynamic Movie List Cards -->
     <div id="movieContainer" class="space-y-3.5 mt-4">
       <div class="text-center text-gray-500 py-12 text-xs">Loading catalog...</div>
     </div>
@@ -172,82 +167,74 @@
   <!-- FLOATING BACK TO SEARCH BAR BUTTON -->
   <button 
     id="backToSearchBtn" 
-    onclick="playClickSound(); scrollToSearch()" 
-    class="fixed bottom-5 right-5 z-40 bg-gray-900/90 text-white border border-gray-700 hover:bg-gray-800 shadow-2xl px-4 py-3 rounded-full text-xs font-bold flex items-center space-x-2 transition-all transform translate-y-20 opacity-0 pointer-events-none backdrop-blur-md">
+    onclick="scrollToSearch()" 
+    class="fixed bottom-5 right-5 z-40 bg-gray-900/90 text-white border border-gray-700 hover:bg-gray-800 shadow-2xl px-4 py-3 rounded-full text-xs font-bold flex items-center space-x-2 transition-all transform translate-y-20 opacity-0 pointer-events-none backdrop-blur-md cursor-pointer">
     <svg class="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 10l7-7m0 0l7 7m-7-7v18"></path></svg>
     <span>Back to Search</span>
   </button>
 
   <script>
-    // 1. Initialize Telegram WebApp SDK
     const tg = window.Telegram?.WebApp;
     if (tg) tg.expand();
 
-    // CONFIGURATION
     const SHEET_ID = '1YQX-1EmNUGOU3BhChV0qIeq1Afu4xlvf2BTp3YuyLtI'; 
     const CHANNEL_INVITE_LINK = 'https://t.me/+-HxYFImrFsU3OGZl';
 
     let allMovies = [];
     let displayedMovies = [];
 
-    // --- BULLETPROOF NON-BLOCKING AUDIO SYNTHESIZER ---
     function playClickSound() {
-      setTimeout(() => {
-        try {
-          const AudioContext = window.AudioContext || window.webkitAudioContext;
-          if (!AudioContext) return;
-          const ctx = new AudioContext();
-          if (ctx.state === 'suspended') ctx.resume();
+      try {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContext) return;
+        const ctx = new AudioContext();
+        if (ctx.state === 'suspended') ctx.resume();
 
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(400, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(80, ctx.currentTime + 0.04);
+
+        gain.gain.setValueAtTime(0.12, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.04);
+
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+
+        osc.start();
+        osc.stop(ctx.currentTime + 0.04);
+      } catch (e) {}
+    }
+
+    function playChimeSound() {
+      try {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContext) return;
+        const ctx = new AudioContext();
+        if (ctx.state === 'suspended') ctx.resume();
+        const now = ctx.currentTime;
+
+        [523.25, 659.25].forEach((freq, index) => {
           const osc = ctx.createOscillator();
           const gain = ctx.createGain();
 
-          osc.type = 'sine';
-          osc.frequency.setValueAtTime(400, ctx.currentTime);
-          osc.frequency.exponentialRampToValueAtTime(80, ctx.currentTime + 0.04);
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(freq, now + (index * 0.06));
 
-          gain.gain.setValueAtTime(0.12, ctx.currentTime);
-          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.04);
+          gain.gain.setValueAtTime(0.08, now + (index * 0.06));
+          gain.gain.exponentialRampToValueAtTime(0.001, now + (index * 0.06) + 0.35);
 
           osc.connect(gain);
           gain.connect(ctx.destination);
 
-          osc.start();
-          osc.stop(ctx.currentTime + 0.04);
-        } catch (e) {}
-      }, 0);
+          osc.start(now + (index * 0.06));
+          osc.stop(now + (index * 0.06) + 0.35);
+        });
+      } catch (e) {}
     }
 
-    function playChimeSound() {
-      setTimeout(() => {
-        try {
-          const AudioContext = window.AudioContext || window.webkitAudioContext;
-          if (!AudioContext) return;
-          const ctx = new AudioContext();
-          if (ctx.state === 'suspended') ctx.resume();
-          const now = ctx.currentTime;
-
-          [523.25, 659.25].forEach((freq, index) => {
-            const osc = ctx.createOscillator();
-            const gain = ctx.createGain();
-
-            osc.type = 'triangle';
-            osc.frequency.setValueAtTime(freq, now + (index * 0.06));
-
-            gain.gain.setValueAtTime(0.08, now + (index * 0.06));
-            gain.gain.exponentialRampToValueAtTime(0.001, now + (index * 0.06) + 0.35);
-
-            osc.connect(gain);
-            gain.connect(ctx.destination);
-
-            osc.start(now + (index * 0.06));
-            osc.stop(now + (index * 0.06) + 0.35);
-          });
-        } catch (e) {}
-      }, 0);
-    }
-
-    // Check membership storage on load
     function checkChannelJoinStatus() {
       const isJoined = localStorage.getItem('bold_cinema_joined');
       const modal = document.getElementById('joinModal');
@@ -259,6 +246,7 @@
     }
 
     function openChannel() {
+      playClickSound();
       if (tg && tg.openTelegramLink) {
         tg.openTelegramLink(CHANNEL_INVITE_LINK);
       } else {
@@ -267,12 +255,13 @@
     }
 
     function confirmJoined() {
+      playClickSound();
       localStorage.setItem('bold_cinema_joined', 'true');
       document.getElementById('joinModal').classList.add('hidden');
     }
 
-    // Movie Request Handlers via Vercel Backend Function
     function toggleRequestModal(show) {
+      playClickSound();
       const modal = document.getElementById('requestModal');
       const feedback = document.getElementById('requestFeedback');
       feedback.classList.add('hidden');
@@ -285,6 +274,7 @@
     }
 
     async function submitRequest() {
+      playClickSound();
       const inputEl = document.getElementById('movieRequestInput');
       const feedbackEl = document.getElementById('requestFeedback');
       const movieName = inputEl.value.trim();
@@ -331,9 +321,7 @@
         feedbackEl.classList.add('text-red-400');
       }
     }
-
-    // 2. Fetch Live Data directly from Google Sheet
-    async function loadSheetData() {
+        async function loadSheetData() {
       const container = document.getElementById("movieContainer");
       const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json`;
 
@@ -364,7 +352,6 @@
       }
     }
 
-    // Helper: Generate Smart Auto-Tag Badges from Captions
     function generateBadges(caption) {
       const lower = caption.toLowerCase();
       let badgesHtml = '<div class="flex flex-wrap gap-1.5 mb-2.5">';
@@ -408,7 +395,6 @@
       return tagCount > 0 ? badgesHtml : '';
     }
 
-    // 3. Render Movie Cards with Smart Auto-Tags
     function renderMovies(data) {
       const container = document.getElementById("movieContainer");
       container.innerHTML = "";
@@ -434,7 +420,7 @@
           </div>
           <button 
             onclick="playClickSound(); openTelegramFile('${movie.link}')" 
-            class="w-full bg-red-600 hover:bg-red-700 active:scale-[0.98] transition-all text-white font-bold py-2.5 px-4 rounded-xl text-xs flex items-center justify-center space-x-2 shadow-lg shadow-red-900/20 mt-1">
+            class="w-full bg-red-600 hover:bg-red-700 active:scale-[0.98] transition-all text-white font-bold py-2.5 px-4 rounded-xl text-xs flex items-center justify-center space-x-2 shadow-lg shadow-red-900/20 mt-1 cursor-pointer">
             <span>Watch Now</span>
           </button>
         `;
@@ -443,15 +429,14 @@
       });
     }
 
-    // 4. Live Search Filter
     function filterMovies() {
       const query = document.getElementById("searchInput").value.toLowerCase().trim();
       displayedMovies = allMovies.filter(movie => movie.caption.toLowerCase().includes(query));
       renderMovies(displayedMovies);
     }
 
-    // 5. Surprise Me! (Random Movie Picker)
     function surpriseMe() {
+      playChimeSound();
       if (allMovies.length === 0) return;
 
       document.getElementById("searchInput").value = "";
@@ -463,4 +448,40 @@
 
       const cardElement = document.getElementById(`movie-card-${selectedMovie.id}`);
       if (cardElement) {
-        cardElement.scrollIntoView
+        cardElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        
+        cardElement.classList.add('highlight-card');
+        setTimeout(() => {
+          cardElement.classList.remove('highlight-card');
+        }, 2200);
+      }
+    }
+
+    function scrollToSearch() {
+      playClickSound();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      document.getElementById('searchInput').focus();
+    }
+
+    window.addEventListener('scroll', () => {
+      const btn = document.getElementById('backToSearchBtn');
+      if (window.scrollY > 300) {
+        btn.classList.remove('translate-y-20', 'opacity-0', 'pointer-events-none');
+      } else {
+        btn.classList.add('translate-y-20', 'opacity-0', 'pointer-events-none');
+      }
+    });
+
+    function openTelegramFile(url) {
+      if (tg && tg.openTelegramLink) {
+        tg.openTelegramLink(url);
+      } else {
+        window.open(url, "_blank");
+      }
+    }
+
+    checkChannelJoinStatus();
+    loadSheetData();
+  </script>
+</body>
+</html>
