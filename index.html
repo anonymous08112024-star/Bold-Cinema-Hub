@@ -77,20 +77,22 @@
         <h3 class="text-sm font-bold text-white font-impact tracking-wider">REQUEST A MOVIE</h3>
         <button onclick="toggleRequestModal(false)" class="text-gray-400 hover:text-white text-lg font-bold px-2">&times;</button>
       </div>
-      <p class="text-[11px] text-gray-400 mb-4">Can't find what you're looking for? Send your request safely to our bot.</p>
+      <p class="text-[11px] text-gray-400 mb-4">Can't find what you're looking for? Submit your request directly to our admins.</p>
       
       <input 
         type="text" 
         id="movieRequestInput" 
         placeholder="Enter movie name & year..." 
-        class="w-full bg-[#14161b] text-white text-xs rounded-xl py-3 px-3.5 focus:outline-none focus:ring-2 focus:ring-red-600 border border-gray-800 placeholder-gray-500 mb-4"
+        class="w-full bg-[#14161b] text-white text-xs rounded-xl py-3 px-3.5 focus:outline-none focus:ring-2 focus:ring-red-600 border border-gray-800 placeholder-gray-500 mb-3"
       />
 
-      <div class="flex space-x-2">
-        <button onclick="submitRequest()" class="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-2.5 rounded-xl text-xs shadow-lg shadow-red-900/20 active:scale-[0.98] transition-all">
-          Send via Bot
+      <div id="requestFeedback" class="text-[10px] text-amber-400 mb-3 hidden text-center font-medium"></div>
+
+      <div class="space-y-2">
+        <button onclick="submitRequest()" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2.5 rounded-xl text-xs shadow-lg shadow-red-900/20 active:scale-[0.98] transition-all">
+          Send Request
         </button>
-        <button onclick="toggleRequestModal(false)" class="bg-gray-800 text-gray-300 font-semibold py-2.5 px-4 rounded-xl text-xs hover:bg-gray-700">
+        <button onclick="toggleRequestModal(false)" class="w-full bg-gray-800 text-gray-300 font-semibold py-2.5 rounded-xl text-xs hover:bg-gray-700">
           Cancel
         </button>
       </div>
@@ -184,7 +186,6 @@
     // CONFIGURATION
     const SHEET_ID = '1YQX-1EmNUGOU3BhChV0qIeq1Afu4xlvf2BTp3YuyLtI'; 
     const CHANNEL_INVITE_LINK = 'https://t.me/+-HxYFImrFsU3OGZl';
-    const BOT_USERNAME = 'boldcinema_bot';
 
     let allMovies = [];
     let displayedMovies = [];
@@ -213,9 +214,12 @@
       document.getElementById('joinModal').classList.add('hidden');
     }
 
-    // Movie Request Handlers
+    // Movie Request Handlers via Vercel Backend Function
     function toggleRequestModal(show) {
       const modal = document.getElementById('requestModal');
+      const feedback = document.getElementById('requestFeedback');
+      feedback.classList.add('hidden');
+      feedback.innerText = '';
       if (show) {
         modal.classList.remove('hidden');
       } else {
@@ -223,22 +227,47 @@
       }
     }
 
-    function submitRequest() {
-      const movieName = document.getElementById('movieRequestInput').value.trim();
+    async function submitRequest() {
+      const inputEl = document.getElementById('movieRequestInput');
+      const feedbackEl = document.getElementById('requestFeedback');
+      const movieName = inputEl.value.trim();
+
       if (!movieName) {
-        alert('Please enter a movie name.');
+        feedbackEl.innerText = 'Please enter a movie name.';
+        feedbackEl.classList.remove('hidden');
         return;
       }
-      const encodedQuery = encodeURIComponent(movieName);
-      const botUrl = `https://t.me/${BOT_USERNAME}?start=req_${encodedQuery}`;
 
-      if (tg && tg.openTelegramLink) {
-        tg.openTelegramLink(botUrl);
-      } else {
-        window.open(botUrl, '_blank');
+      feedbackEl.innerText = 'Sending request to admins...';
+      feedbackEl.classList.remove('hidden', 'text-red-400', 'text-emerald-400');
+      feedbackEl.classList.add('text-amber-400');
+
+      try {
+        const res = await fetch('/api/request-movie', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ movie: movieName })
+        });
+
+        const data = await res.json();
+
+        if (res.ok && data.success) {
+          feedbackEl.innerText = '✅ Request sent successfully!';
+          feedbackEl.classList.remove('text-amber-400');
+          feedbackEl.classList.add('text-emerald-400');
+
+          setTimeout(() => {
+            toggleRequestModal(false);
+            inputEl.value = '';
+          }, 1500);
+        } else {
+          throw new Error(data.error || 'Failed to send request');
+        }
+      } catch (err) {
+        feedbackEl.innerText = '❌ Failed to send. Please try again.';
+        feedbackEl.classList.remove('text-amber-400');
+        feedbackEl.classList.add('text-red-400');
       }
-      toggleRequestModal(false);
-      document.getElementById('movieRequestInput').value = '';
     }
 
     // 2. Fetch Live Data directly from Google Sheet
@@ -262,7 +291,6 @@
           return { id: index, caption, link };
         }).filter(item => item.caption && item.link);
 
-        // Reverse array so latest entries added at bottom of Sheet appear at top of App
         allMovies.reverse();
         displayedMovies = [...allMovies];
 
@@ -270,7 +298,7 @@
         renderMovies(displayedMovies);
       } catch (error) {
         console.error("Error loading Sheet:", error);
-        container.innerHTML = `<div class="text-center text-red-500 py-10 text-xs">Failed to load data. Please ensure your Google Sheet is set to public.</div>`;
+        container.innerHTML = `<div class="text-center text-red-500 py-10 text-xs">Failed to load data. Please ensure your Google Sheet is set to public viewer mode.</div>`;
       }
     }
 
