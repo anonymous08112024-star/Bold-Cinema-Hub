@@ -36,7 +36,7 @@
     }
   </style>
 </head>
-<body class="pb-16 max-w-md mx-auto min-h-screen flex flex-col relative">
+<body class="pb-24 max-w-md mx-auto min-h-screen flex flex-col relative">
 
   <!-- FORCE JOIN OVERLAY -->
   <div id="joinModal" class="fixed inset-0 z-50 bg-[#0b0c0e]/95 backdrop-blur-xl flex flex-col items-center justify-center p-6 text-center">
@@ -98,77 +98,110 @@
     </div>
   </div>
 
-  <!-- HERO SECTION -->
-  <header id="topHeader" class="relative px-5 pt-8 pb-6 border-b border-gray-800/60 overflow-hidden">
-    <div class="absolute -top-10 left-1/2 -translate-x-1/2 w-72 h-36 bg-red-600/10 rounded-full blur-3xl pointer-events-none"></div>
+  <!-- HOME VIEW CONTAINER -->
+  <div id="homeView" class="flex-1 flex flex-col">
+    <header id="topHeader" class="relative px-5 pt-8 pb-6 border-b border-gray-800/60 overflow-hidden">
+      <div class="absolute -top-10 left-1/2 -translate-x-1/2 w-72 h-36 bg-red-600/10 rounded-full blur-3xl pointer-events-none"></div>
 
-    <div class="flex items-center justify-between mb-1">
-      <div class="flex items-center space-x-2 text-[11px] font-semibold text-blue-400 tracking-widest uppercase">
-        <span class="w-2 h-2 rounded-full bg-blue-500 inline-block animate-pulse"></span>
-        <span>Bold Cinema</span>
+      <div class="flex items-center justify-between mb-1">
+        <div class="flex items-center space-x-2 text-[11px] font-semibold text-blue-400 tracking-widest uppercase">
+          <span class="w-2 h-2 rounded-full bg-blue-500 inline-block animate-pulse"></span>
+          <span>Bold Cinema</span>
+        </div>
+        <div class="flex items-center space-x-2">
+          <button onclick="openChannel()" class="text-[10px] bg-amber-600/20 text-amber-400 border border-amber-600/40 px-2.5 py-1 rounded-full font-semibold hover:bg-amber-600/30 transition-all flex items-center space-x-1 cursor-pointer">
+            <span>📢 Join Channel</span>
+          </button>
+          <button onclick="toggleRequestModal(true)" class="text-[10px] bg-red-600/20 text-red-400 border border-red-600/40 px-2.5 py-1 rounded-full font-semibold hover:bg-red-600/30 transition-all flex items-center space-x-1 cursor-pointer">
+            <span>+ Request</span>
+          </button>
+        </div>
       </div>
-      <div class="flex items-center space-x-2">
-        <button onclick="openChannel()" class="text-[10px] bg-amber-600/20 text-amber-400 border border-amber-600/40 px-2.5 py-1 rounded-full font-semibold hover:bg-amber-600/30 transition-all flex items-center space-x-1 cursor-pointer">
-          <span>📢 Join Channel</span>
+
+      <h1 class="text-4xl font-black text-white font-impact leading-none tracking-tight my-2">
+        BOLD CINEMA HUB
+      </h1>
+
+      <p class="text-xs text-gray-400 leading-relaxed font-normal max-w-xs mb-4">
+        Discover films by title, year, or quality — then continue to their direct Telegram file links.
+      </p>
+
+      <div class="space-y-2.5 mt-2">
+        <div class="relative">
+          <input 
+            type="text" 
+            id="searchInput" 
+            placeholder='Try title, year, or 1080p...' 
+            class="w-full bg-[#14161b] text-white text-xs rounded-xl py-3.5 pl-10 pr-4 focus:outline-none focus:ring-2 focus:ring-red-600 border border-gray-800/80 placeholder-gray-500 shadow-xl transition-all"
+            oninput="filterMovies()"
+          />
+          <svg class="w-4 h-4 absolute left-3.5 top-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+          </svg>
+        </div>
+
+        <button 
+          onclick="surpriseMe()" 
+          class="w-full bg-gradient-to-r from-amber-600 via-orange-600 to-red-600 hover:opacity-95 active:scale-[0.98] transition-all text-white font-bold py-3 px-4 rounded-xl text-xs flex items-center justify-center space-x-2 shadow-lg shadow-orange-900/30 cursor-pointer">
+          <span>🎲 Surprise Me! (Random Movie)</span>
         </button>
-        <button onclick="toggleRequestModal(true)" class="text-[10px] bg-red-600/20 text-red-400 border border-red-600/40 px-2.5 py-1 rounded-full font-semibold hover:bg-red-600/30 transition-all flex items-center space-x-1 cursor-pointer">
-          <span>+ Request</span>
-        </button>
       </div>
-    </div>
+    </header>
 
-    <h1 class="text-4xl font-black text-white font-impact leading-none tracking-tight my-2">
-      BOLD CINEMA HUB
-    </h1>
-
-    <p class="text-xs text-gray-400 leading-relaxed font-normal max-w-xs mb-4">
-      Discover films by title, year, or quality — then continue to their direct Telegram file links.
-    </p>
-
-    <div class="space-y-2.5 mt-2">
-      <div class="relative">
-        <input 
-          type="text" 
-          id="searchInput" 
-          placeholder='Try title, year, or 1080p...' 
-          class="w-full bg-[#14161b] text-white text-xs rounded-xl py-3.5 pl-10 pr-4 focus:outline-none focus:ring-2 focus:ring-red-600 border border-gray-800/80 placeholder-gray-500 shadow-xl transition-all"
-          oninput="filterMovies()"
-        />
-        <svg class="w-4 h-4 absolute left-3.5 top-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-        </svg>
+    <main class="px-5 pt-6 flex-1">
+      <div class="flex items-center justify-between mb-3">
+        <div>
+          <span class="text-[10px] font-bold text-blue-400 tracking-widest uppercase block">The Catalog</span>
+          <h2 class="text-2xl font-bold text-white font-impact tracking-wide">FIND YOUR NEXT FILM</h2>
+        </div>
+        <span id="movieCount" class="text-[11px] bg-gray-800/80 text-gray-300 font-medium px-2.5 py-1 rounded-full border border-gray-700/50">
+          0 movies
+        </span>
       </div>
 
-      <button 
-        onclick="surpriseMe()" 
-        class="w-full bg-gradient-to-r from-amber-600 via-orange-600 to-red-600 hover:opacity-95 active:scale-[0.98] transition-all text-white font-bold py-3 px-4 rounded-xl text-xs flex items-center justify-center space-x-2 shadow-lg shadow-orange-900/30 cursor-pointer">
-        <span>🎲 Surprise Me! (Random Movie)</span>
-      </button>
-    </div>
-  </header>
-
-  <!-- MAIN CATALOG AREA -->
-  <main class="px-5 pt-6 flex-1">
-    <div class="flex items-center justify-between mb-3">
-      <div>
-        <span class="text-[10px] font-bold text-blue-400 tracking-widest uppercase block">The Catalog</span>
-        <h2 class="text-2xl font-bold text-white font-impact tracking-wide">FIND YOUR NEXT FILM</h2>
+      <div id="movieContainer" class="space-y-3.5 mt-4">
+        <div class="text-center text-gray-500 py-12 text-xs">Loading catalog...</div>
       </div>
-      <span id="movieCount" class="text-[11px] bg-gray-800/80 text-gray-300 font-medium px-2.5 py-1 rounded-full border border-gray-700/50">
-        0 movies
-      </span>
+    </main>
+  </div>
+
+  <!-- LIBRARY VIEW CONTAINER (Watch History) -->
+  <div id="libraryView" class="flex-1 flex flex-col hidden px-5 pt-6">
+    <div class="mb-4">
+      <span class="text-[10px] font-bold text-amber-400 tracking-widest uppercase block">Your Watchlist</span>
+      <h2 class="text-3xl font-black text-white font-impact tracking-wide">WATCH HISTORY</h2>
+      <p class="text-xs text-gray-400 mt-1">Here are the last 10 movies you opened.</p>
     </div>
 
-    <div id="movieContainer" class="space-y-3.5 mt-4">
-      <div class="text-center text-gray-500 py-12 text-xs">Loading catalog...</div>
+    <div id="libraryContainer" class="space-y-3.5 mt-2 flex-1">
+      <!-- Dynamically populated watch history -->
     </div>
-  </main>
+  </div>
+
+  <!-- FIXED FOOTER NAVIGATION -->
+  <nav class="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-[#0b0c0e]/95 backdrop-blur-lg border-t border-gray-800/80 px-6 py-3 z-40 flex items-center justify-around">
+    <button 
+      id="navHomeBtn" 
+      onclick="switchTab('home')" 
+      class="flex flex-col items-center space-y-1 text-red-500 transition-all cursor-pointer">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+      <span class="text-[10px] font-bold tracking-wide uppercase">Home</span>
+    </button>
+
+    <button 
+      id="navLibraryBtn" 
+      onclick="switchTab('library')" 
+      class="flex flex-col items-center space-y-1 text-gray-400 hover:text-gray-200 transition-all cursor-pointer">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+      <span class="text-[10px] font-bold tracking-wide uppercase">Library</span>
+    </button>
+  </nav>
 
   <!-- FLOATING BACK TO SEARCH BAR BUTTON -->
   <button 
     id="backToSearchBtn" 
     onclick="scrollToSearch()" 
-    class="fixed bottom-5 right-5 z-40 bg-gray-900/90 text-white border border-gray-700 hover:bg-gray-800 shadow-2xl px-4 py-3 rounded-full text-xs font-bold flex items-center space-x-2 transition-all transform translate-y-20 opacity-0 pointer-events-none backdrop-blur-md cursor-pointer">
+    class="fixed bottom-20 right-5 z-30 bg-gray-900/90 text-white border border-gray-700 hover:bg-gray-800 shadow-2xl px-4 py-3 rounded-full text-xs font-bold flex items-center space-x-2 transition-all transform translate-y-20 opacity-0 pointer-events-none backdrop-blur-md cursor-pointer">
     <svg class="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 10l7-7m0 0l7 7m-7-7v18"></path></svg>
     <span>Back to Search</span>
   </button>
@@ -233,6 +266,78 @@
           osc.stop(now + (index * 0.06) + 0.35);
         });
       } catch (e) {}
+    }
+
+    // Tab Navigation Logic
+    function switchTab(tab) {
+      playClickSound();
+      const homeView = document.getElementById('homeView');
+      const libraryView = document.getElementById('libraryView');
+      const navHomeBtn = document.getElementById('navHomeBtn');
+      const navLibraryBtn = document.getElementById('navLibraryBtn');
+
+      if (tab === 'home') {
+        homeView.classList.remove('hidden');
+        libraryView.classList.add('hidden');
+        navHomeBtn.className = "flex flex-col items-center space-y-1 text-red-500 transition-all cursor-pointer";
+        navLibraryBtn.className = "flex flex-col items-center space-y-1 text-gray-400 hover:text-gray-200 transition-all cursor-pointer";
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } else {
+        homeView.classList.add('hidden');
+        libraryView.classList.remove('hidden');
+        navLibraryBtn.className = "flex flex-col items-center space-y-1 text-red-500 transition-all cursor-pointer";
+        navHomeBtn.className = "flex flex-col items-center space-y-1 text-gray-400 hover:text-gray-200 transition-all cursor-pointer";
+        renderLibrary();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    }
+
+    // Watch History Management (LocalStorage - Max 10)
+    function addToHistory(caption, link) {
+      let history = JSON.parse(localStorage.getItem('bold_cinema_history')) || [];
+      // Remove duplicate if already exists
+      history = history.filter(item => item.link !== link);
+      // Add to front
+      history.unshift({ caption, link, time: new Date().toLocaleDateString() });
+      // Keep only last 10
+      if (history.length > 10) history.pop();
+      localStorage.setItem('bold_cinema_history', JSON.stringify(history));
+    }
+
+    function renderLibrary() {
+      const container = document.getElementById('libraryContainer');
+      const history = JSON.parse(localStorage.getItem('bold_cinema_history')) || [];
+
+      if (history.length === 0) {
+        container.innerHTML = `
+          <div class="text-center text-gray-500 py-16 text-xs flex flex-col items-center space-y-2">
+            <svg class="w-10 h-10 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            <span>No watch history yet.<br>Movies you open will appear here!</span>
+          </div>`;
+        return;
+      }
+
+      container.innerHTML = "";
+      history.forEach((item) => {
+        const card = document.createElement("div");
+        card.className = "glass-card p-4 rounded-2xl flex flex-col justify-between shadow-xl border border-gray-800/80";
+        const badges = generateBadges(item.caption);
+
+        card.innerHTML = `
+          <div>
+            ${badges}
+            <div class="text-xs font-semibold text-gray-100 leading-relaxed mb-3.5 tracking-tight">
+              ${item.caption}
+            </div>
+          </div>
+          <button 
+            onclick="playClickSound(); openTelegramFile('${item.link}', '${item.caption.replace(/'/g, "\\'")}')" 
+            class="w-full bg-red-600 hover:bg-red-700 active:scale-[0.98] transition-all text-white font-bold py-2.5 px-4 rounded-xl text-xs flex items-center justify-center space-x-2 shadow-lg shadow-red-900/20 mt-1 cursor-pointer">
+            <span>Watch Again</span>
+          </button>
+        `;
+        container.appendChild(card);
+      });
     }
 
     function checkChannelJoinStatus() {
@@ -419,7 +524,7 @@
             </div>
           </div>
           <button 
-            onclick="playClickSound(); openTelegramFile('${movie.link}')" 
+            onclick="playClickSound(); openTelegramFile('${movie.link}', '${movie.caption.replace(/'/g, "\\'")}')" 
             class="w-full bg-red-600 hover:bg-red-700 active:scale-[0.98] transition-all text-white font-bold py-2.5 px-4 rounded-xl text-xs flex items-center justify-center space-x-2 shadow-lg shadow-red-900/20 mt-1 cursor-pointer">
             <span>Watch Now</span>
           </button>
@@ -472,7 +577,8 @@
       }
     });
 
-    function openTelegramFile(url) {
+    function openTelegramFile(url, caption) {
+      addToHistory(caption, url);
       if (tg && tg.openTelegramLink) {
         tg.openTelegramLink(url);
       } else {
