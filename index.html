@@ -129,7 +129,7 @@
       </h1>
 
       <p class="text-xs text-gray-400 leading-relaxed font-normal max-w-xs mb-4">
-        Discover films by title, year, or quality — then continue to their direct Telegram file links.
+        Explore structured films by genre and year with multi-quality streaming links.
       </p>
 
       <div class="space-y-2.5 mt-2">
@@ -137,7 +137,7 @@
           <input 
             type="text" 
             id="searchInput" 
-            placeholder='Search any movie in catalog...' 
+            placeholder='Search movie title or genre...' 
             class="w-full bg-[#14161b] text-white text-xs rounded-xl py-3.5 pl-10 pr-4 focus:outline-none focus:ring-2 focus:ring-red-600 border border-gray-800/80 placeholder-gray-500 shadow-xl transition-all"
             oninput="handleSearchInput()"
           />
@@ -152,7 +152,7 @@
           <span>🎲 Surprise Me! (Random Mystery Pick)</span>
         </button>
 
-        <!-- SURPRISE SPOTLIGHT CONTAINER (Appears right under button) -->
+        <!-- SURPRISE SPOTLIGHT CONTAINER -->
         <div id="surpriseSpotlight" class="hidden mt-3"></div>
       </div>
     </header>
@@ -162,7 +162,7 @@
       <div>
         <div class="flex items-center justify-between mb-3">
           <div>
-            <span class="text-[10px] font-bold text-amber-400 tracking-widest uppercase block">Curated For You</span>
+            <span class="text-[10px] font-bold text-amber-400 tracking-widest uppercase block">Based On Your History</span>
             <h2 class="text-xl font-bold text-white font-impact tracking-wide">RECOMMENDED PICKS</h2>
           </div>
         </div>
@@ -240,7 +240,8 @@
     const tg = window.Telegram?.WebApp;
     if (tg) tg.expand();
 
-    const SHEET_ID = '1YQX-1EmNUGOU3BhChV0qIeq1Afu4xlvf2BTp3YuyLtI'; 
+    const SHEET_ID = '1nxx-Mn7zQ9u02Bc8NhiEsBMyNrZ_Vx9_7QL-EgHH7Nc'; 
+    const SHEET_NAME = 'Clean Catalog';
     const CHANNEL_INVITE_LINK = 'https://t.me/+-HxYFImrFsU3OGZl';
 
     let allMovies = [];
@@ -320,10 +321,10 @@
       }
     }
 
-    function addToHistory(caption, link) {
+    function addToHistory(title, year, links) {
       let history = JSON.parse(localStorage.getItem('bold_cinema_history')) || [];
-      history = history.filter(item => item.link !== link);
-      history.unshift({ caption, link, time: new Date().toLocaleDateString() });
+      history = history.filter(item => item.title !== title);
+      history.unshift({ title, year, links, time: new Date().toLocaleDateString() });
       if (history.length > 10) history.pop();
       localStorage.setItem('bold_cinema_history', JSON.stringify(history));
     }
@@ -344,20 +345,17 @@
       history.forEach((item) => {
         const card = document.createElement("div");
         card.className = "glass-card p-4 rounded-2xl flex flex-col justify-between shadow-xl border border-gray-800/80";
-        const badges = generateBadges(item.caption);
+        
+        let qualityButtons = '';
+        if (item.links['480p']) qualityButtons += `<button onclick="playClickSound(); openTelegramFile('${item.links['480p']}', '${item.title.replace(/'/g, "\\'")}', '${item.links ? JSON.stringify(item.links).replace(/'/g, "\\'") : ''}')" class="flex-1 bg-gray-800 hover:bg-gray-700 text-gray-200 font-bold py-2 rounded-xl text-xs border border-gray-700/60 transition-all cursor-pointer">480p</button>`;
+        if (item.links['720p']) qualityButtons += `<button onclick="playClickSound(); openTelegramFile('${item.links['720p']}', '${item.title.replace(/'/g, "\\'")}', '')" class="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-2 rounded-xl text-xs transition-all cursor-pointer">720p</button>`;
+        if (item.links['1080p']) qualityButtons += `<button onclick="playClickSound(); openTelegramFile('${item.links['1080p']}', '${item.title.replace(/'/g, "\\'")}', '')" class="flex-1 bg-amber-600 hover:bg-amber-700 text-white font-bold py-2 rounded-xl text-xs transition-all cursor-pointer">1080p</button>`;
 
         card.innerHTML = `
-          <div>
-            ${badges}
-            <div class="text-xs font-semibold text-gray-100 leading-relaxed mb-3.5 tracking-tight">
-              ${item.caption}
-            </div>
+          <div class="mb-3">
+            <div class="text-xs font-bold text-white leading-tight tracking-tight">${item.title} ${item.year ? `<span class="text-gray-400 font-normal">(${item.year})</span>` : ''}</div>
           </div>
-          <button 
-            onclick="playClickSound(); openTelegramFile('${item.link}', '${item.caption.replace(/'/g, "\\'")}')" 
-            class="w-full bg-red-600 hover:bg-red-700 active:scale-[0.98] transition-all text-white font-bold py-2.5 px-4 rounded-xl text-xs flex items-center justify-center space-x-2 shadow-lg shadow-red-900/20 mt-1 cursor-pointer">
-            <span>Watch Again</span>
-          </button>
+          <div class="flex space-x-2">${qualityButtons}</div>
         `;
         container.appendChild(card);
       });
@@ -366,7 +364,7 @@
     async function loadSheetData() {
       const recContainer = document.getElementById("recommendationsContainer");
       const latestContainer = document.getElementById("latestContainer");
-      const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json`;
+      const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?sheet=${encodeURIComponent(SHEET_NAME)}&tqx=out:json`;
 
       try {
         const response = await fetch(url);
@@ -379,12 +377,29 @@
         const rows = data.table.rows;
 
         allMovies = rows.map((row, index) => {
-          const caption = row.c && row.c[0] ? row.c[0].v : '';
-          const link = row.c && row.c[1] ? row.c[1].v : '';
-          return { id: index, caption, link };
-        }).filter(item => item.caption && item.link);
+          const title = row.c && row.c[0] ? row.c[0].v : '';
+          const year = row.c && row.c[1] ? row.c[1].v : '';
+          const genres = row.c && row.c[2] ? row.c[2].v : '';
+          const link480 = row.c && row.c[3] ? row.c[3].v : '';
+          const link720 = row.c && row.c[4] ? row.c[4].v : '';
+          const link1080 = row.c && row.c[5] ? row.c[5].v : '';
+          const tags = row.c && row.c[6] ? row.c[6].v : '';
 
-        allMovies.reverse();
+          return {
+            id: index,
+            title: title ? String(title).trim() : '',
+            year: year ? String(year).trim() : '',
+            genres: genres ? String(genres).trim() : '',
+            links: {
+              '480p': link480 ? String(link480).trim() : '',
+              '720p': link720 ? String(link720).trim() : '',
+              '1080p': link1080 ? String(link1080).trim() : ''
+            },
+            tags: tags ? String(tags).trim() : ''
+          };
+        }).filter(item => item.title && (item.links['480p'] || item.links['720p'] || item.links['1080p']));
+
+        allMovies.reverse(); // Newest first
 
         renderHomeFeed();
       } catch (error) {
@@ -397,29 +412,41 @@
       const recContainer = document.getElementById("recommendationsContainer");
       const latestContainer = document.getElementById("latestContainer");
 
+      // 1. Render Latest Drops (First 12 movies)
       const latestMovies = allMovies.slice(0, 12);
       latestContainer.innerHTML = "";
       latestMovies.forEach(movie => {
         latestContainer.appendChild(createMovieCard(movie));
       });
 
+      // 2. Render Ultra-Accurate Genre-Based Recommendations from History
       const history = JSON.parse(localStorage.getItem('bold_cinema_history')) || [];
       let recommendedMovies = [];
 
       if (history.length > 0) {
-        const lastWatched = history[0].caption.toLowerCase();
+        // Collect genres of last watched movies
+        const watchedTitles = history.map(h => h.title);
+        const watchedGenres = new Set();
+        
+        history.forEach(h => {
+          const matched = allMovies.find(m => m.title === h.title);
+          if (matched && matched.genres) {
+            matched.genres.split(',').forEach(g => watchedGenres.add(g.trim().toLowerCase()));
+          }
+        });
+
+        // Filter movies that share at least one genre and haven't been watched yet
         recommendedMovies = allMovies.filter(m => {
-          const cap = m.caption.toLowerCase();
-          return !history.some(h => h.link === m.link) && (
-            cap.includes('1080p') && lastWatched.includes('1080p') ||
-            cap.includes('dual audio') && lastWatched.includes('dual audio') ||
-            cap.includes('hindi') && lastWatched.includes('hindi')
-          );
+          if (watchedTitles.includes(m.title)) return false;
+          if (!m.genres) return false;
+          const movieGenres = m.genres.split(',').map(g => g.trim().toLowerCase());
+          return movieGenres.some(g => watchedGenres.has(g));
         });
       }
 
+      // Fallback if history is empty or not enough genre matches
       if (recommendedMovies.length < 5) {
-        const remaining = allMovies.filter(m => !recommendedMovies.some(r => r.link === m.link));
+        const remaining = allMovies.filter(m => !recommendedMovies.some(r => r.title === m.title));
         const shuffled = [...remaining].sort(() => 0.5 - Math.random());
         recommendedMovies = [...recommendedMovies, ...shuffled].slice(0, 5);
       } else {
@@ -436,80 +463,65 @@
       const card = document.createElement("div");
       card.className = "glass-card p-4 rounded-2xl flex flex-col justify-between shadow-xl border border-gray-800/80 hover:border-gray-700/60 transition-all";
 
-      const badges = generateBadges(movie.caption);
+      // Build genre badges
+      let genreHtml = '';
+      if (movie.genres) {
+        genreHtml = '<div class="flex flex-wrap gap-1.5 mb-2.5">';
+        movie.genres.split(',').forEach(g => {
+          genreHtml += `<span class="bg-red-500/20 text-red-400 border border-red-500/40 text-[9px] font-bold px-2 py-0.5 rounded-md uppercase">${g.trim()}</span>`;
+        });
+        genreHtml += '</div>';
+      }
+
+      // Build quality buttons dynamically based on available links
+      let qualityButtons = '';
+      if (movie.links['480p']) {
+        qualityButtons += `<button onclick="playClickSound(); openTelegramFile('${movie.links['480p']}', '${movie.title.replace(/'/g, "\\'")}', ${JSON.stringify(movie.links).replace(/"/g, '&quot;')})" class="flex-1 bg-gray-800 hover:bg-gray-700 text-gray-200 font-bold py-2.5 rounded-xl text-xs border border-gray-700/60 transition-all cursor-pointer">480p</button>`;
+      }
+      if (movie.links['720p']) {
+        qualityButtons += `<button onclick="playClickSound(); openTelegramFile('${movie.links['720p']}', '${movie.title.replace(/'/g, "\\'")}', ${JSON.stringify(movie.links).replace(/"/g, '&quot;')})" class="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-2.5 rounded-xl text-xs shadow-lg shadow-red-900/20 transition-all cursor-pointer">720p</button>`;
+      }
+      if (movie.links['1080p']) {
+        qualityButtons += `<button onclick="playClickSound(); openTelegramFile('${movie.links['1080p']}', '${movie.title.replace(/'/g, "\\'")}', ${JSON.stringify(movie.links).replace(/"/g, '&quot;')})" class="flex-1 bg-amber-600 hover:bg-amber-700 text-white font-bold py-2.5 rounded-xl text-xs shadow-lg shadow-amber-900/20 transition-all cursor-pointer">1080p</button>`;
+      }
 
       card.innerHTML = `
         <div>
-          ${badges}
-          <div class="text-xs font-semibold text-gray-100 leading-relaxed mb-3.5 tracking-tight">
-            ${movie.caption}
+          ${genreHtml}
+          <div class="text-sm font-bold text-white leading-snug tracking-tight mb-3">
+            ${movie.title} ${movie.year ? `<span class="text-gray-400 font-normal">(${movie.year})</span>` : ''}
           </div>
         </div>
-        <button 
-          onclick="playClickSound(); openTelegramFile('${movie.link}', '${movie.caption.replace(/'/g, "\\'")}')" 
-          class="w-full bg-red-600 hover:bg-red-700 active:scale-[0.98] transition-all text-white font-bold py-2.5 px-4 rounded-xl text-xs flex items-center justify-center space-x-2 shadow-lg shadow-red-900/20 mt-1 cursor-pointer">
-          <span>Watch Now</span>
-        </button>
+        <div class="flex space-x-2 mt-1">
+          ${qualityButtons}
+        </div>
       `;
       return card;
     }
 
-    function generateBadges(caption) {
-      const lower = caption.toLowerCase();
-      let badgesHtml = '<div class="flex flex-wrap gap-1.5 mb-2.5">';
-      let tagCount = 0;
-
-      if (lower.includes('4k') || lower.includes('2160p') || lower.includes('hdr')) {
-        badgesHtml += `<span class="bg-amber-500/20 text-amber-400 border border-amber-500/40 text-[9px] font-bold px-2 py-0.5 rounded-md uppercase">4K / HDR</span>`;
-        tagCount++;
-      } else if (lower.includes('1080p') || lower.includes('1080')) {
-        badgesHtml += `<span class="bg-blue-500/20 text-blue-400 border border-blue-500/40 text-[9px] font-bold px-2 py-0.5 rounded-md uppercase">1080p FHD</span>`;
-        tagCount++;
-      } else if (lower.includes('720p') || lower.includes('720')) {
-        badgesHtml += `<span class="bg-indigo-500/20 text-indigo-400 border border-indigo-500/40 text-[9px] font-bold px-2 py-0.5 rounded-md uppercase">720p HD</span>`;
-        tagCount++;
-      } else if (lower.includes('480p')) {
-        badgesHtml += `<span class="bg-gray-500/20 text-gray-400 border border-gray-500/40 text-[9px] font-bold px-2 py-0.5 rounded-md uppercase">480p</span>`;
-        tagCount++;
-      }
-
-      if (lower.includes('dual audio') || lower.includes('dual') || lower.includes('multi')) {
-        badgesHtml += `<span class="bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 text-[9px] font-bold px-2 py-0.5 rounded-md uppercase">Dual Audio</span>`;
-        tagCount++;
-      }
-
-      if (lower.includes('hindi')) {
-        badgesHtml += `<span class="bg-orange-500/20 text-orange-400 border border-orange-500/40 text-[9px] font-bold px-2 py-0.5 rounded-md uppercase">Hindi</span>`;
-        tagCount++;
-      }
-
-      if (lower.includes('english') || lower.includes('eng') || lower.includes('hin-eng')) {
-        badgesHtml += `<span class="bg-teal-500/20 text-teal-400 border border-teal-500/40 text-[9px] font-bold px-2 py-0.5 rounded-md uppercase">English</span>`;
-        tagCount++;
-      }
-
-      if (lower.includes('esub') || lower.includes('sub') || lower.includes('subtitles')) {
-        badgesHtml += `<span class="bg-purple-500/20 text-purple-400 border border-purple-500/40 text-[9px] font-bold px-2 py-0.5 rounded-md uppercase">ESub</span>`;
-        tagCount++;
-      }
-
-      badgesHtml += '</div>';
-      return tagCount > 0 ? badgesHtml : '';
-    }
-
-    // SURPRISE ME SPOTLIGHT LOGIC
     function surpriseMe() {
       playChimeSound();
       if (allMovies.length === 0) return;
 
-      // Pick a truly random movie from the ENTIRE database
       const randomIndex = Math.floor(Math.random() * allMovies.length);
       const selectedMovie = allMovies[randomIndex];
 
       const spotlightEl = document.getElementById("surpriseSpotlight");
       spotlightEl.classList.remove("hidden");
 
-      const badges = generateBadges(selectedMovie.caption);
+      let genreHtml = '';
+      if (selectedMovie.genres) {
+        genreHtml = '<div class="flex flex-wrap gap-1.5 mb-2.5">';
+        selectedMovie.genres.split(',').forEach(g => {
+          genreHtml += `<span class="bg-amber-500/20 text-amber-400 border border-amber-500/40 text-[9px] font-bold px-2 py-0.5 rounded-md uppercase">${g.trim()}</span>`;
+        });
+        genreHtml += '</div>';
+      }
+
+      let qualityButtons = '';
+      if (selectedMovie.links['480p']) qualityButtons += `<button onclick="playClickSound(); openTelegramFile('${selectedMovie.links['480p']}', '${selectedMovie.title.replace(/'/g, "\\'")}', '')" class="flex-1 bg-gray-800 hover:bg-gray-700 text-gray-200 font-bold py-2.5 rounded-xl text-xs border border-gray-700/60 transition-all cursor-pointer">480p</button>`;
+      if (selectedMovie.links['720p']) qualityButtons += `<button onclick="playClickSound(); openTelegramFile('${selectedMovie.links['720p']}', '${selectedMovie.title.replace(/'/g, "\\'")}', '')" class="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-2.5 rounded-xl text-xs transition-all cursor-pointer">720p</button>`;
+      if (selectedMovie.links['1080p']) qualityButtons += `<button onclick="playClickSound(); openTelegramFile('${selectedMovie.links['1080p']}', '${selectedMovie.title.replace(/'/g, "\\'")}', '')" class="flex-1 bg-amber-600 hover:bg-amber-700 text-white font-bold py-2.5 rounded-xl text-xs transition-all cursor-pointer">1080p</button>`;
 
       spotlightEl.innerHTML = `
         <div class="spotlight-card p-4 rounded-2xl relative shadow-2xl">
@@ -519,22 +531,18 @@
             </span>
             <button onclick="closeSpotlight()" class="text-gray-400 hover:text-white text-base font-bold px-1.5 cursor-pointer">&times;</button>
           </div>
-          ${badges}
-          <div class="text-xs font-semibold text-gray-100 leading-relaxed mb-3.5 tracking-tight">
-            ${selectedMovie.caption}
+          ${genreHtml}
+          <div class="text-sm font-bold text-white leading-snug tracking-tight mb-3">
+            ${selectedMovie.title} ${selectedMovie.year ? `<span class="text-gray-400 font-normal">(${selectedMovie.year})</span>` : ''}
           </div>
           <div class="flex space-x-2">
-            <button 
-              onclick="playClickSound(); openTelegramFile('${selectedMovie.link}', '${selectedMovie.caption.replace(/'/g, "\\'")}')" 
-              class="flex-1 bg-gradient-to-r from-amber-600 to-orange-600 hover:opacity-95 active:scale-[0.98] transition-all text-white font-bold py-2.5 px-4 rounded-xl text-xs flex items-center justify-center space-x-2 shadow-lg cursor-pointer">
-              <span>Watch Now</span>
-            </button>
-            <button 
-              onclick="surpriseMe()" 
-              class="bg-gray-800 hover:bg-gray-700 text-gray-300 font-semibold py-2.5 px-3 rounded-xl text-xs border border-gray-700/60 cursor-pointer">
-              🎲 Roll Again
-            </button>
+            ${qualityButtons}
           </div>
+          <button 
+            onclick="surpriseMe()" 
+            class="w-full mt-2.5 bg-gray-800 hover:bg-gray-700 text-gray-300 font-semibold py-2 rounded-xl text-xs border border-gray-700/60 cursor-pointer">
+            🎲 Roll Again
+          </button>
         </div>
       `;
     }
@@ -560,7 +568,12 @@
       defaultFeed.classList.add("hidden");
       searchFeed.classList.remove("hidden");
 
-      const filtered = allMovies.filter(movie => movie.caption.toLowerCase().includes(query));
+      const filtered = allMovies.filter(movie => 
+        movie.title.toLowerCase().includes(query) || 
+        movie.genres.toLowerCase().includes(query) ||
+        movie.year.toLowerCase().includes(query)
+      );
+
       searchCount.innerText = `${filtered.length} movies`;
       searchContainer.innerHTML = "";
 
@@ -676,8 +689,13 @@
       }
     }
 
-    function openTelegramFile(url, caption) {
-      addToHistory(caption, url);
+    function openTelegramFile(url, title, links) {
+      const movieObj = allMovies.find(m => m.title === title);
+      const movieLinks = links || (movieObj ? movieObj.links : {});
+      const movieYear = movieObj ? movieObj.year : '';
+      
+      addToHistory(title, movieYear, movieLinks);
+
       if (tg && tg.openTelegramLink) {
         tg.openTelegramLink(url);
       } else {
