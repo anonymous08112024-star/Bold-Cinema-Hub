@@ -103,14 +103,14 @@
       </div>
     </div>
   </div>
-
-  <!-- HOME VIEW CONTAINER -->
+    <!-- HOME VIEW CONTAINER -->
   <div id="homeView" class="flex-1 flex flex-col">
     <header id="topHeader" class="relative px-5 pt-8 pb-6 border-b border-gray-800/60 overflow-hidden">
       <div class="absolute -top-10 left-1/2 -translate-x-1/2 w-72 h-36 bg-red-600/10 rounded-full blur-3xl pointer-events-none"></div>
 
       <div class="flex items-center justify-between mb-1">
-        <div class="flex items-center space-x-2 text-[11px] font-semibold text-blue-400 tracking-widest uppercase">
+        <!-- CLICKABLE BRAND HOME BUTTON -->
+        <div onclick="resetToHome()" class="flex items-center space-x-2 text-[11px] font-semibold text-blue-400 tracking-widest uppercase cursor-pointer hover:opacity-85 transition-opacity">
           <span class="w-2 h-2 rounded-full bg-blue-500 inline-block animate-pulse"></span>
           <span>Bold Cinema</span>
         </div>
@@ -124,7 +124,7 @@
         </div>
       </div>
 
-      <h1 class="text-4xl font-black text-white font-impact leading-none tracking-tight my-2">
+      <h1 onclick="resetToHome()" class="text-4xl font-black text-white font-impact leading-none tracking-tight my-2 cursor-pointer hover:opacity-90 transition-opacity">
         BOLD CINEMA HUB
       </h1>
 
@@ -162,7 +162,7 @@
       <div>
         <div class="flex items-center justify-between mb-3">
           <div>
-            <span class="text-[10px] font-bold text-amber-400 tracking-widest uppercase block">Based On Your History</span>
+            <span class="text-[10px] font-bold text-amber-400 tracking-widest uppercase block">Smart Recommendations</span>
             <h2 class="text-xl font-bold text-white font-impact tracking-wide">RECOMMENDED PICKS</h2>
           </div>
         </div>
@@ -235,8 +235,7 @@
     <svg class="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 10l7-7m0 0l7 7m-7-7v18"></path></svg>
     <span>Back to Search</span>
   </button>
-
-  <script>
+    <script>
     const tg = window.Telegram?.WebApp;
     if (tg) tg.expand();
 
@@ -321,6 +320,13 @@
       }
     }
 
+    function resetToHome() {
+      playClickSound();
+      document.getElementById('searchInput').value = '';
+      handleSearchInput();
+      switchTab('home');
+    }
+
     function addToHistory(title, year, links) {
       let history = JSON.parse(localStorage.getItem('bold_cinema_history')) || [];
       history = history.filter(item => item.title !== title);
@@ -328,7 +334,8 @@
       if (history.length > 10) history.pop();
       localStorage.setItem('bold_cinema_history', JSON.stringify(history));
     }
-        function renderLibrary() {
+
+    function renderLibrary() {
       const container = document.getElementById('libraryContainer');
       const history = JSON.parse(localStorage.getItem('bold_cinema_history')) || [];
 
@@ -347,9 +354,9 @@
         card.className = "glass-card p-4 rounded-2xl flex flex-col justify-between shadow-xl border border-gray-800/80";
         
         let qualityButtons = '';
-        if (item.links['480p']) qualityButtons += `<button onclick="playClickSound(); openTelegramFile('${item.links['480p']}', '${item.title.replace(/'/g, "\\'")}', '${item.links ? JSON.stringify(item.links).replace(/'/g, "\\'") : ''}')" class="flex-1 bg-gray-800 hover:bg-gray-700 text-gray-200 font-bold py-2 rounded-xl text-xs border border-gray-700/60 transition-all cursor-pointer">480p</button>`;
-        if (item.links['720p']) qualityButtons += `<button onclick="playClickSound(); openTelegramFile('${item.links['720p']}', '${item.title.replace(/'/g, "\\'")}', '')" class="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-2 rounded-xl text-xs transition-all cursor-pointer">720p</button>`;
-        if (item.links['1080p']) qualityButtons += `<button onclick="playClickSound(); openTelegramFile('${item.links['1080p']}', '${item.title.replace(/'/g, "\\'")}', '')" class="flex-1 bg-amber-600 hover:bg-amber-700 text-white font-bold py-2 rounded-xl text-xs transition-all cursor-pointer">1080p</button>`;
+        if (item.links['480p']) qualityButtons += `<button onclick="playClickSound(); openTelegramFile('${item.links['480p']}', '${item.title.replace(/'/g, "\\'")}')" class="flex-1 bg-gray-800 hover:bg-gray-700 text-gray-200 font-bold py-2 rounded-xl text-xs border border-gray-700/60 transition-all cursor-pointer">480p</button>`;
+        if (item.links['720p']) qualityButtons += `<button onclick="playClickSound(); openTelegramFile('${item.links['720p']}', '${item.title.replace(/'/g, "\\'")}')" class="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-2 rounded-xl text-xs transition-all cursor-pointer">720p</button>`;
+        if (item.links['1080p']) qualityButtons += `<button onclick="playClickSound(); openTelegramFile('${item.links['1080p']}', '${item.title.replace(/'/g, "\\'")}')" class="flex-1 bg-amber-600 hover:bg-amber-700 text-white font-bold py-2 rounded-xl text-xs transition-all cursor-pointer">1080p</button>`;
 
         card.innerHTML = `
           <div class="mb-3">
@@ -408,26 +415,41 @@
       }
     }
 
+    function getCoreFranchiseName(title) {
+      return title
+        .replace(/season\s*\d+/gi, '')
+        .replace(/part\s*\d+/gi, '')
+        .replace(/chapter\s*\d+/gi, '')
+        .replace(/vol(ume)?\.?\s*\d+/gi, '')
+        .trim()
+        .toLowerCase();
+    }
+
     function renderHomeFeed() {
       const recContainer = document.getElementById("recommendationsContainer");
       const latestContainer = document.getElementById("latestContainer");
 
-      // 1. Render Latest Drops (First 12 movies)
       const latestMovies = allMovies.slice(0, 12);
       latestContainer.innerHTML = "";
       latestMovies.forEach(movie => {
         latestContainer.appendChild(createMovieCard(movie));
       });
 
-      // 2. Render Ultra-Accurate Genre-Based Recommendations from History
       const history = JSON.parse(localStorage.getItem('bold_cinema_history')) || [];
       let recommendedMovies = [];
 
       if (history.length > 0) {
-        // Collect genres of last watched movies
         const watchedTitles = history.map(h => h.title);
+        const lastWatched = history[0];
+        const lastCoreName = getCoreFranchiseName(lastWatched.title);
+
+        const franchiseMatches = allMovies.filter(m => {
+          if (watchedTitles.includes(m.title)) return false;
+          const core = getCoreFranchiseName(m.title);
+          return core.length > 3 && core === lastCoreName;
+        });
+
         const watchedGenres = new Set();
-        
         history.forEach(h => {
           const matched = allMovies.find(m => m.title === h.title);
           if (matched && matched.genres) {
@@ -435,16 +457,17 @@
           }
         });
 
-        // Filter movies that share at least one genre and haven't been watched yet
-        recommendedMovies = allMovies.filter(m => {
+        const genreMatches = allMovies.filter(m => {
           if (watchedTitles.includes(m.title)) return false;
+          if (franchiseMatches.some(f => f.title === m.title)) return false;
           if (!m.genres) return false;
           const movieGenres = m.genres.split(',').map(g => g.trim().toLowerCase());
           return movieGenres.some(g => watchedGenres.has(g));
         });
+
+        recommendedMovies = [...franchiseMatches, ...genreMatches];
       }
 
-      // Fallback if history is empty or not enough genre matches
       if (recommendedMovies.length < 5) {
         const remaining = allMovies.filter(m => !recommendedMovies.some(r => r.title === m.title));
         const shuffled = [...remaining].sort(() => 0.5 - Math.random());
@@ -463,7 +486,6 @@
       const card = document.createElement("div");
       card.className = "glass-card p-4 rounded-2xl flex flex-col justify-between shadow-xl border border-gray-800/80 hover:border-gray-700/60 transition-all";
 
-      // Build genre badges
       let genreHtml = '';
       if (movie.genres) {
         genreHtml = '<div class="flex flex-wrap gap-1.5 mb-2.5">';
@@ -473,16 +495,15 @@
         genreHtml += '</div>';
       }
 
-      // Build quality buttons dynamically based on available links
       let qualityButtons = '';
       if (movie.links['480p']) {
-        qualityButtons += `<button onclick="playClickSound(); openTelegramFile('${movie.links['480p']}', '${movie.title.replace(/'/g, "\\'")}', ${JSON.stringify(movie.links).replace(/"/g, '&quot;')})" class="flex-1 bg-gray-800 hover:bg-gray-700 text-gray-200 font-bold py-2.5 rounded-xl text-xs border border-gray-700/60 transition-all cursor-pointer">480p</button>`;
+        qualityButtons += `<button onclick="playClickSound(); openTelegramFile('${movie.links['480p']}', '${movie.title.replace(/'/g, "\\'")}')" class="flex-1 bg-gray-800 hover:bg-gray-700 text-gray-200 font-bold py-2.5 rounded-xl text-xs border border-gray-700/60 transition-all cursor-pointer">480p</button>`;
       }
       if (movie.links['720p']) {
-        qualityButtons += `<button onclick="playClickSound(); openTelegramFile('${movie.links['720p']}', '${movie.title.replace(/'/g, "\\'")}', ${JSON.stringify(movie.links).replace(/"/g, '&quot;')})" class="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-2.5 rounded-xl text-xs shadow-lg shadow-red-900/20 transition-all cursor-pointer">720p</button>`;
+        qualityButtons += `<button onclick="playClickSound(); openTelegramFile('${movie.links['720p']}', '${movie.title.replace(/'/g, "\\'")}')" class="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-2.5 rounded-xl text-xs shadow-lg shadow-red-900/20 transition-all cursor-pointer">720p</button>`;
       }
       if (movie.links['1080p']) {
-        qualityButtons += `<button onclick="playClickSound(); openTelegramFile('${movie.links['1080p']}', '${movie.title.replace(/'/g, "\\'")}', ${JSON.stringify(movie.links).replace(/"/g, '&quot;')})" class="flex-1 bg-amber-600 hover:bg-amber-700 text-white font-bold py-2.5 rounded-xl text-xs shadow-lg shadow-amber-900/20 transition-all cursor-pointer">1080p</button>`;
+        qualityButtons += `<button onclick="playClickSound(); openTelegramFile('${movie.links['1080p']}', '${movie.title.replace(/'/g, "\\'")}')" class="flex-1 bg-amber-600 hover:bg-amber-700 text-white font-bold py-2.5 rounded-xl text-xs shadow-lg shadow-amber-900/20 transition-all cursor-pointer">1080p</button>`;
       }
 
       card.innerHTML = `
@@ -519,9 +540,9 @@
       }
 
       let qualityButtons = '';
-      if (selectedMovie.links['480p']) qualityButtons += `<button onclick="playClickSound(); openTelegramFile('${selectedMovie.links['480p']}', '${selectedMovie.title.replace(/'/g, "\\'")}', '')" class="flex-1 bg-gray-800 hover:bg-gray-700 text-gray-200 font-bold py-2.5 rounded-xl text-xs border border-gray-700/60 transition-all cursor-pointer">480p</button>`;
-      if (selectedMovie.links['720p']) qualityButtons += `<button onclick="playClickSound(); openTelegramFile('${selectedMovie.links['720p']}', '${selectedMovie.title.replace(/'/g, "\\'")}', '')" class="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-2.5 rounded-xl text-xs transition-all cursor-pointer">720p</button>`;
-      if (selectedMovie.links['1080p']) qualityButtons += `<button onclick="playClickSound(); openTelegramFile('${selectedMovie.links['1080p']}', '${selectedMovie.title.replace(/'/g, "\\'")}', '')" class="flex-1 bg-amber-600 hover:bg-amber-700 text-white font-bold py-2.5 rounded-xl text-xs transition-all cursor-pointer">1080p</button>`;
+      if (selectedMovie.links['480p']) qualityButtons += `<button onclick="playClickSound(); openTelegramFile('${selectedMovie.links['480p']}', '${selectedMovie.title.replace(/'/g, "\\'")}')" class="flex-1 bg-gray-800 hover:bg-gray-700 text-gray-200 font-bold py-2.5 rounded-xl text-xs border border-gray-700/60 transition-all cursor-pointer">480p</button>`;
+      if (selectedMovie.links['720p']) qualityButtons += `<button onclick="playClickSound(); openTelegramFile('${selectedMovie.links['720p']}', '${selectedMovie.title.replace(/'/g, "\\'")}')" class="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-2.5 rounded-xl text-xs transition-all cursor-pointer">720p</button>`;
+      if (selectedMovie.links['1080p']) qualityButtons += `<button onclick="playClickSound(); openTelegramFile('${selectedMovie.links['1080p']}', '${selectedMovie.title.replace(/'/g, "\\'")}')" class="flex-1 bg-amber-600 hover:bg-amber-700 text-white font-bold py-2.5 rounded-xl text-xs transition-all cursor-pointer">1080p</button>`;
 
       spotlightEl.innerHTML = `
         <div class="spotlight-card p-4 rounded-2xl relative shadow-2xl">
@@ -675,7 +696,7 @@
           feedbackEl.classList.remove('text-amber-400');
           feedbackEl.classList.add('text-emerald-400');
 
-          setTimeout(() => {
+            setTimeout(() => {
             toggleRequestModal(false);
             inputEl.value = '';
           }, 1500);
@@ -689,9 +710,9 @@
       }
     }
 
-    function openTelegramFile(url, title, links) {
+    function openTelegramFile(url, title) {
       const movieObj = allMovies.find(m => m.title === title);
-      const movieLinks = links || (movieObj ? movieObj.links : {});
+      const movieLinks = movieObj ? movieObj.links : {};
       const movieYear = movieObj ? movieObj.year : '';
       
       addToHistory(title, movieYear, movieLinks);
