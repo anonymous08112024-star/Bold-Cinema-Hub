@@ -29,10 +29,16 @@
       backdrop-filter: blur(12px);
       transition: all 0.3s ease;
     }
-    .highlight-card {
-      border-color: #f59e0b !important;
-      box-shadow: 0 0 25px rgba(245, 158, 11, 0.35) !important;
-      transform: scale(1.02);
+    .spotlight-card {
+      background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(22, 24, 29, 0.95));
+      border: 1px solid rgba(245, 158, 11, 0.5);
+      box-shadow: 0 0 30px rgba(245, 158, 11, 0.25);
+      backdrop-filter: blur(12px);
+      animation: fadeIn 0.4s ease-out forwards;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
     }
   </style>
 </head>
@@ -143,14 +149,16 @@
         <button 
           onclick="surpriseMe()" 
           class="w-full bg-gradient-to-r from-amber-600 via-orange-600 to-red-600 hover:opacity-95 active:scale-[0.98] transition-all text-white font-bold py-3 px-4 rounded-xl text-xs flex items-center justify-center space-x-2 shadow-lg shadow-orange-900/30 cursor-pointer">
-          <span>🎲 Surprise Me! (Random Movie)</span>
+          <span>🎲 Surprise Me! (Random Mystery Pick)</span>
         </button>
+
+        <!-- SURPRISE SPOTLIGHT CONTAINER (Appears right under button) -->
+        <div id="surpriseSpotlight" class="hidden mt-3"></div>
       </div>
     </header>
 
-    <!-- DEFAULT HOME FEED (Personalized & Latest Drops) -->
+    <!-- DEFAULT HOME FEED -->
     <main id="defaultHomeFeed" class="px-5 pt-6 flex-1 space-y-6">
-      <!-- Section 1: Recommendations based on history -->
       <div>
         <div class="flex items-center justify-between mb-3">
           <div>
@@ -163,7 +171,6 @@
         </div>
       </div>
 
-      <!-- Section 2: Latest 10-15 Drops -->
       <div>
         <div class="flex items-center justify-between mb-3">
           <div>
@@ -177,7 +184,7 @@
       </div>
     </main>
 
-    <!-- LIVE SEARCH RESULTS VIEW (Appears when typing in search box) -->
+    <!-- LIVE SEARCH RESULTS VIEW -->
     <main id="searchResultsFeed" class="px-5 pt-6 flex-1 hidden">
       <div class="flex items-center justify-between mb-3">
         <div>
@@ -377,7 +384,7 @@
           return { id: index, caption, link };
         }).filter(item => item.caption && item.link);
 
-        allMovies.reverse(); // Newest first
+        allMovies.reverse();
 
         renderHomeFeed();
       } catch (error) {
@@ -386,24 +393,20 @@
       }
     }
 
-    // Render Home Feed (Recommendations + Latest Drops)
     function renderHomeFeed() {
       const recContainer = document.getElementById("recommendationsContainer");
       const latestContainer = document.getElementById("latestContainer");
 
-      // 1. Render Latest Drops (First 12 movies)
       const latestMovies = allMovies.slice(0, 12);
       latestContainer.innerHTML = "";
       latestMovies.forEach(movie => {
         latestContainer.appendChild(createMovieCard(movie));
       });
 
-      // 2. Render Personalized Recommendations based on Watch History
       const history = JSON.parse(localStorage.getItem('bold_cinema_history')) || [];
       let recommendedMovies = [];
 
       if (history.length > 0) {
-        // Extract words from history titles to find similar films
         const lastWatched = history[0].caption.toLowerCase();
         recommendedMovies = allMovies.filter(m => {
           const cap = m.caption.toLowerCase();
@@ -415,10 +418,8 @@
         });
       }
 
-      // Fallback: If not enough matches or empty history, pick random/trending movies
       if (recommendedMovies.length < 5) {
         const remaining = allMovies.filter(m => !recommendedMovies.some(r => r.link === m.link));
-        // Shuffle remaining
         const shuffled = [...remaining].sort(() => 0.5 - Math.random());
         recommendedMovies = [...recommendedMovies, ...shuffled].slice(0, 5);
       } else {
@@ -433,7 +434,6 @@
 
     function createMovieCard(movie) {
       const card = document.createElement("div");
-      card.id = `movie-card-${movie.id}`;
       card.className = "glass-card p-4 rounded-2xl flex flex-col justify-between shadow-xl border border-gray-800/80 hover:border-gray-700/60 transition-all";
 
       const badges = generateBadges(movie.caption);
@@ -497,7 +497,53 @@
       return tagCount > 0 ? badgesHtml : '';
     }
 
-    // Handle Live Search Input
+    // SURPRISE ME SPOTLIGHT LOGIC
+    function surpriseMe() {
+      playChimeSound();
+      if (allMovies.length === 0) return;
+
+      // Pick a truly random movie from the ENTIRE database
+      const randomIndex = Math.floor(Math.random() * allMovies.length);
+      const selectedMovie = allMovies[randomIndex];
+
+      const spotlightEl = document.getElementById("surpriseSpotlight");
+      spotlightEl.classList.remove("hidden");
+
+      const badges = generateBadges(selectedMovie.caption);
+
+      spotlightEl.innerHTML = `
+        <div class="spotlight-card p-4 rounded-2xl relative shadow-2xl">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-[10px] font-extrabold text-amber-400 tracking-widest uppercase flex items-center space-x-1">
+              <span>✨ YOUR MYSTERY SPOTLIGHT</span>
+            </span>
+            <button onclick="closeSpotlight()" class="text-gray-400 hover:text-white text-base font-bold px-1.5 cursor-pointer">&times;</button>
+          </div>
+          ${badges}
+          <div class="text-xs font-semibold text-gray-100 leading-relaxed mb-3.5 tracking-tight">
+            ${selectedMovie.caption}
+          </div>
+          <div class="flex space-x-2">
+            <button 
+              onclick="playClickSound(); openTelegramFile('${selectedMovie.link}', '${selectedMovie.caption.replace(/'/g, "\\'")}')" 
+              class="flex-1 bg-gradient-to-r from-amber-600 to-orange-600 hover:opacity-95 active:scale-[0.98] transition-all text-white font-bold py-2.5 px-4 rounded-xl text-xs flex items-center justify-center space-x-2 shadow-lg cursor-pointer">
+              <span>Watch Now</span>
+            </button>
+            <button 
+              onclick="surpriseMe()" 
+              class="bg-gray-800 hover:bg-gray-700 text-gray-300 font-semibold py-2.5 px-3 rounded-xl text-xs border border-gray-700/60 cursor-pointer">
+              🎲 Roll Again
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    function closeSpotlight() {
+      playClickSound();
+      document.getElementById("surpriseSpotlight").classList.add("hidden");
+    }
+
     function handleSearchInput() {
       const query = document.getElementById("searchInput").value.toLowerCase().trim();
       const defaultFeed = document.getElementById("defaultHomeFeed");
@@ -526,26 +572,6 @@
       filtered.forEach(movie => {
         searchContainer.appendChild(createMovieCard(movie));
       });
-    }
-
-    function surpriseMe() {
-      playChimeSound();
-      if (allMovies.length === 0) return;
-
-      document.getElementById("searchInput").value = "";
-      handleSearchInput();
-
-      const randomIndex = Math.floor(Math.random() * allMovies.length);
-      const selectedMovie = allMovies[randomIndex];
-
-      const cardElement = document.getElementById(`movie-card-${selectedMovie.id}`);
-      if (cardElement) {
-        cardElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        cardElement.classList.add('highlight-card');
-        setTimeout(() => {
-          cardElement.classList.remove('highlight-card');
-        }, 2200);
-      }
     }
 
     function scrollToSearch() {
