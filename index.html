@@ -562,7 +562,7 @@
       return card;
     }
 
-    function surpriseMe() {
+        function surpriseMe() {
       playChimeSound();
       if (allMovies.length === 0) return;
 
@@ -581,6 +581,9 @@
         genreHtml += '</div>';
       }
 
+      const watchlist = JSON.parse(localStorage.getItem('bold_cinema_watchlist')) || [];
+      const isBookmarked = watchlist.some(item => item.title === selectedMovie.title);
+
       let qualityButtons = '';
       if (selectedMovie.links['480p']) qualityButtons += `<button onclick="playClickSound(); openTelegramFile('${selectedMovie.links['480p']}', '${selectedMovie.title.replace(/'/g, "\\'")}')" class="flex-1 bg-gray-800 hover:bg-gray-700 text-gray-200 font-bold py-2.5 rounded-xl text-xs border border-gray-700/60 transition-all cursor-pointer">480p</button>`;
       if (selectedMovie.links['720p']) qualityButtons += `<button onclick="playClickSound(); openTelegramFile('${selectedMovie.links['720p']}', '${selectedMovie.title.replace(/'/g, "\\'")}')" class="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-2.5 rounded-xl text-xs transition-all cursor-pointer">720p</button>`;
@@ -592,7 +595,14 @@
             <span class="text-[10px] font-extrabold text-amber-400 tracking-widest uppercase flex items-center space-x-1">
               <span>✨ YOUR MYSTERY SPOTLIGHT</span>
             </span>
-            <button onclick="closeSpotlight()" class="text-gray-400 hover:text-white text-base font-bold px-1.5 cursor-pointer">&times;</button>
+            <div class="flex items-center space-x-1">
+              <button onclick="toggleWatchlist('${selectedMovie.title.replace(/'/g, "\\'")}', '${selectedMovie.year || ''}')" class="p-1 text-gray-400 hover:text-amber-400 transition-colors cursor-pointer" title="Bookmark">
+                <svg class="w-5 h-5 ${isBookmarked ? 'text-amber-400 fill-amber-400' : ''}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"></path>
+                </svg>
+              </button>
+              <button onclick="closeSpotlight()" class="text-gray-400 hover:text-white text-base font-bold px-1.5 cursor-pointer">&times;</button>
+            </div>
           </div>
           ${genreHtml}
           <div class="text-sm font-bold text-white leading-snug tracking-tight mb-3">
@@ -608,7 +618,8 @@
           </button>
         </div>
       `;
-    }
+        }
+         
 
     function closeSpotlight() {
       playClickSound();
