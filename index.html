@@ -190,64 +190,61 @@
     let allMovies = [];
     let displayedMovies = [];
 
-    // --- PREMIUM WEB AUDIO SYNTHESIZER ---
-    let audioCtx = null;
-
-    function getAudioContext() {
-      if (!audioCtx) {
-        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      }
-      if (audioCtx.state === 'suspended') {
-        audioCtx.resume();
-      }
-      return audioCtx;
-    }
-
-    // Subtle, Muted Mechanical Click
+    // --- BULLETPROOF NON-BLOCKING AUDIO SYNTHESIZER ---
     function playClickSound() {
-      try {
-        const ctx = getAudioContext();
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
+      setTimeout(() => {
+        try {
+          const AudioContext = window.AudioContext || window.webkitAudioContext;
+          if (!AudioContext) return;
+          const ctx = new AudioContext();
+          if (ctx.state === 'suspended') ctx.resume();
 
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(400, ctx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(80, ctx.currentTime + 0.04);
-
-        gain.gain.setValueAtTime(0.12, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.04);
-
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-
-        osc.start();
-        osc.stop(ctx.currentTime + 0.04);
-      } catch (e) {}
-    }
-
-    // Premium Golden Chime for "Surprise Me!"
-    function playChimeSound() {
-      try {
-        const ctx = getAudioContext();
-        const now = ctx.currentTime;
-
-        [523.25, 659.25].forEach((freq, index) => {
           const osc = ctx.createOscillator();
           const gain = ctx.createGain();
 
-          osc.type = 'triangle';
-          osc.frequency.setValueAtTime(freq, now + (index * 0.06));
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(400, ctx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(80, ctx.currentTime + 0.04);
 
-          gain.gain.setValueAtTime(0.08, now + (index * 0.06));
-          gain.gain.exponentialRampToValueAtTime(0.001, now + (index * 0.06) + 0.35);
+          gain.gain.setValueAtTime(0.12, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.04);
 
           osc.connect(gain);
           gain.connect(ctx.destination);
 
-          osc.start(now + (index * 0.06));
-          osc.stop(now + (index * 0.06) + 0.35);
-        });
-      } catch (e) {}
+          osc.start();
+          osc.stop(ctx.currentTime + 0.04);
+        } catch (e) {}
+      }, 0);
+    }
+
+    function playChimeSound() {
+      setTimeout(() => {
+        try {
+          const AudioContext = window.AudioContext || window.webkitAudioContext;
+          if (!AudioContext) return;
+          const ctx = new AudioContext();
+          if (ctx.state === 'suspended') ctx.resume();
+          const now = ctx.currentTime;
+
+          [523.25, 659.25].forEach((freq, index) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(freq, now + (index * 0.06));
+
+            gain.gain.setValueAtTime(0.08, now + (index * 0.06));
+            gain.gain.exponentialRampToValueAtTime(0.001, now + (index * 0.06) + 0.35);
+
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+
+            osc.start(now + (index * 0.06));
+            osc.stop(now + (index * 0.06) + 0.35);
+          });
+        } catch (e) {}
+      }, 0);
     }
 
     // Check membership storage on load
@@ -466,8 +463,4 @@
 
       const cardElement = document.getElementById(`movie-card-${selectedMovie.id}`);
       if (cardElement) {
-        cardElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        
-        cardElement.classList.add('highlight-card');
-        setTimeout(() => {
-     
+        cardElement.scrollIntoView
