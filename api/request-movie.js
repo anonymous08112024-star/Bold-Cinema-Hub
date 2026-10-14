@@ -1,5 +1,4 @@
 export default async function handler(req, res) {
-  // Allow requests from your Mini App frontend
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -12,7 +11,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { movie } = req.body || {};
+  const { movie, user } = req.body || {};
 
   if (!movie || !movie.trim()) {
     return res.status(400).json({ error: 'Movie name is required' });
@@ -25,7 +24,26 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'Server misconfiguration' });
   }
 
-  const messageText = `🎬 *NEW MOVIE REQUEST*\n\n📌 *Title:* ${movie.trim()}\n⏰ *Time:* ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}`;
+  // Format user details nicely
+  let userDisplay = 'Anonymous / Web User';
+  let userIdDisplay = 'N/A';
+  
+  if (user) {
+    if (user.username) {
+      userDisplay = `@${user.username}`;
+    } else if (user.first_name) {
+      userDisplay = user.first_name;
+    }
+    if (user.id) {
+      userIdDisplay = user.id;
+    }
+  }
+
+  const messageText = `🎬 *NEW MOVIE REQUEST*\n\n` +
+                      `📌 *Title:* ${movie.trim()}\n` +
+                      `👤 *Requested by:* ${userDisplay}\n` +
+                      `🆔 *User ID:* \`${userIdDisplay}\`\n` +
+                      `⏰ *Time:* ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}`;
 
   try {
     const telegramUrl = `https://api.telegram.org/bot${botToken}/sendMessage`;
@@ -43,7 +61,7 @@ export default async function handler(req, res) {
 
     if (!data.ok) {
       console.error('Telegram API error:', data);
-      return res.status(500).json({ error: 'Failed to send notification to admin group' });
+      return res.status(500).json({ error: 'Failed to send notification' });
     }
 
     return res.status(200).json({ success: true });
@@ -51,5 +69,4 @@ export default async function handler(req, res) {
     console.error('Server error:', err);
     return res.status(500).json({ error: 'Internal server error' });
   }
-}
-  
+      }
