@@ -338,6 +338,11 @@
         tagCount++;
       }
 
+      if (lower.includes('english') || lower.includes('eng') || lower.includes('hin-eng')) {
+        badgesHtml += `<span class="bg-teal-500/20 text-teal-400 border border-teal-500/40 text-[9px] font-bold px-2 py-0.5 rounded-md uppercase">English</span>`;
+        tagCount++;
+      }
+
       if (lower.includes('esub') || lower.includes('sub') || lower.includes('subtitles')) {
         badgesHtml += `<span class="bg-purple-500/20 text-purple-400 border border-purple-500/40 text-[9px] font-bold px-2 py-0.5 rounded-md uppercase">ESub</span>`;
         tagCount++;
