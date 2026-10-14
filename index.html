@@ -242,11 +242,17 @@
       feedbackEl.classList.remove('hidden', 'text-red-400', 'text-emerald-400');
       feedbackEl.classList.add('text-amber-400');
 
+      // Grab Telegram User data if opened inside Telegram
+      const tgUser = tg?.initDataUnsafe?.user || null;
+
       try {
         const res = await fetch('/api/request-movie', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ movie: movieName })
+          body: JSON.stringify({ 
+            movie: movieName,
+            user: tgUser 
+          })
         });
 
         const data = await res.json();
