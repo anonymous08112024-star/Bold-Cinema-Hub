@@ -197,15 +197,23 @@
     </main>
   </div>
 
-  <!-- LIBRARY VIEW CONTAINER -->
-  <div id="libraryView" class="flex-1 flex flex-col hidden px-5 pt-6">
-    <div class="mb-4">
-      <span class="text-[10px] font-bold text-amber-400 tracking-widest uppercase block">Your Watchlist</span>
-      <h2 class="text-3xl font-black text-white font-impact tracking-wide">WATCH HISTORY</h2>
-      <p class="text-xs text-gray-400 mt-1">Here are the last 10 movies you opened.</p>
+  <!-- LIBRARY VIEW CONTAINER (WATCHLIST FIRST, THEN HISTORY) -->
+  <div id="libraryView" class="flex-1 flex flex-col hidden px-5 pt-6 space-y-6">
+    <div>
+      <div class="mb-3">
+        <span class="text-[10px] font-bold text-amber-400 tracking-widest uppercase block">Saved For Later</span>
+        <h2 class="text-2xl font-black text-white font-impact tracking-wide">MY WATCHLIST</h2>
+      </div>
+      <div id="watchlistContainer" class="space-y-3.5"></div>
     </div>
 
-    <div id="libraryContainer" class="space-y-3.5 mt-2 flex-1"></div>
+    <div>
+      <div class="mb-3">
+        <span class="text-[10px] font-bold text-red-500 tracking-widest uppercase block">Recently Opened</span>
+        <h2 class="text-2xl font-black text-white font-impact tracking-wide">WATCH HISTORY</h2>
+      </div>
+      <div id="historyContainer" class="space-y-3.5"></div>
+    </div>
   </div>
 
   <!-- FIXED FOOTER NAVIGATION -->
@@ -234,8 +242,8 @@
     class="fixed bottom-20 right-5 z-30 bg-gray-900/90 text-white border border-gray-700 hover:bg-gray-800 shadow-2xl px-4 py-3 rounded-full text-xs font-bold flex items-center space-x-2 transition-all transform translate-y-20 opacity-0 pointer-events-none backdrop-blur-md cursor-pointer">
     <svg class="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 10l7-7m0 0l7 7m-7-7v18"></path></svg>
     <span>Back to Search</span>
-  </button>
-    <script>
+        </button>
+       <script>
     const tg = window.Telegram?.WebApp;
     if (tg) tg.expand();
 
@@ -335,37 +343,61 @@
       localStorage.setItem('bold_cinema_history', JSON.stringify(history));
     }
 
-    function renderLibrary() {
-      const container = document.getElementById('libraryContainer');
-      const history = JSON.parse(localStorage.getItem('bold_cinema_history')) || [];
+    function toggleWatchlist(title, year) {
+      playChimeSound();
+      let watchlist = JSON.parse(localStorage.getItem('bold_cinema_watchlist')) || [];
+      const index = watchlist.findIndex(item => item.title === title);
 
-      if (history.length === 0) {
-        container.innerHTML = `
-          <div class="text-center text-gray-500 py-16 text-xs flex flex-col items-center space-y-2">
-            <svg class="w-10 h-10 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-            <span>No watch history yet.<br>Movies you open will appear here!</span>
-          </div>`;
-        return;
+      if (index > -1) {
+        watchlist.splice(index, 1);
+      } else {
+        const movieObj = allMovies.find(m => m.title === title);
+        const links = movieObj ? movieObj.links : {};
+        watchlist.unshift({ title, year, links });
       }
 
-      container.innerHTML = "";
-      history.forEach((item) => {
-        const card = document.createElement("div");
-        card.className = "glass-card p-4 rounded-2xl flex flex-col justify-between shadow-xl border border-gray-800/80";
-        
-        let qualityButtons = '';
-        if (item.links['480p']) qualityButtons += `<button onclick="playClickSound(); openTelegramFile('${item.links['480p']}', '${item.title.replace(/'/g, "\\'")}')" class="flex-1 bg-gray-800 hover:bg-gray-700 text-gray-200 font-bold py-2 rounded-xl text-xs border border-gray-700/60 transition-all cursor-pointer">480p</button>`;
-        if (item.links['720p']) qualityButtons += `<button onclick="playClickSound(); openTelegramFile('${item.links['720p']}', '${item.title.replace(/'/g, "\\'")}')" class="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-2 rounded-xl text-xs transition-all cursor-pointer">720p</button>`;
-        if (item.links['1080p']) qualityButtons += `<button onclick="playClickSound(); openTelegramFile('${item.links['1080p']}', '${item.title.replace(/'/g, "\\'")}')" class="flex-1 bg-amber-600 hover:bg-amber-700 text-white font-bold py-2 rounded-xl text-xs transition-all cursor-pointer">1080p</button>`;
+      localStorage.setItem('bold_cinema_watchlist', JSON.stringify(watchlist));
+      renderHomeFeed();
+      if (!document.getElementById('searchResultsFeed').classList.contains('hidden')) {
+        handleSearchInput();
+      }
+      if (!document.getElementById('libraryView').classList.contains('hidden')) {
+        renderLibrary();
+      }
+    }
 
-        card.innerHTML = `
-          <div class="mb-3">
-            <div class="text-xs font-bold text-white leading-tight tracking-tight">${item.title} ${item.year ? `<span class="text-gray-400 font-normal">(${item.year})</span>` : ''}</div>
-          </div>
-          <div class="flex space-x-2">${qualityButtons}</div>
-        `;
-        container.appendChild(card);
-      });
+    function renderLibrary() {
+      const watchlistContainer = document.getElementById('watchlistContainer');
+      const historyContainer = document.getElementById('historyContainer');
+      
+      const watchlist = JSON.parse(localStorage.getItem('bold_cinema_watchlist')) || [];
+      const history = JSON.parse(localStorage.getItem('bold_cinema_history')) || [];
+
+      // 1. Render Watchlist
+      if (watchlist.length === 0) {
+        watchlistContainer.innerHTML = `
+          <div class="text-center text-gray-500 py-6 text-xs bg-[#16181d]/50 rounded-2xl border border-gray-800/60">
+            No saved movies in your watchlist yet. Tap the bookmark icon on any film!
+          </div>`;
+      } else {
+        watchlistContainer.innerHTML = "";
+        watchlist.forEach(item => {
+          watchlistContainer.appendChild(createMovieCard(item, true));
+        });
+      }
+
+      // 2. Render Watch History
+      if (history.length === 0) {
+        historyContainer.innerHTML = `
+          <div class="text-center text-gray-500 py-6 text-xs bg-[#16181d]/50 rounded-2xl border border-gray-800/60">
+            No watch history yet. Movies you open will appear here!
+          </div>`;
+      } else {
+        historyContainer.innerHTML = "";
+        history.forEach(item => {
+          historyContainer.appendChild(createMovieCard(item, false));
+        });
+      }
     }
 
     async function loadSheetData() {
@@ -406,7 +438,7 @@
           };
         }).filter(item => item.title && (item.links['480p'] || item.links['720p'] || item.links['1080p']));
 
-        allMovies.reverse(); // Newest first
+        allMovies.reverse();
 
         renderHomeFeed();
       } catch (error) {
@@ -495,6 +527,9 @@
         genreHtml += '</div>';
       }
 
+      const watchlist = JSON.parse(localStorage.getItem('bold_cinema_watchlist')) || [];
+      const isBookmarked = watchlist.some(item => item.title === movie.title);
+
       let qualityButtons = '';
       if (movie.links['480p']) {
         qualityButtons += `<button onclick="playClickSound(); openTelegramFile('${movie.links['480p']}', '${movie.title.replace(/'/g, "\\'")}')" class="flex-1 bg-gray-800 hover:bg-gray-700 text-gray-200 font-bold py-2.5 rounded-xl text-xs border border-gray-700/60 transition-all cursor-pointer">480p</button>`;
@@ -508,7 +543,14 @@
 
       card.innerHTML = `
         <div>
-          ${genreHtml}
+          <div class="flex items-start justify-between mb-1">
+            ${genreHtml}
+            <button onclick="toggleWatchlist('${movie.title.replace(/'/g, "\\'")}', '${movie.year || ''}')" class="p-1.5 text-gray-400 hover:text-amber-400 transition-colors cursor-pointer ml-auto" title="Bookmark">
+              <svg class="w-5 h-5 ${isBookmarked ? 'text-amber-400 fill-amber-400' : ''}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"></path>
+              </svg>
+            </button>
+          </div>
           <div class="text-sm font-bold text-white leading-snug tracking-tight mb-3">
             ${movie.title} ${movie.year ? `<span class="text-gray-400 font-normal">(${movie.year})</span>` : ''}
           </div>
@@ -696,7 +738,7 @@
           feedbackEl.classList.remove('text-amber-400');
           feedbackEl.classList.add('text-emerald-400');
 
-            setTimeout(() => {
+          setTimeout(() => {
             toggleRequestModal(false);
             inputEl.value = '';
           }, 1500);
