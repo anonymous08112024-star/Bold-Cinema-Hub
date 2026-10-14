@@ -57,13 +57,13 @@
 
     <div class="w-full space-y-3 max-w-xs">
       <button 
-        onclick="openChannel()" 
+        onclick="playClickSound(); openChannel()" 
         class="w-full bg-red-600 hover:bg-red-700 active:scale-[0.98] transition-all text-white font-bold py-3 px-4 rounded-xl text-xs flex items-center justify-center space-x-2 shadow-lg shadow-red-900/30">
         <span>📢 Join Channel Now</span>
       </button>
 
       <button 
-        onclick="confirmJoined()" 
+        onclick="playClickSound(); confirmJoined()" 
         class="w-full bg-gray-800 hover:bg-gray-700 active:scale-[0.98] transition-all text-gray-200 font-semibold py-3 px-4 rounded-xl text-xs border border-gray-700/60">
         <span>Already Joined</span>
       </button>
@@ -75,7 +75,7 @@
     <div class="glass-card w-full max-w-xs p-5 rounded-2xl border border-gray-700/80 shadow-2xl">
       <div class="flex justify-between items-center mb-3">
         <h3 class="text-sm font-bold text-white font-impact tracking-wider">REQUEST A MOVIE</h3>
-        <button onclick="toggleRequestModal(false)" class="text-gray-400 hover:text-white text-lg font-bold px-2">&times;</button>
+        <button onclick="playClickSound(); toggleRequestModal(false)" class="text-gray-400 hover:text-white text-lg font-bold px-2">&times;</button>
       </div>
       <p class="text-[11px] text-gray-400 mb-4">Can't find what you're looking for? Submit your request directly to our admins.</p>
       
@@ -89,10 +89,10 @@
       <div id="requestFeedback" class="text-[10px] text-amber-400 mb-3 hidden text-center font-medium"></div>
 
       <div class="space-y-2">
-        <button onclick="submitRequest()" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2.5 rounded-xl text-xs shadow-lg shadow-red-900/20 active:scale-[0.98] transition-all">
+        <button onclick="playClickSound(); submitRequest()" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2.5 rounded-xl text-xs shadow-lg shadow-red-900/20 active:scale-[0.98] transition-all">
           Send Request
         </button>
-        <button onclick="toggleRequestModal(false)" class="w-full bg-gray-800 text-gray-300 font-semibold py-2.5 rounded-xl text-xs hover:bg-gray-700">
+        <button onclick="playClickSound(); toggleRequestModal(false)" class="w-full bg-gray-800 text-gray-300 font-semibold py-2.5 rounded-xl text-xs hover:bg-gray-700">
           Cancel
         </button>
       </div>
@@ -110,10 +110,10 @@
       </div>
       <!-- Header Action Buttons (Join Channel & Request Movie) -->
       <div class="flex items-center space-x-2">
-        <button onclick="openChannel()" class="text-[10px] bg-amber-600/20 text-amber-400 border border-amber-600/40 px-2.5 py-1 rounded-full font-semibold hover:bg-amber-600/30 transition-all flex items-center space-x-1">
+        <button onclick="playClickSound(); openChannel()" class="text-[10px] bg-amber-600/20 text-amber-400 border border-amber-600/40 px-2.5 py-1 rounded-full font-semibold hover:bg-amber-600/30 transition-all flex items-center space-x-1">
           <span>📢 Join Channel</span>
         </button>
-        <button onclick="toggleRequestModal(true)" class="text-[10px] bg-red-600/20 text-red-400 border border-red-600/40 px-2.5 py-1 rounded-full font-semibold hover:bg-red-600/30 transition-all flex items-center space-x-1">
+        <button onclick="playClickSound(); toggleRequestModal(true)" class="text-[10px] bg-red-600/20 text-red-400 border border-red-600/40 px-2.5 py-1 rounded-full font-semibold hover:bg-red-600/30 transition-all flex items-center space-x-1">
           <span>+ Request</span>
         </button>
       </div>
@@ -142,9 +142,9 @@
         </svg>
       </div>
 
-      <!-- Surprise Me Button -->
+      <!-- Surprise Me Button with Golden Chime -->
       <button 
-        onclick="surpriseMe()" 
+        onclick="playChimeSound(); surpriseMe()" 
         class="w-full bg-gradient-to-r from-amber-600 via-orange-600 to-red-600 hover:opacity-95 active:scale-[0.98] transition-all text-white font-bold py-3 px-4 rounded-xl text-xs flex items-center justify-center space-x-2 shadow-lg shadow-orange-900/30">
         <span>🎲 Surprise Me! (Random Movie)</span>
       </button>
@@ -172,7 +172,7 @@
   <!-- FLOATING BACK TO SEARCH BAR BUTTON -->
   <button 
     id="backToSearchBtn" 
-    onclick="scrollToSearch()" 
+    onclick="playClickSound(); scrollToSearch()" 
     class="fixed bottom-5 right-5 z-40 bg-gray-900/90 text-white border border-gray-700 hover:bg-gray-800 shadow-2xl px-4 py-3 rounded-full text-xs font-bold flex items-center space-x-2 transition-all transform translate-y-20 opacity-0 pointer-events-none backdrop-blur-md">
     <svg class="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 10l7-7m0 0l7 7m-7-7v18"></path></svg>
     <span>Back to Search</span>
@@ -189,6 +189,66 @@
 
     let allMovies = [];
     let displayedMovies = [];
+
+    // --- PREMIUM WEB AUDIO SYNTHESIZER ---
+    let audioCtx = null;
+
+    function getAudioContext() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+      return audioCtx;
+    }
+
+    // Subtle, Muted Mechanical Click
+    function playClickSound() {
+      try {
+        const ctx = getAudioContext();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(400, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(80, ctx.currentTime + 0.04);
+
+        gain.gain.setValueAtTime(0.12, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.04);
+
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+
+        osc.start();
+        osc.stop(ctx.currentTime + 0.04);
+      } catch (e) {}
+    }
+
+    // Premium Golden Chime for "Surprise Me!"
+    function playChimeSound() {
+      try {
+        const ctx = getAudioContext();
+        const now = ctx.currentTime;
+
+        [523.25, 659.25].forEach((freq, index) => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(freq, now + (index * 0.06));
+
+          gain.gain.setValueAtTime(0.08, now + (index * 0.06));
+          gain.gain.exponentialRampToValueAtTime(0.001, now + (index * 0.06) + 0.35);
+
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+
+          osc.start(now + (index * 0.06));
+          osc.stop(now + (index * 0.06) + 0.35);
+        });
+      } catch (e) {}
+    }
 
     // Check membership storage on load
     function checkChannelJoinStatus() {
@@ -242,7 +302,6 @@
       feedbackEl.classList.remove('hidden', 'text-red-400', 'text-emerald-400');
       feedbackEl.classList.add('text-amber-400');
 
-      // Grab Telegram User data if opened inside Telegram
       const tgUser = tg?.initDataUnsafe?.user || null;
 
       try {
@@ -377,7 +436,7 @@
             </div>
           </div>
           <button 
-            onclick="openTelegramFile('${movie.link}')" 
+            onclick="playClickSound(); openTelegramFile('${movie.link}')" 
             class="w-full bg-red-600 hover:bg-red-700 active:scale-[0.98] transition-all text-white font-bold py-2.5 px-4 rounded-xl text-xs flex items-center justify-center space-x-2 shadow-lg shadow-red-900/20 mt-1">
             <span>Watch Now</span>
           </button>
@@ -411,38 +470,4 @@
         
         cardElement.classList.add('highlight-card');
         setTimeout(() => {
-          cardElement.classList.remove('highlight-card');
-        }, 2200);
-      }
-    }
-
-    // Scroll back to top search area
-    function scrollToSearch() {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      document.getElementById('searchInput').focus();
-    }
-
-    window.addEventListener('scroll', () => {
-      const btn = document.getElementById('backToSearchBtn');
-      if (window.scrollY > 300) {
-        btn.classList.remove('translate-y-20', 'opacity-0', 'pointer-events-none');
-      } else {
-        btn.classList.add('translate-y-20', 'opacity-0', 'pointer-events-none');
-      }
-    });
-
-    // 6. Native Telegram Link Redirect
-    function openTelegramFile(url) {
-      if (tg && tg.openTelegramLink) {
-        tg.openTelegramLink(url);
-      } else {
-        window.open(url, "_blank");
-      }
-    }
-
-    // Initializations
-    checkChannelJoinStatus();
-    loadSheetData();
-  </script>
-</body>
-</html>
+     
