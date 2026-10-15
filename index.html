@@ -13,7 +13,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
-        /* Admin Carousel Styling */
+    /* Admin Carousel Styling */
     .carousel-container {
       display: flex;
       overflow-x: auto;
@@ -131,13 +131,13 @@
       </div>
     </div>
   </div>
-    <!-- HOME VIEW CONTAINER -->
+
+  <!-- HOME VIEW CONTAINER -->
   <div id="homeView" class="flex-1 flex flex-col">
     <header id="topHeader" class="relative px-5 pt-8 pb-4 border-b border-gray-800/60 overflow-hidden">
       <div class="absolute -top-10 left-1/2 -translate-x-1/2 w-72 h-36 bg-red-600/10 rounded-full blur-3xl pointer-events-none"></div>
 
       <div class="flex items-center justify-between mb-1">
-        <!-- CLICKABLE BRAND HOME BUTTON -->
         <div onclick="resetToHome()" class="flex items-center space-x-2 text-[11px] font-semibold text-blue-400 tracking-widest uppercase cursor-pointer hover:opacity-85 transition-opacity">
           <span class="w-2 h-2 rounded-full bg-blue-500 inline-block animate-pulse"></span>
           <span>Bold Cinema</span>
@@ -174,7 +174,7 @@
           </svg>
         </div>
 
-        <!-- INTERACTIVE GENRE FILTER PILLS BAR -->
+        <!-- GENRE FILTER PILLS BAR -->
         <div id="genrePillsBar" class="flex items-center space-x-2 overflow-x-auto py-1 scrollbar-none no-scrollbar">
           <button onclick="filterByGenre('All')" class="genre-pill bg-red-600 text-white font-bold px-3.5 py-1.5 rounded-full text-[11px] whitespace-nowrap shadow-md cursor-pointer transition-all">🔥 All</button>
           <button onclick="filterByGenre('Action')" class="genre-pill bg-[#16181d] text-gray-300 border border-gray-800 font-semibold px-3.5 py-1.5 rounded-full text-[11px] whitespace-nowrap cursor-pointer hover:border-gray-700 transition-all">Action</button>
@@ -199,7 +199,7 @@
 
     <!-- DEFAULT HOME FEED -->
     <main id="defaultHomeFeed" class="px-5 pt-6 flex-1 space-y-6">
-            <!-- FEATURED CAROUSEL SECTION -->
+      <!-- FEATURED CAROUSEL SECTION -->
       <div id="carouselSection" class="hidden mb-6">
         <div class="flex items-center justify-between mb-2">
           <span class="text-[10px] font-extrabold text-red-500 tracking-widest uppercase flex items-center space-x-1">
@@ -220,7 +220,6 @@
           </div>
         </div>
         <div id="recommendationsContainer" class="space-y-3.5">
-          <!-- SKELETON LOADERS -->
           <div class="skeleton h-24 rounded-2xl w-full"></div>
           <div class="skeleton h-24 rounded-2xl w-full"></div>
         </div>
@@ -234,7 +233,6 @@
           </div>
         </div>
         <div id="latestContainer" class="space-y-3.5">
-          <!-- SKELETON LOADERS -->
           <div class="skeleton h-24 rounded-2xl w-full"></div>
           <div class="skeleton h-24 rounded-2xl w-full"></div>
         </div>
@@ -292,27 +290,28 @@
     </button>
   </nav>
 
-  <!-- FIXED BACK TO TOP / SEARCH BUTTON -->
+  <!-- FIXED BACK TO SEARCH BUTTON -->
   <button 
     id="backToSearchBtn" 
     onclick="scrollToSearch()" 
     class="fixed bottom-20 right-5 z-30 bg-gray-900/90 text-white border border-gray-700 hover:bg-gray-800 shadow-2xl px-4 py-3 rounded-full text-xs font-bold flex items-center space-x-2 transition-all transform translate-y-20 opacity-0 pointer-events-none backdrop-blur-md cursor-pointer">
     <svg class="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 10l7-7m0 0l7 7m-7-7v18"></path></svg>
     <span>Back to Search</span>
-          </button>
-    <script>
+  </button>
+
+  <script>
     const ADMIN_TELEGRAM_ID = 5527067319; // Your Telegram User ID
     const tg = window.Telegram?.WebApp;
     if (tg) tg.expand();
 
-    const SHEET_ID = '1nxx-Mn7zQ9u02Bc8NhiEsBMyNrZ_Vx9_7QL-EgHH7Nc'; 
+    const SHEET_ID = '1nxx-Nn7zQ9u02Bc8NhiEsBMyNrZ_Vx9_7QL-EgHH7Nc'; 
     const SHEET_NAME = 'Clean Catalog';
     const CHANNEL_INVITE_LINK = 'https://t.me/+-HxYFImrFsU3OGZl';
 
     let allMovies = [];
     let activeGenreFilter = 'All';
 
-        function checkAdminAccess() {
+    function checkAdminAccess() {
       const tgUser = tg?.initDataUnsafe?.user;
       if (tgUser && Number(tgUser.id) === ADMIN_TELEGRAM_ID) {
         const badge = document.getElementById('adminBadge');
@@ -325,7 +324,16 @@
     function renderCarousel() {
       const carouselSection = document.getElementById('carouselSection');
       const carouselContainer = document.getElementById('carouselContainer');
-      const featuredMovies = allMovies.filter(m => m.featured);
+      if (!carouselSection || !carouselContainer) return;
+
+      // Sort featured movies numerically by Column H priority numbers (1, 2, 3...)
+      const featuredMovies = allMovies
+        .filter(m => m.featured)
+        .sort((a, b) => {
+          const numA = Number(a.featuredRaw) || 999;
+          const numB = Number(b.featuredRaw) || 999;
+          return numA - numB;
+        });
 
       if (featuredMovies.length === 0) {
         carouselSection.classList.add('hidden');
@@ -382,7 +390,7 @@
     function copySheetTitle(title) {
       playClickSound();
       navigator.clipboard.writeText(title);
-      alert(`Title "${title}" copied! To feature/unfeature, set Column H (Featured) to YES or NO in your Google Sheet.`);
+      alert(`Title "${title}" copied! Set Column H to your priority number (1, 2, 3...) in Google Sheets.`);
     }
       
     function playClickSound() {
@@ -469,12 +477,11 @@
       switchTab('home');
     }
 
-        function filterByGenre(genre) {
+    function filterByGenre(genre) {
       playClickSound();
       activeGenreFilter = genre;
       updateGenrePillsUI();
       
-      // FIX: Reset search input correctly
       const searchInputEl = document.getElementById('searchInput');
       if (searchInputEl) searchInputEl.value = '';
       
@@ -511,8 +518,7 @@
       filtered.forEach(movie => {
         searchContainer.appendChild(createMovieCard(movie));
       });
-        }
-      
+    }
 
     function updateGenrePillsUI() {
       const pills = document.querySelectorAll('.genre-pill');
@@ -524,14 +530,6 @@
           pill.className = "genre-pill bg-[#16181d] text-gray-300 border border-gray-800 font-semibold px-3.5 py-1.5 rounded-full text-[11px] whitespace-nowrap cursor-pointer hover:border-gray-700 transition-all";
         }
       });
-    }
-
-    function addToHistory(title, year, links) {
-      let history = JSON.parse(localStorage.getItem('bold_cinema_history')) || [];
-      history = history.filter(item => item.title !== title);
-      history.unshift({ title, year, links, time: new Date().toLocaleDateString() });
-      if (history.length > 10) history.pop();
-      localStorage.setItem('bold_cinema_history', JSON.stringify(history));
     }
 
     function toggleWatchlist(title, year) {
@@ -572,7 +570,7 @@
       } else {
         watchlistContainer.innerHTML = "";
         watchlist.forEach(item => {
-          watchlistContainer.appendChild(createMovieCard(item, true));
+          watchlistContainer.appendChild(createMovieCard(item));
         });
       }
 
@@ -584,7 +582,7 @@
       } else {
         historyContainer.innerHTML = "";
         history.forEach(item => {
-          historyContainer.appendChild(createMovieCard(item, false));
+          historyContainer.appendChild(createMovieCard(item));
         });
       }
     }
@@ -604,7 +602,7 @@
         const data = JSON.parse(jsonMatch[1]);
         const rows = data.table.rows;
 
-                allMovies = rows.map((row, index) => {
+        allMovies = rows.map((row, index) => {
           const title = row.c && row.c[0] ? row.c[0].v : '';
           const year = row.c && row.c[1] ? row.c[1].v : '';
           const genres = row.c && row.c[2] ? row.c[2].v : '';
@@ -625,16 +623,16 @@
               '1080p': link1080 ? String(link1080).trim() : ''
             },
             tags: tags ? String(tags).trim() : '',
-            featured: featured ? String(featured).trim().toUpperCase() === 'YES' || String(featured).trim().toUpperCase() === 'TRUE' : false
+            featuredRaw: featured,
+            featured: featured !== '' && featured !== null && String(featured).trim().toUpperCase() !== 'FALSE' && String(featured).trim().toUpperCase() !== 'NO'
           };
         }).filter(item => item.title && (item.links['480p'] || item.links['720p'] || item.links['1080p']));
         
         allMovies.reverse();
-
         renderHomeFeed();
       } catch (error) {
         console.error("Error loading Sheet:", error);
-        recContainer.innerHTML = `<div class="text-center text-red-500 py-6 text-xs">Failed to load data.</div>`;
+        if (recContainer) recContainer.innerHTML = `<div class="text-center text-red-500 py-6 text-xs">Failed to load data.</div>`;
       }
     }
 
@@ -759,7 +757,7 @@
       document.getElementById("surpriseSpotlight").classList.add("hidden");
     }
 
-        function handleSearchInput() {
+    function handleSearchInput() {
       const query = document.getElementById("searchInput").value.toLowerCase().trim();
       const defaultFeed = document.getElementById("defaultHomeFeed");
       const searchFeed = document.getElementById("searchResultsFeed");
@@ -909,7 +907,6 @@
       const movieYear = movieObj ? movieObj.year : '';
       const movieGenres = movieObj ? movieObj.genres : '';
       
-      // Save genres directly to history!
       addToHistory(title, movieYear, movieLinks, movieGenres);
 
       if (tg && tg.openTelegramLink) {
@@ -928,27 +925,24 @@
     }
 
     function renderHomeFeed() {
-    renderCarousel();
-    checkAdminAccess();
+      renderCarousel();
+      checkAdminAccess();
       
       const recContainer = document.getElementById("recommendationsContainer");
       const latestContainer = document.getElementById("latestContainer");
 
-      // 1. Render Latest Drops
       const latestMovies = allMovies.slice(0, 12);
       latestContainer.innerHTML = "";
       latestMovies.forEach(movie => {
         latestContainer.appendChild(createMovieCard(movie));
       });
 
-      // 2. Render Weighted Personalized Recommendations
       const history = JSON.parse(localStorage.getItem('bold_cinema_history')) || [];
       let recommendedMovies = [];
 
       if (history.length > 0) {
         const watchedTitles = history.map(h => h.title);
 
-        // A. Count genre occurrences directly from history + fallbacks
         const genreCounts = {};
         history.forEach(h => {
           let gStr = h.genres;
@@ -964,11 +958,9 @@
           }
         });
 
-        // Get the single most-watched genre (e.g. "horror")
         const topGenres = Object.keys(genreCounts).sort((a, b) => genreCounts[b] - genreCounts[a]);
-        const primaryGenre = topGenres[0]; // Most frequent genre
+        const primaryGenre = topGenres[0];
 
-        // B. Franchise/Sequel Pool (Capped at 1 max to keep feed fresh)
         const lastWatched = history[0];
         const lastCoreName = getCoreFranchiseName(lastWatched.title);
         let franchiseMatches = [];
@@ -981,7 +973,6 @@
           franchiseMatches = rawFranchise.sort(() => 0.5 - Math.random()).slice(0, 1);
         }
 
-        // C. Filter movies strictly matching the top genre(s)
         let genreMatches = allMovies.filter(m => {
           if (watchedTitles.includes(m.title)) return false;
           if (franchiseMatches.some(f => f.title === m.title)) return false;
@@ -990,13 +981,10 @@
           return primaryGenre ? movieGenres.includes(primaryGenre) : movieGenres.some(g => topGenres.includes(g));
         });
 
-        // D. Shuffle matching genre picks
         const shuffledGenrePicks = genreMatches.sort(() => 0.5 - Math.random());
-
         recommendedMovies = [...franchiseMatches, ...shuffledGenrePicks];
       }
 
-      // E. Fallback if recommendation pool is small
       if (recommendedMovies.length < 5) {
         const remaining = allMovies.filter(m => !recommendedMovies.some(r => r.title === m.title));
         const shuffledRemaining = [...remaining].sort(() => 0.5 - Math.random());
@@ -1010,7 +998,6 @@
         recContainer.appendChild(createMovieCard(movie));
       });
     }
-
 
     checkChannelJoinStatus();
     loadSheetData();
