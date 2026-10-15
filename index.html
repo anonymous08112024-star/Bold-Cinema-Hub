@@ -13,6 +13,9 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
+    .hidden { display: none !important; }
+    .no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
     /* Admin Carousel Styling */
     .carousel-container {
       display: flex;
@@ -302,14 +305,28 @@
   <script>
     const ADMIN_TELEGRAM_ID = 5527067319; // Your Telegram User ID
     const tg = window.Telegram?.WebApp;
-    if (tg) tg.expand();
+    if (tg) { tg.ready(); tg.expand(); }
 
-    const SHEET_ID = '1nxx-Nn7zQ9u02Bc8NhiEsBMyNrZ_Vx9_7QL-EgHH7Nc'; 
+    const SHEET_ID = '1nxx-Mn7zQ9u02Bc8NhiEsBMyNrZ_Vx9_7QL-EgHH7Nc'; 
     const SHEET_NAME = 'Clean Catalog';
     const CHANNEL_INVITE_LINK = 'https://t.me/+-HxYFImrFsU3OGZl';
 
     let allMovies = [];
     let activeGenreFilter = 'All';
+
+    // Safe localStorage reader (never throws on corrupt data)
+    function readStore(key) {
+      try {
+        const v = JSON.parse(localStorage.getItem(key));
+        return Array.isArray(v) ? v : [];
+      } catch (e) { return []; }
+    }
+
+    // Makes any string safe inside an inline onclick="" attribute
+    function jsq(str) {
+      return JSON.stringify(String(str ?? ''))
+        .replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+    }
 
     function checkAdminAccess() {
       const tgUser = tg?.initDataUnsafe?.user;
@@ -329,11 +346,7 @@
       // Sort featured movies numerically by Column H priority numbers (1, 2, 3...)
       const featuredMovies = allMovies
         .filter(m => m.featured)
-        .sort((a, b) => {
-          const numA = Number(a.featuredRaw) || 999;
-          const numB = Number(b.featuredRaw) || 999;
-          return numA - numB;
-        });
+        .sort((a, b) => a.priority - b.priority);
 
       if (featuredMovies.length === 0) {
         carouselSection.classList.add('hidden');
@@ -348,15 +361,15 @@
         card.className = 'carousel-card p-4 rounded-2xl flex-shrink-0 shadow-2xl relative flex flex-col justify-between';
 
         let qualityButtons = '';
-        if (movie.links['480p']) qualityButtons += `<button onclick="playClickSound(); openTelegramFile('${movie.links['480p']}', '${movie.title.replace(/'/g, "\\'")}')" class="flex-1 bg-gray-800 hover:bg-gray-700 text-gray-200 font-bold py-2 rounded-xl text-xs border border-gray-700/60 cursor-pointer">480p</button>`;
-        if (movie.links['720p']) qualityButtons += `<button onclick="playClickSound(); openTelegramFile('${movie.links['720p']}', '${movie.title.replace(/'/g, "\\'")}')" class="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-2 rounded-xl text-xs shadow-lg cursor-pointer">720p</button>`;
-        if (movie.links['1080p']) qualityButtons += `<button onclick="playClickSound(); openTelegramFile('${movie.links['1080p']}', '${movie.title.replace(/'/g, "\\'")}')" class="flex-1 bg-amber-600 hover:bg-amber-700 text-white font-bold py-2 rounded-xl text-xs shadow-lg cursor-pointer">1080p</button>`;
+        if (movie.links['480p']) qualityButtons += `<button onclick="playClickSound(); openTelegramFile(${jsq(movie.links['480p'])}, ${jsq(movie.title)})" class="flex-1 bg-gray-800 hover:bg-gray-700 text-gray-200 font-bold py-2 rounded-xl text-xs border border-gray-700/60 cursor-pointer">480p</button>`;
+        if (movie.links['720p']) qualityButtons += `<button onclick="playClickSound(); openTelegramFile(${jsq(movie.links['720p'])}, ${jsq(movie.title)})" class="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-2 rounded-xl text-xs shadow-lg cursor-pointer">720p</button>`;
+        if (movie.links['1080p']) qualityButtons += `<button onclick="playClickSound(); openTelegramFile(${jsq(movie.links['1080p'])}, ${jsq(movie.title)})" class="flex-1 bg-amber-600 hover:bg-amber-700 text-white font-bold py-2 rounded-xl text-xs shadow-lg cursor-pointer">1080p</button>`;
 
         card.innerHTML = `
           <div>
             <div class="flex items-center justify-between mb-1.5">
               <span class="bg-red-600 text-white font-black text-[9px] px-2 py-0.5 rounded-md uppercase tracking-wider">FEATURED</span>
-              ${checkAdminAccess() ? `<button onclick="copySheetTitle('${movie.title.replace(/'/g, "\\'")}')" class="text-[10px] bg-amber-500/20 text-amber-400 border border-amber-500/40 px-2 py-0.5 rounded-md font-bold">📋 Copy Admin Title</button>` : ''}
+              ${checkAdminAccess() ? `<button onclick="copySheetTitle(${jsq(movie.title)})" class="text-[10px] bg-amber-500/20 text-amber-400 border border-amber-500/40 px-2 py-0.5 rounded-md font-bold">📋 Copy Admin Title</button>` : ''}
             </div>
             <div class="text-base font-extrabold text-white leading-tight font-impact tracking-wide mb-1">
               ${movie.title} ${movie.year ? `<span class="text-gray-400 font-normal text-xs">(${movie.year})</span>` : ''}
@@ -534,7 +547,7 @@
 
     function toggleWatchlist(title, year) {
       playChimeSound();
-      let watchlist = JSON.parse(localStorage.getItem('bold_cinema_watchlist')) || [];
+      let watchlist = readStore('bold_cinema_watchlist');
       const index = watchlist.findIndex(item => item.title === title);
 
       if (index > -1) {
@@ -559,8 +572,8 @@
       const watchlistContainer = document.getElementById('watchlistContainer');
       const historyContainer = document.getElementById('historyContainer');
       
-      const watchlist = JSON.parse(localStorage.getItem('bold_cinema_watchlist')) || [];
-      const history = JSON.parse(localStorage.getItem('bold_cinema_history')) || [];
+      const watchlist = readStore('bold_cinema_watchlist');
+      const history = readStore('bold_cinema_history');
 
       if (watchlist.length === 0) {
         watchlistContainer.innerHTML = `
@@ -587,52 +600,82 @@
       }
     }
 
+    function skeletonHtml() {
+      return '<div class="skeleton h-24 rounded-2xl w-full"></div><div class="skeleton h-24 rounded-2xl w-full"></div>';
+    }
+
+    function showLoadError(reason) {
+      const rec = document.getElementById('recommendationsContainer');
+      const latest = document.getElementById('latestContainer');
+      const safeReason = String(reason || '').replace(/</g, '&lt;');
+      if (rec) rec.innerHTML = `
+        <div class="text-center py-6 text-xs">
+          <div class="text-red-500 font-semibold">Failed to load data.</div>
+          <div class="text-gray-500 mt-1 px-4">${safeReason}</div>
+          <button onclick="loadSheetData()" class="mt-3 bg-red-600 hover:bg-red-700 text-white font-bold px-4 py-2 rounded-xl text-xs cursor-pointer">↻ Retry</button>
+        </div>`;
+      if (latest) latest.innerHTML = `<div class="text-center text-gray-500 py-6 text-xs">Nothing to show yet.</div>`;
+    }
+
     async function loadSheetData() {
-      const recContainer = document.getElementById("recommendationsContainer");
-      const latestContainer = document.getElementById("latestContainer");
+      const rec = document.getElementById('recommendationsContainer');
+      const latest = document.getElementById('latestContainer');
+      if (rec) rec.innerHTML = skeletonHtml();
+      if (latest) latest.innerHTML = skeletonHtml();
+
       const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?sheet=${encodeURIComponent(SHEET_NAME)}&tqx=out:json`;
+      let rows;
 
       try {
-        const response = await fetch(url);
+        const response = await fetch(url, { cache: 'no-store' });
+        if (!response.ok) throw new Error('HTTP ' + response.status);
         const text = await response.text();
-        
-        const jsonMatch = text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\);/);
-        if (!jsonMatch) throw new Error("Format error");
-        
-        const data = JSON.parse(jsonMatch[1]);
-        const rows = data.table.rows;
+        if (!text.includes('setResponse(')) {
+          throw new Error('Sheet unreachable. Check the Sheet ID and set sharing to "Anyone with the link".');
+        }
+        const data = JSON.parse(text.slice(text.indexOf('{'), text.lastIndexOf('}') + 1));
+        if (data.status === 'error') {
+          const err = data.errors && data.errors[0];
+          throw new Error((err && (err.detailed_message || err.message)) || 'Sheet query error');
+        }
+        rows = data.table.rows;
+      } catch (error) {
+        console.error('Error loading Sheet:', error);
+        showLoadError(error.message);
+        return;
+      }
 
-        allMovies = rows.map((row, index) => {
-          const title = row.c && row.c[0] ? row.c[0].v : '';
-          const year = row.c && row.c[1] ? row.c[1].v : '';
-          const genres = row.c && row.c[2] ? row.c[2].v : '';
-          const link480 = row.c && row.c[3] ? row.c[3].v : '';
-          const link720 = row.c && row.c[4] ? row.c[4].v : '';
-          const link1080 = row.c && row.c[5] ? row.c[5].v : '';
-          const tags = row.c && row.c[6] ? row.c[6].v : '';
-          const featured = row.c && row.c[7] ? row.c[7].v : ''; // Column H
+      const cell = (row, i) => (row.c && row.c[i] && row.c[i].v !== null && row.c[i].v !== undefined) ? row.c[i].v : '';
 
-          return {
-            id: index,
-            title: title ? String(title).trim() : '',
-            year: year ? String(year).trim() : '',
-            genres: genres ? String(genres).trim() : '',
-            links: {
-              '480p': link480 ? String(link480).trim() : '',
-              '720p': link720 ? String(link720).trim() : '',
-              '1080p': link1080 ? String(link1080).trim() : ''
-            },
-            tags: tags ? String(tags).trim() : '',
-            featuredRaw: featured,
-            featured: featured !== '' && featured !== null && String(featured).trim().toUpperCase() !== 'FALSE' && String(featured).trim().toUpperCase() !== 'NO'
-          };
-        }).filter(item => item.title && (item.links['480p'] || item.links['720p'] || item.links['1080p']));
-        
-        allMovies.reverse();
+      allMovies = rows.map((row, index) => {
+        const featuredRaw = cell(row, 7); // Column H
+        const fs = String(featuredRaw).trim().toUpperCase();
+        const featured = fs !== '' && fs !== 'FALSE' && fs !== 'NO';
+        const num = parseFloat(fs);
+        return {
+          id: index,
+          title: String(cell(row, 0)).trim(),
+          year: String(cell(row, 1)).trim(),
+          genres: String(cell(row, 2)).trim(),
+          links: {
+            '480p': String(cell(row, 3)).trim(),
+            '720p': String(cell(row, 4)).trim(),
+            '1080p': String(cell(row, 5)).trim()
+          },
+          tags: String(cell(row, 6)).trim(),
+          featuredRaw,
+          featured,
+          priority: featured && isFinite(num) && num > 0 ? num : 999
+        };
+      }).filter(item => item.title && (item.links['480p'] || item.links['720p'] || item.links['1080p']));
+
+      allMovies.reverse(); // newest rows first
+
+      try {
         renderHomeFeed();
       } catch (error) {
-        console.error("Error loading Sheet:", error);
-        if (recContainer) recContainer.innerHTML = `<div class="text-center text-red-500 py-6 text-xs">Failed to load data.</div>`;
+        console.error('Render error:', error);
+        showLoadError('Display error: ' + error.message);
       }
     }
 
@@ -659,25 +702,25 @@
         genreHtml += '</div>';
       }
 
-      const watchlist = JSON.parse(localStorage.getItem('bold_cinema_watchlist')) || [];
+      const watchlist = readStore('bold_cinema_watchlist');
       const isBookmarked = watchlist.some(item => item.title === movie.title);
 
       let qualityButtons = '';
       if (movie.links['480p']) {
-        qualityButtons += `<button onclick="playClickSound(); openTelegramFile('${movie.links['480p']}', '${movie.title.replace(/'/g, "\\'")}')" class="flex-1 bg-gray-800 hover:bg-gray-700 text-gray-200 font-bold py-2.5 rounded-xl text-xs border border-gray-700/60 transition-all cursor-pointer">480p</button>`;
+        qualityButtons += `<button onclick="playClickSound(); openTelegramFile(${jsq(movie.links['480p'])}, ${jsq(movie.title)})" class="flex-1 bg-gray-800 hover:bg-gray-700 text-gray-200 font-bold py-2.5 rounded-xl text-xs border border-gray-700/60 transition-all cursor-pointer">480p</button>`;
       }
       if (movie.links['720p']) {
-        qualityButtons += `<button onclick="playClickSound(); openTelegramFile('${movie.links['720p']}', '${movie.title.replace(/'/g, "\\'")}')" class="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-2.5 rounded-xl text-xs shadow-lg shadow-red-900/20 transition-all cursor-pointer">720p</button>`;
+        qualityButtons += `<button onclick="playClickSound(); openTelegramFile(${jsq(movie.links['720p'])}, ${jsq(movie.title)})" class="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-2.5 rounded-xl text-xs shadow-lg shadow-red-900/20 transition-all cursor-pointer">720p</button>`;
       }
       if (movie.links['1080p']) {
-        qualityButtons += `<button onclick="playClickSound(); openTelegramFile('${movie.links['1080p']}', '${movie.title.replace(/'/g, "\\'")}')" class="flex-1 bg-amber-600 hover:bg-amber-700 text-white font-bold py-2.5 rounded-xl text-xs shadow-lg shadow-amber-900/20 transition-all cursor-pointer">1080p</button>`;
+        qualityButtons += `<button onclick="playClickSound(); openTelegramFile(${jsq(movie.links['1080p'])}, ${jsq(movie.title)})" class="flex-1 bg-amber-600 hover:bg-amber-700 text-white font-bold py-2.5 rounded-xl text-xs shadow-lg shadow-amber-900/20 transition-all cursor-pointer">1080p</button>`;
       }
 
       card.innerHTML = `
         <div>
           <div class="flex items-start justify-between mb-1">
             ${genreHtml}
-            <button onclick="toggleWatchlist('${movie.title.replace(/'/g, "\\'")}', '${movie.year || ''}')" class="p-1.5 text-gray-400 hover:text-amber-400 transition-colors cursor-pointer ml-auto" title="Bookmark">
+            <button onclick="toggleWatchlist(${jsq(movie.title)}, ${jsq(movie.year || '')})" class="p-1.5 text-gray-400 hover:text-amber-400 transition-colors cursor-pointer ml-auto" title="Bookmark">
               <svg class="w-5 h-5 ${isBookmarked ? 'text-amber-400 fill-amber-400' : ''}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"></path>
               </svg>
@@ -713,13 +756,13 @@
         genreHtml += '</div>';
       }
 
-      const watchlist = JSON.parse(localStorage.getItem('bold_cinema_watchlist')) || [];
+      const watchlist = readStore('bold_cinema_watchlist');
       const isBookmarked = watchlist.some(item => item.title === selectedMovie.title);
 
       let qualityButtons = '';
-      if (selectedMovie.links['480p']) qualityButtons += `<button onclick="playClickSound(); openTelegramFile('${selectedMovie.links['480p']}', '${selectedMovie.title.replace(/'/g, "\\'")}')" class="flex-1 bg-gray-800 hover:bg-gray-700 text-gray-200 font-bold py-2.5 rounded-xl text-xs border border-gray-700/60 transition-all cursor-pointer">480p</button>`;
-      if (selectedMovie.links['720p']) qualityButtons += `<button onclick="playClickSound(); openTelegramFile('${selectedMovie.links['720p']}', '${selectedMovie.title.replace(/'/g, "\\'")}')" class="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-2.5 rounded-xl text-xs transition-all cursor-pointer">720p</button>`;
-      if (selectedMovie.links['1080p']) qualityButtons += `<button onclick="playClickSound(); openTelegramFile('${selectedMovie.links['1080p']}', '${selectedMovie.title.replace(/'/g, "\\'")}')" class="flex-1 bg-amber-600 hover:bg-amber-700 text-white font-bold py-2.5 rounded-xl text-xs transition-all cursor-pointer">1080p</button>`;
+      if (selectedMovie.links['480p']) qualityButtons += `<button onclick="playClickSound(); openTelegramFile(${jsq(selectedMovie.links['480p'])}, ${jsq(selectedMovie.title)})" class="flex-1 bg-gray-800 hover:bg-gray-700 text-gray-200 font-bold py-2.5 rounded-xl text-xs border border-gray-700/60 transition-all cursor-pointer">480p</button>`;
+      if (selectedMovie.links['720p']) qualityButtons += `<button onclick="playClickSound(); openTelegramFile(${jsq(selectedMovie.links['720p'])}, ${jsq(selectedMovie.title)})" class="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-2.5 rounded-xl text-xs transition-all cursor-pointer">720p</button>`;
+      if (selectedMovie.links['1080p']) qualityButtons += `<button onclick="playClickSound(); openTelegramFile(${jsq(selectedMovie.links['1080p'])}, ${jsq(selectedMovie.title)})" class="flex-1 bg-amber-600 hover:bg-amber-700 text-white font-bold py-2.5 rounded-xl text-xs transition-all cursor-pointer">1080p</button>`;
 
       spotlightEl.innerHTML = `
         <div class="spotlight-card p-4 rounded-2xl relative shadow-2xl">
@@ -728,7 +771,7 @@
               <span>✨ YOUR MYSTERY SPOTLIGHT</span>
             </span>
             <div class="flex items-center space-x-1">
-              <button onclick="toggleWatchlist('${selectedMovie.title.replace(/'/g, "\\'")}', '${selectedMovie.year || ''}')" class="p-1 text-gray-400 hover:text-amber-400 transition-colors cursor-pointer" title="Bookmark">
+              <button onclick="toggleWatchlist(${jsq(selectedMovie.title)}, ${jsq(selectedMovie.year || '')})" class="p-1 text-gray-400 hover:text-amber-400 transition-colors cursor-pointer" title="Bookmark">
                 <svg class="w-5 h-5 ${isBookmarked ? 'text-amber-400 fill-amber-400' : ''}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"></path>
                 </svg>
@@ -917,7 +960,7 @@
     }
 
     function addToHistory(title, year, links, genres = '') {
-      let history = JSON.parse(localStorage.getItem('bold_cinema_history')) || [];
+      let history = readStore('bold_cinema_history');
       history = history.filter(item => item.title !== title);
       history.unshift({ title, year, links, genres, time: new Date().toLocaleDateString() });
       if (history.length > 10) history.pop();
@@ -937,7 +980,7 @@
         latestContainer.appendChild(createMovieCard(movie));
       });
 
-      const history = JSON.parse(localStorage.getItem('bold_cinema_history')) || [];
+      const history = readStore('bold_cinema_history');
       let recommendedMovies = [];
 
       if (history.length > 0) {
