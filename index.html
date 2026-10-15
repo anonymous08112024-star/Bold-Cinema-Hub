@@ -675,7 +675,7 @@
       const noTitle = parsed.filter(m => !m.title).length;
       const noLinks = parsed.filter(m => m.title && !m.links['480p'] && !m.links['720p'] && !m.links['1080p']).length;
       const labels = cols.slice(0, 8).map(c => String(c.label || c.id || '?').slice(0, 20)).join(' | ').replace(/</g, '&lt;');
-      el.innerHTML = `🛠 Admin debug: ${rowCount} rows received from Sheet · ${valid.length} valid movies · ${noTitle} without title · ${noLinks} without links<br>Columns: ${labels}`;
+      el.innerHTML = `🛠 Admin debug: ${rowCount} rows received from Sheet · ${valid.length} valid movies · ${noTitle} without title · ${noLinks} without links · ${valid.filter(m => m.customPoster).length} custom posters (Column I)<br>Columns: ${labels}`;
       el.classList.remove('hidden');
     }
 
@@ -743,6 +743,7 @@
             '1080p': String(cell(row, 5)).trim()
           },
           tags: String(cell(row, 6)).trim(),
+          customPoster: (/^https?:\/\/\S+$/i.test(String(cell(row, 8)).trim())) ? String(cell(row, 8)).trim() : '', // Column I
           featuredRaw,
           featured,
           priority: featured && isFinite(num) && num > 0 ? num : 999
@@ -873,7 +874,7 @@
       }
     }
 
-    function applyPoster(el, url) {
+    function applyPoster(el, url, onFail) {
       if (!el || el.querySelector('img')) return;
       const img = new Image();
       img.alt = '';
@@ -887,7 +888,8 @@
         const ph = el.querySelector('.poster-fallback');
         if (ph) ph.classList.add('opacity-0');
       };
-      img.src = String(url).replace(/^http:/i, 'https:'); // on error the gradient fallback simply stays
+      img.onerror = () => { if (onFail) onFail(); }; // otherwise the gradient fallback simply stays
+      img.src = String(url).replace(/^http:/i, 'https:');
     }
 
     // Loads posters only for cards that are (almost) on screen, which keeps API usage low
@@ -896,19 +898,36 @@
           entries.forEach(entry => {
             if (!entry.isIntersecting) return;
             posterObserver.unobserve(entry.target);
-            if (entry.target._posterMovie) requestPoster(entry.target._posterMovie, entry.target);
+            if (entry.target._posterMovie) loadPoster(entry.target, entry.target._posterMovie);
           });
         }, { rootMargin: '300px 0px' })
       : null;
 
+    // Priority: 1) Column I custom URL  2) OMDb (cached)  3) glass placeholder
+    function loadPoster(el, movie) {
+      // Library items (watchlist/history) don't store the custom URL, so look it up in the catalog
+      const entry = (movie.customPoster !== undefined) ? movie : (allMovies.find(m => m.title === movie.title) || {});
+      const custom = entry.customPoster;
+
+      const viaOmdb = () => {
+        const cached = posterCache[posterKey(movie)];
+        if (cached && cached.u) { applyPoster(el, cached.u); return; }
+        if (cached && !cached.u && (Date.now() - (cached.t || 0)) < POSTER_MISS_TTL) return; // known "no poster"
+        if (omdbDisabled) return;
+        requestPoster(movie, el);
+      };
+
+      if (custom && /^https?:\/\/\S+$/i.test(custom)) {
+        applyPoster(el, custom, viaOmdb); // if the custom image fails to load, fall back to OMDb
+      } else {
+        viaOmdb();
+      }
+    }
+
     function attachPoster(el, movie) {
       if (!el || !movie || !movie.title) return;
-      const cached = posterCache[posterKey(movie)];
-      if (cached && cached.u) { applyPoster(el, cached.u); return; }
-      if (cached && !cached.u && (Date.now() - (cached.t || 0)) < POSTER_MISS_TTL) return; // known "no poster"
-      if (omdbDisabled) return;
       el._posterMovie = movie;
-      if (posterObserver) posterObserver.observe(el); else requestPoster(movie, el);
+      if (posterObserver) posterObserver.observe(el); else loadPoster(el, movie);
     }
 
     // Poster slot: uniform 2:3 box with a glass-gradient cinema placeholder until the image arrives
