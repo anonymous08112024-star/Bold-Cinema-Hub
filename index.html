@@ -413,19 +413,25 @@
         if (movie.links['1080p']) qualityButtons += `<button onclick="playClickSound(); openTelegramFile(${jsq(movie.links['1080p'])}, ${jsq(movie.title)})" class="flex-1 bg-amber-600 hover:bg-amber-700 text-white font-bold py-2 rounded-xl text-xs shadow-lg cursor-pointer">1080p</button>`;
 
         card.innerHTML = `
-          <div>
-            <div class="flex items-center justify-between mb-1.5">
-              <span class="bg-red-600 text-white font-black text-[9px] px-2 py-0.5 rounded-md uppercase tracking-wider">FEATURED</span>
-              ${checkAdminAccess() ? `<button onclick="copySheetTitle(${jsq(movie.title)})" class="text-[10px] bg-amber-500/20 text-amber-400 border border-amber-500/40 px-2 py-0.5 rounded-md font-bold">📋 Copy Admin Title</button>` : ''}
+          <div class="flex gap-3 flex-1">
+            ${posterBoxHtml('w-24')}
+            <div class="flex-1 min-w-0 flex flex-col justify-between">
+              <div>
+                <div class="flex items-center justify-between gap-1.5 mb-1.5">
+                  <span class="bg-red-600 text-white font-black text-[9px] px-2 py-0.5 rounded-md uppercase tracking-wider">FEATURED</span>
+                  ${checkAdminAccess() ? `<button onclick="copySheetTitle(${jsq(movie.title)})" class="text-[10px] bg-amber-500/20 text-amber-400 border border-amber-500/40 px-2 py-0.5 rounded-md font-bold cursor-pointer" title="Copy admin title">📋 Copy</button>` : ''}
+                </div>
+                <div class="text-base font-extrabold text-white leading-tight font-impact tracking-wide line-clamp-3">
+                  ${movie.title} ${movie.year ? `<span class="text-gray-400 font-normal text-xs">(${movie.year})</span>` : ''}
+                </div>
+              </div>
+              <div class="flex space-x-2 mt-3">
+                ${qualityButtons}
+              </div>
             </div>
-            <div class="text-base font-extrabold text-white leading-tight font-impact tracking-wide mb-1">
-              ${movie.title} ${movie.year ? `<span class="text-gray-400 font-normal text-xs">(${movie.year})</span>` : ''}
-            </div>
-          </div>
-          <div class="flex space-x-2 mt-3">
-            ${qualityButtons}
           </div>
         `;
+        attachPoster(card.querySelector('.poster-box'), movie);
         carouselContainer.appendChild(card);
       });
 
@@ -767,52 +773,208 @@
         .toLowerCase();
     }
 
+    // ===================== POSTERS (OMDb) =====================
+    const OMDB_KEY = '9bce98fc';
+    const POSTER_CACHE_KEY = 'bold_cinema_poster_cache';
+    const POSTER_MISS_TTL = 7 * 24 * 60 * 60 * 1000; // retry "no poster" results after 7 days
+    const POSTER_CONCURRENCY = 4;
+    let omdbDisabled = false; // set when the daily request limit is hit
+
+    let posterCache = (() => {
+      try {
+        const v = JSON.parse(localStorage.getItem(POSTER_CACHE_KEY));
+        return v && typeof v === 'object' && !Array.isArray(v) ? v : {};
+      } catch (e) { return {}; }
+    })();
+
+    let posterSaveTimer = null;
+    function schedulePosterCacheSave() {
+      clearTimeout(posterSaveTimer);
+      posterSaveTimer = setTimeout(() => {
+        try {
+          localStorage.setItem(POSTER_CACHE_KEY, JSON.stringify(posterCache));
+        } catch (e) {
+          // Storage full: drop the oldest half and try once more
+          try {
+            const keys = Object.keys(posterCache);
+            keys.slice(0, Math.ceil(keys.length / 2)).forEach(k => delete posterCache[k]);
+            localStorage.setItem(POSTER_CACHE_KEY, JSON.stringify(posterCache));
+          } catch (e2) {}
+        }
+      }, 400);
+    }
+
+    // "The Mentalist S05", "Show S01 (E01-15)", "Show Season 2" -> clean title OMDb understands
+    function cleanTitleForOmdb(title) {
+      return String(title || '')
+        .replace(/\(\s*E\d+(?:\s*[-–]\s*E?\d+)?\s*\)/gi, '')
+        .replace(/\bS\d{1,2}\s*E\d{1,3}(?:\s*[-–]\s*E?\d{1,3})?\b/gi, '')
+        .replace(/\bS\d{1,2}\b/gi, '')
+        .replace(/\bseason\s*\d+\b/gi, '')
+        .replace(/\s*[\[(][^\])]*[\])]\s*$/g, '')
+        .replace(/\s{2,}/g, ' ')
+        .trim();
+    }
+
+    function posterKey(movie) {
+      return cleanTitleForOmdb(movie.title).toLowerCase() + '|' + String(movie.year || '').trim();
+    }
+
+    // Returns { url } (url may be '' = no poster) or { error: true } (network/limit, do not cache)
+    async function fetchOmdbPoster(title, year) {
+      const cleanTitle = cleanTitleForOmdb(title);
+      const yearMatch = String(year || '').match(/\d{4}/);
+      const attempts = [];
+      if (yearMatch) attempts.push(`t=${encodeURIComponent(cleanTitle)}&y=${encodeURIComponent(yearMatch[0])}`);
+      attempts.push(`t=${encodeURIComponent(cleanTitle)}`); // series seasons often fail with a year, so retry without it
+      let hadError = false;
+
+      for (const q of attempts) {
+        try {
+          const res = await fetch(`https://www.omdbapi.com/?${q}&apikey=${OMDB_KEY}`);
+          if (res.status === 401) { omdbDisabled = true; return { error: true }; }
+          if (!res.ok) { hadError = true; continue; }
+          const d = await res.json();
+          if (d && d.Response === 'True' && d.Poster && d.Poster !== 'N/A') return { url: d.Poster };
+          if (d && /limit/i.test(d.Error || '')) { omdbDisabled = true; return { error: true }; }
+        } catch (e) { hadError = true; }
+      }
+      return hadError ? { error: true } : { url: '' };
+    }
+
+    const pendingPosters = {};
+    const posterQueue = [];
+    let posterActive = 0;
+
+    function requestPoster(movie, el) {
+      const key = posterKey(movie);
+      (pendingPosters[key] = pendingPosters[key] || []).push(el);
+      if (pendingPosters[key].length > 1) return; // same movie already queued/in flight
+      posterQueue.push({ key, title: movie.title, year: movie.year });
+      runPosterQueue();
+    }
+
+    function runPosterQueue() {
+      while (posterActive < POSTER_CONCURRENCY && posterQueue.length && !omdbDisabled) {
+        const job = posterQueue.shift();
+        posterActive++;
+        fetchOmdbPoster(job.title, job.year)
+          .then(r => {
+            if (!r.error) {
+              posterCache[job.key] = { u: r.url, t: Date.now() };
+              schedulePosterCacheSave();
+            }
+            const els = pendingPosters[job.key] || [];
+            delete pendingPosters[job.key];
+            if (r.url) els.forEach(el => applyPoster(el, r.url));
+          })
+          .catch(() => { delete pendingPosters[job.key]; })
+          .finally(() => { posterActive--; runPosterQueue(); });
+      }
+    }
+
+    function applyPoster(el, url) {
+      if (!el || el.querySelector('img')) return;
+      const img = new Image();
+      img.alt = '';
+      img.decoding = 'async';
+      img.referrerPolicy = 'no-referrer';
+      img.className = 'absolute inset-0 w-full h-full object-cover opacity-0 transition-opacity duration-500';
+      img.onload = () => {
+        if (el.querySelector('img')) return;
+        el.appendChild(img);
+        requestAnimationFrame(() => img.classList.remove('opacity-0'));
+        const ph = el.querySelector('.poster-fallback');
+        if (ph) ph.classList.add('opacity-0');
+      };
+      img.src = String(url).replace(/^http:/i, 'https:'); // on error the gradient fallback simply stays
+    }
+
+    // Loads posters only for cards that are (almost) on screen, which keeps API usage low
+    const posterObserver = ('IntersectionObserver' in window)
+      ? new IntersectionObserver(entries => {
+          entries.forEach(entry => {
+            if (!entry.isIntersecting) return;
+            posterObserver.unobserve(entry.target);
+            if (entry.target._posterMovie) requestPoster(entry.target._posterMovie, entry.target);
+          });
+        }, { rootMargin: '300px 0px' })
+      : null;
+
+    function attachPoster(el, movie) {
+      if (!el || !movie || !movie.title) return;
+      const cached = posterCache[posterKey(movie)];
+      if (cached && cached.u) { applyPoster(el, cached.u); return; }
+      if (cached && !cached.u && (Date.now() - (cached.t || 0)) < POSTER_MISS_TTL) return; // known "no poster"
+      if (omdbDisabled) return;
+      el._posterMovie = movie;
+      if (posterObserver) posterObserver.observe(el); else requestPoster(movie, el);
+    }
+
+    // Poster slot: uniform 2:3 box with a glass-gradient cinema placeholder until the image arrives
+    function posterBoxHtml(widthClass) {
+      return `
+        <div class="poster-box relative ${widthClass} shrink-0 aspect-[2/3] rounded-xl overflow-hidden self-start ring-1 ring-white/10 shadow-lg shadow-black/50 bg-[#14161b]">
+          <div class="poster-fallback absolute inset-0 flex items-center justify-center bg-gradient-to-br from-red-900/40 via-[#16181d] to-amber-900/30 transition-opacity duration-500">
+            <svg class="w-7 h-7 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z"></path>
+            </svg>
+          </div>
+        </div>`;
+    }
+
     function createMovieCard(movie) {
       const card = document.createElement("div");
-      card.className = "glass-card p-4 rounded-2xl flex flex-col justify-between";
+      card.className = "glass-card p-3.5 rounded-2xl flex gap-3";
 
       const genresStr = movie.genres || ((allMovies.find(m => m.title === movie.title) || {}).genres) || '';
-      let genreHtml = '';
+      let genreHtml = '<div class="flex flex-wrap gap-1.5"></div>';
       if (genresStr) {
-        genreHtml = '<div class="flex flex-wrap gap-1.5 mb-2.5">';
-        genresStr.split(',').forEach(g => {
-          if (g.trim()) genreHtml += `<button type="button" onclick="filterByGenreFromCard(${jsq(g.trim())})" class="bg-red-500/20 hover:bg-red-500/35 active:scale-95 text-red-400 border border-red-500/40 text-[9px] font-bold px-2 py-0.5 rounded-md uppercase cursor-pointer transition-all">${g.trim()}</button>`;
+        genreHtml = '<div class="flex flex-wrap gap-1.5">';
+        genresStr.split(',').map(g => g.trim()).filter(Boolean).slice(0, 3).forEach(g => {
+          genreHtml += `<button type="button" onclick="filterByGenreFromCard(${jsq(g)})" class="bg-red-500/20 hover:bg-red-500/35 active:scale-95 text-red-400 border border-red-500/40 text-[9px] font-bold px-2 py-0.5 rounded-md uppercase cursor-pointer transition-all">${g}</button>`;
         });
         genreHtml += '</div>';
       }
 
       const watchlist = readStore('bold_cinema_watchlist');
       const isBookmarked = watchlist.some(item => item.title === movie.title);
+      const t = jsq(movie.title);
 
       let qualityButtons = '';
       if (movie.links['480p']) {
-        qualityButtons += `<button onclick="playClickSound(); openTelegramFile(${jsq(movie.links['480p'])}, ${jsq(movie.title)})" class="flex-1 bg-gray-800 hover:bg-gray-700 text-gray-200 font-bold py-2.5 rounded-xl text-xs border border-gray-700/60 transition-all cursor-pointer">480p</button>`;
+        qualityButtons += `<button onclick="playClickSound(); openTelegramFile(${jsq(movie.links['480p'])}, ${t})" class="flex-1 bg-gray-800 hover:bg-gray-700 text-gray-200 font-bold py-2.5 rounded-xl text-xs border border-gray-700/60 transition-all cursor-pointer">480p</button>`;
       }
       if (movie.links['720p']) {
-        qualityButtons += `<button onclick="playClickSound(); openTelegramFile(${jsq(movie.links['720p'])}, ${jsq(movie.title)})" class="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-2.5 rounded-xl text-xs shadow-lg shadow-red-900/20 transition-all cursor-pointer">720p</button>`;
+        qualityButtons += `<button onclick="playClickSound(); openTelegramFile(${jsq(movie.links['720p'])}, ${t})" class="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-2.5 rounded-xl text-xs shadow-lg shadow-red-900/20 transition-all cursor-pointer">720p</button>`;
       }
       if (movie.links['1080p']) {
-        qualityButtons += `<button onclick="playClickSound(); openTelegramFile(${jsq(movie.links['1080p'])}, ${jsq(movie.title)})" class="flex-1 bg-amber-600 hover:bg-amber-700 text-white font-bold py-2.5 rounded-xl text-xs shadow-lg shadow-amber-900/20 transition-all cursor-pointer">1080p</button>`;
+        qualityButtons += `<button onclick="playClickSound(); openTelegramFile(${jsq(movie.links['1080p'])}, ${t})" class="flex-1 bg-amber-600 hover:bg-amber-700 text-white font-bold py-2.5 rounded-xl text-xs shadow-lg shadow-amber-900/20 transition-all cursor-pointer">1080p</button>`;
       }
 
       card.innerHTML = `
-        <div>
-          <div class="flex items-start justify-between mb-1">
-            ${genreHtml}
-            <button onclick="toggleWatchlist(${jsq(movie.title)}, ${jsq(movie.year || '')})" class="p-1.5 text-gray-400 hover:text-amber-400 transition-colors cursor-pointer ml-auto" title="Bookmark">
-              <svg class="w-5 h-5 ${isBookmarked ? 'text-amber-400 fill-amber-400' : ''}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"></path>
-              </svg>
-            </button>
+        ${posterBoxHtml('w-20')}
+        <div class="flex-1 min-w-0 flex flex-col justify-between">
+          <div>
+            <div class="flex items-start justify-between gap-1 mb-1.5">
+              ${genreHtml}
+              <button onclick="toggleWatchlist(${t}, ${jsq(movie.year || '')})" class="p-1 -mt-1 -mr-1 text-gray-400 hover:text-amber-400 transition-colors cursor-pointer shrink-0" title="Bookmark">
+                <svg class="w-5 h-5 ${isBookmarked ? 'text-amber-400 fill-amber-400' : ''}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"></path>
+                </svg>
+              </button>
+            </div>
+            <div class="text-sm font-bold text-white leading-snug tracking-tight line-clamp-2">
+              ${movie.title} ${movie.year ? `<span class="text-gray-400 font-normal">(${movie.year})</span>` : ''}
+            </div>
           </div>
-          <div class="text-sm font-bold text-white leading-snug tracking-tight mb-3">
-            ${movie.title} ${movie.year ? `<span class="text-gray-400 font-normal">(${movie.year})</span>` : ''}
+          <div class="flex space-x-2 mt-3">
+            ${qualityButtons}
           </div>
-        </div>
-        <div class="flex space-x-2 mt-1">
-          ${qualityButtons}
         </div>
       `;
+
+      attachPoster(card.querySelector('.poster-box'), movie);
       return card;
     }
 
@@ -845,7 +1007,7 @@
 
       spotlightEl.innerHTML = `
         <div class="spotlight-card p-4 rounded-2xl relative">
-          <div class="flex items-center justify-between mb-2">
+          <div class="flex items-center justify-between mb-3">
             <span class="text-[10px] font-extrabold text-amber-400 tracking-widest uppercase flex items-center space-x-1">
               <span>✨ YOUR MYSTERY SPOTLIGHT</span>
             </span>
@@ -858,20 +1020,28 @@
               <button onclick="closeSpotlight()" class="text-gray-400 hover:text-white text-base font-bold px-1.5 cursor-pointer">&times;</button>
             </div>
           </div>
-          ${genreHtml}
-          <div class="text-sm font-bold text-white leading-snug tracking-tight mb-3">
-            ${selectedMovie.title} ${selectedMovie.year ? `<span class="text-gray-400 font-normal">(${selectedMovie.year})</span>` : ''}
-          </div>
-          <div class="flex space-x-2">
-            ${qualityButtons}
+          <div class="flex gap-3">
+            ${posterBoxHtml('w-24')}
+            <div class="flex-1 min-w-0 flex flex-col justify-between">
+              <div>
+                ${genreHtml}
+                <div class="text-sm font-bold text-white leading-snug tracking-tight line-clamp-3">
+                  ${selectedMovie.title} ${selectedMovie.year ? `<span class="text-gray-400 font-normal">(${selectedMovie.year})</span>` : ''}
+                </div>
+              </div>
+              <div class="flex space-x-2 mt-3">
+                ${qualityButtons}
+              </div>
+            </div>
           </div>
           <button 
             onclick="surpriseMe()" 
-            class="w-full mt-2.5 bg-gray-800 hover:bg-gray-700 text-gray-300 font-semibold py-2 rounded-xl text-xs border border-gray-700/60 cursor-pointer">
+            class="w-full mt-3 bg-gray-800 hover:bg-gray-700 text-gray-300 font-semibold py-2 rounded-xl text-xs border border-gray-700/60 cursor-pointer">
             🎲 Roll Again
           </button>
         </div>
       `;
+      attachPoster(spotlightEl.querySelector('.poster-box'), selectedMovie);
     }
 
     function closeSpotlight() {
