@@ -13,6 +13,25 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
+        /* Admin Carousel Styling */
+    .carousel-container {
+      display: flex;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+    .carousel-container::-webkit-scrollbar {
+      display: none;
+    }
+    .carousel-card {
+      scroll-snap-align: center;
+      flex: 0 0 88%;
+      background: linear-gradient(135deg, rgba(220, 38, 38, 0.2), rgba(22, 24, 29, 0.95));
+      border: 1px solid rgba(220, 38, 38, 0.4);
+      backdrop-filter: blur(12px);
+    }
+    
     body {
       background-color: #0b0c0e;
       color: #f3f4f6;
@@ -180,6 +199,19 @@
 
     <!-- DEFAULT HOME FEED -->
     <main id="defaultHomeFeed" class="px-5 pt-6 flex-1 space-y-6">
+            <!-- FEATURED CAROUSEL SECTION -->
+      <div id="carouselSection" class="hidden mb-6">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-[10px] font-extrabold text-red-500 tracking-widest uppercase flex items-center space-x-1">
+            <span>🔥 SPOTLIGHT HIGHLIGHTS</span>
+          </span>
+          <span id="adminBadge" class="hidden text-[9px] bg-amber-500/20 text-amber-400 border border-amber-500/50 px-2 py-0.5 rounded-full font-black uppercase tracking-wider">
+            👑 ADMIN ACTIVE
+          </span>
+        </div>
+        <div id="carouselContainer" class="carousel-container space-x-3 py-1"></div>
+      </div>
+      
       <div>
         <div class="flex items-center justify-between mb-3">
           <div>
@@ -269,6 +301,7 @@
     <span>Back to Search</span>
           </button>
     <script>
+    const ADMIN_TELEGRAM_ID = 5527067319; // Your Telegram User ID
     const tg = window.Telegram?.WebApp;
     if (tg) tg.expand();
 
@@ -279,6 +312,79 @@
     let allMovies = [];
     let activeGenreFilter = 'All';
 
+        function checkAdminAccess() {
+      const tgUser = tg?.initDataUnsafe?.user;
+      if (tgUser && Number(tgUser.id) === ADMIN_TELEGRAM_ID) {
+        const badge = document.getElementById('adminBadge');
+        if (badge) badge.classList.remove('hidden');
+        return true;
+      }
+      return false;
+    }
+
+    function renderCarousel() {
+      const carouselSection = document.getElementById('carouselSection');
+      const carouselContainer = document.getElementById('carouselContainer');
+      const featuredMovies = allMovies.filter(m => m.featured);
+
+      if (featuredMovies.length === 0) {
+        carouselSection.classList.add('hidden');
+        return;
+      }
+
+      carouselSection.classList.remove('hidden');
+      carouselContainer.innerHTML = '';
+
+      featuredMovies.forEach(movie => {
+        const card = document.createElement('div');
+        card.className = 'carousel-card p-4 rounded-2xl flex-shrink-0 shadow-2xl relative flex flex-col justify-between';
+
+        let qualityButtons = '';
+        if (movie.links['480p']) qualityButtons += `<button onclick="playClickSound(); openTelegramFile('${movie.links['480p']}', '${movie.title.replace(/'/g, "\\'")}')" class="flex-1 bg-gray-800 hover:bg-gray-700 text-gray-200 font-bold py-2 rounded-xl text-xs border border-gray-700/60 cursor-pointer">480p</button>`;
+        if (movie.links['720p']) qualityButtons += `<button onclick="playClickSound(); openTelegramFile('${movie.links['720p']}', '${movie.title.replace(/'/g, "\\'")}')" class="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-2 rounded-xl text-xs shadow-lg cursor-pointer">720p</button>`;
+        if (movie.links['1080p']) qualityButtons += `<button onclick="playClickSound(); openTelegramFile('${movie.links['1080p']}', '${movie.title.replace(/'/g, "\\'")}')" class="flex-1 bg-amber-600 hover:bg-amber-700 text-white font-bold py-2 rounded-xl text-xs shadow-lg cursor-pointer">1080p</button>`;
+
+        card.innerHTML = `
+          <div>
+            <div class="flex items-center justify-between mb-1.5">
+              <span class="bg-red-600 text-white font-black text-[9px] px-2 py-0.5 rounded-md uppercase tracking-wider">FEATURED</span>
+              ${checkAdminAccess() ? `<button onclick="copySheetTitle('${movie.title.replace(/'/g, "\\'")}')" class="text-[10px] bg-amber-500/20 text-amber-400 border border-amber-500/40 px-2 py-0.5 rounded-md font-bold">📋 Copy Admin Title</button>` : ''}
+            </div>
+            <div class="text-base font-extrabold text-white leading-tight font-impact tracking-wide mb-1">
+              ${movie.title} ${movie.year ? `<span class="text-gray-400 font-normal text-xs">(${movie.year})</span>` : ''}
+            </div>
+          </div>
+          <div class="flex space-x-2 mt-3">
+            ${qualityButtons}
+          </div>
+        `;
+        carouselContainer.appendChild(card);
+      });
+
+      startAutoScrollCarousel();
+    }
+
+    let carouselInterval;
+    function startAutoScrollCarousel() {
+      const container = document.getElementById('carouselContainer');
+      if (!container) return;
+      clearInterval(carouselInterval);
+
+      carouselInterval = setInterval(() => {
+        if (container.scrollLeft + container.clientWidth >= container.scrollWidth - 10) {
+          container.scrollTo({ left: 0, behavior: 'smooth' });
+        } else {
+          container.scrollBy({ left: 280, behavior: 'smooth' });
+        }
+      }, 3500);
+    }
+
+    function copySheetTitle(title) {
+      playClickSound();
+      navigator.clipboard.writeText(title);
+      alert(`Title "${title}" copied! To feature/unfeature, set Column H (Featured) to YES or NO in your Google Sheet.`);
+    }
+      
     function playClickSound() {
       try {
         const AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -498,7 +604,7 @@
         const data = JSON.parse(jsonMatch[1]);
         const rows = data.table.rows;
 
-        allMovies = rows.map((row, index) => {
+                allMovies = rows.map((row, index) => {
           const title = row.c && row.c[0] ? row.c[0].v : '';
           const year = row.c && row.c[1] ? row.c[1].v : '';
           const genres = row.c && row.c[2] ? row.c[2].v : '';
@@ -506,6 +612,7 @@
           const link720 = row.c && row.c[4] ? row.c[4].v : '';
           const link1080 = row.c && row.c[5] ? row.c[5].v : '';
           const tags = row.c && row.c[6] ? row.c[6].v : '';
+          const featured = row.c && row.c[7] ? row.c[7].v : ''; // Column H
 
           return {
             id: index,
@@ -517,10 +624,11 @@
               '720p': link720 ? String(link720).trim() : '',
               '1080p': link1080 ? String(link1080).trim() : ''
             },
-            tags: tags ? String(tags).trim() : ''
+            tags: tags ? String(tags).trim() : '',
+            featured: featured ? String(featured).trim().toUpperCase() === 'YES' || String(featured).trim().toUpperCase() === 'TRUE' : false
           };
         }).filter(item => item.title && (item.links['480p'] || item.links['720p'] || item.links['1080p']));
-
+        
         allMovies.reverse();
 
         renderHomeFeed();
@@ -820,6 +928,9 @@
     }
 
     function renderHomeFeed() {
+    renderCarousel();
+    checkAdminAccess();
+      
       const recContainer = document.getElementById("recommendationsContainer");
       const latestContainer = document.getElementById("latestContainer");
 
