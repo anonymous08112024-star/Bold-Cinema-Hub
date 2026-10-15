@@ -14,6 +14,13 @@
   <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     .hidden { display: none !important; }
+    /* Cinema ambient lighting + vignette */
+    .ambient-layer { position: fixed; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; }
+    .ambient-pool { position: absolute; border-radius: 9999px; will-change: transform; }
+    .vignette {
+      position: fixed; inset: 0; z-index: 1; pointer-events: none;
+      background: radial-gradient(ellipse 85% 75% at 50% 45%, transparent 55%, rgba(0, 0, 0, 0.55) 100%);
+    }
     .no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
     .no-scrollbar::-webkit-scrollbar { display: none; }
     /* Admin Carousel Styling */
@@ -30,9 +37,18 @@
     .carousel-card {
       scroll-snap-align: center;
       flex: 0 0 88%;
-      background: linear-gradient(135deg, rgba(220, 38, 38, 0.2), rgba(22, 24, 29, 0.95));
-      border: 1px solid rgba(220, 38, 38, 0.4);
-      backdrop-filter: blur(12px);
+      background:
+        radial-gradient(120% 90% at 0% 0%, rgba(220, 38, 38, 0.22), transparent 60%),
+        linear-gradient(145deg, rgba(34, 24, 28, 0.78) 0%, rgba(22, 24, 29, 0.75) 45%, rgba(11, 12, 14, 0.85) 100%);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      -webkit-backdrop-filter: blur(16px);
+      backdrop-filter: blur(16px);
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.10),
+        inset 0 0 40px rgba(220, 38, 38, 0.06),
+        0 18px 40px -12px rgba(0, 0, 0, 0.75),
+        0 6px 14px rgba(0, 0, 0, 0.45),
+        0 0 28px rgba(220, 38, 38, 0.12);
     }
     
     body {
@@ -46,16 +62,35 @@
       letter-spacing: -0.02em;
     }
     .glass-card {
-      background: rgba(22, 24, 29, 0.85);
+      background: linear-gradient(145deg, rgba(22, 24, 29, 0.75) 0%, rgba(17, 18, 22, 0.80) 50%, rgba(11, 12, 14, 0.85) 100%);
       border: 1px solid rgba(255, 255, 255, 0.08);
-      backdrop-filter: blur(12px);
-      transition: all 0.3s ease;
+      -webkit-backdrop-filter: blur(16px);
+      backdrop-filter: blur(16px);
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.07),
+        0 14px 32px -10px rgba(0, 0, 0, 0.70),
+        0 4px 10px rgba(0, 0, 0, 0.40);
+      transition: border-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
+    }
+    .glass-card:hover {
+      border-color: rgba(255, 255, 255, 0.14);
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.10),
+        0 18px 38px -10px rgba(0, 0, 0, 0.80),
+        0 4px 12px rgba(0, 0, 0, 0.45),
+        0 0 24px rgba(245, 158, 11, 0.06);
     }
     .spotlight-card {
-      background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(22, 24, 29, 0.95));
-      border: 1px solid rgba(245, 158, 11, 0.5);
-      box-shadow: 0 0 30px rgba(245, 158, 11, 0.25);
-      backdrop-filter: blur(12px);
+      background:
+        radial-gradient(120% 90% at 0% 0%, rgba(245, 158, 11, 0.20), transparent 60%),
+        linear-gradient(145deg, rgba(34, 28, 20, 0.80) 0%, rgba(22, 24, 29, 0.78) 50%, rgba(11, 12, 14, 0.88) 100%);
+      border: 1px solid rgba(245, 158, 11, 0.40);
+      -webkit-backdrop-filter: blur(16px);
+      backdrop-filter: blur(16px);
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.10),
+        0 18px 40px -12px rgba(0, 0, 0, 0.75),
+        0 0 36px rgba(245, 158, 11, 0.22);
       animation: fadeIn 0.4s ease-out forwards;
     }
     @keyframes shimmer {
@@ -74,6 +109,15 @@
   </style>
 </head>
 <body class="pb-24 max-w-md mx-auto min-h-screen flex flex-col relative">
+
+  <!-- CINEMA AMBIENT LIGHTING -->
+  <div class="ambient-layer" aria-hidden="true">
+    <div class="ambient-pool bg-red-700/20 blur-3xl w-[26rem] h-[26rem] -top-32 -left-32"></div>
+    <div class="ambient-pool bg-amber-500/10 blur-3xl w-[22rem] h-[22rem] top-1/3 -right-40"></div>
+    <div class="ambient-pool bg-red-900/25 blur-3xl w-[28rem] h-[28rem] -bottom-40 -left-24"></div>
+    <div class="ambient-pool bg-amber-600/10 blur-3xl w-[18rem] h-[18rem] -bottom-20 right-0"></div>
+  </div>
+  <div class="vignette" aria-hidden="true"></div>
 
   <!-- FORCE JOIN OVERLAY -->
   <div id="joinModal" class="fixed inset-0 z-50 bg-[#0b0c0e]/95 backdrop-blur-xl flex flex-col items-center justify-center p-6 text-center">
@@ -108,7 +152,7 @@
 
   <!-- MOVIE REQUEST MODAL -->
   <div id="requestModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-5">
-    <div class="glass-card w-full max-w-xs p-5 rounded-2xl border border-gray-700/80 shadow-2xl">
+    <div class="glass-card w-full max-w-xs p-5 rounded-2xl">
       <div class="flex justify-between items-center mb-3">
         <h3 class="text-sm font-bold text-white font-impact tracking-wider">REQUEST A MOVIE</h3>
         <button onclick="toggleRequestModal(false)" class="text-gray-400 hover:text-white text-lg font-bold px-2 cursor-pointer">&times;</button>
@@ -138,7 +182,9 @@
   <!-- HOME VIEW CONTAINER -->
   <div id="homeView" class="flex-1 flex flex-col">
     <header id="topHeader" class="relative px-5 pt-8 pb-4 border-b border-gray-800/60 overflow-hidden">
-      <div class="absolute -top-10 left-1/2 -translate-x-1/2 w-72 h-36 bg-red-600/10 rounded-full blur-3xl pointer-events-none"></div>
+      <div class="absolute -top-10 left-1/2 -translate-x-1/2 w-80 h-44 bg-red-600/20 rounded-full blur-3xl pointer-events-none"></div>
+      <div class="absolute top-6 -right-16 w-56 h-56 bg-amber-500/15 rounded-full blur-3xl pointer-events-none"></div>
+      <div class="absolute -bottom-10 -left-16 w-56 h-40 bg-red-800/15 rounded-full blur-3xl pointer-events-none"></div>
 
       <div class="flex items-center justify-between mb-1">
         <div onclick="resetToHome()" class="flex items-center space-x-2 text-[11px] font-semibold text-blue-400 tracking-widest uppercase cursor-pointer hover:opacity-85 transition-opacity">
@@ -359,7 +405,7 @@
 
       featuredMovies.forEach(movie => {
         const card = document.createElement('div');
-        card.className = 'carousel-card p-4 rounded-2xl flex-shrink-0 shadow-2xl relative flex flex-col justify-between';
+        card.className = 'carousel-card p-4 rounded-2xl flex-shrink-0 relative flex flex-col justify-between';
 
         let qualityButtons = '';
         if (movie.links['480p']) qualityButtons += `<button onclick="playClickSound(); openTelegramFile(${jsq(movie.links['480p'])}, ${jsq(movie.title)})" class="flex-1 bg-gray-800 hover:bg-gray-700 text-gray-200 font-bold py-2 rounded-xl text-xs border border-gray-700/60 cursor-pointer">480p</button>`;
@@ -723,7 +769,7 @@
 
     function createMovieCard(movie) {
       const card = document.createElement("div");
-      card.className = "glass-card p-4 rounded-2xl flex flex-col justify-between shadow-xl border border-gray-800/80 hover:border-gray-700/60 transition-all";
+      card.className = "glass-card p-4 rounded-2xl flex flex-col justify-between";
 
       const genresStr = movie.genres || ((allMovies.find(m => m.title === movie.title) || {}).genres) || '';
       let genreHtml = '';
@@ -798,7 +844,7 @@
       if (selectedMovie.links['1080p']) qualityButtons += `<button onclick="playClickSound(); openTelegramFile(${jsq(selectedMovie.links['1080p'])}, ${jsq(selectedMovie.title)})" class="flex-1 bg-amber-600 hover:bg-amber-700 text-white font-bold py-2.5 rounded-xl text-xs transition-all cursor-pointer">1080p</button>`;
 
       spotlightEl.innerHTML = `
-        <div class="spotlight-card p-4 rounded-2xl relative shadow-2xl">
+        <div class="spotlight-card p-4 rounded-2xl relative">
           <div class="flex items-center justify-between mb-2">
             <span class="text-[10px] font-extrabold text-amber-400 tracking-widest uppercase flex items-center space-x-1">
               <span>✨ YOUR MYSTERY SPOTLIGHT</span>
