@@ -14,6 +14,17 @@
   <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     .hidden { display: none !important; }
+    /* Cinematic details bottom sheet */
+    .details-sheet {
+      background: linear-gradient(160deg, rgba(26, 28, 34, 0.92) 0%, rgba(11, 12, 14, 0.96) 100%);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-bottom: none;
+      -webkit-backdrop-filter: blur(20px);
+      backdrop-filter: blur(20px);
+      box-shadow: 0 -20px 60px rgba(0, 0, 0, 0.7), 0 0 40px rgba(220, 38, 38, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.10);
+      animation: sheetUp 0.35s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+    }
+    @keyframes sheetUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
     /* Cinema ambient lighting + vignette */
     .ambient-layer { position: fixed; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; }
     .ambient-pool { position: absolute; border-radius: 9999px; will-change: transform; }
@@ -150,6 +161,47 @@
     </div>
   </div>
 
+  <!-- CINEMATIC DETAILS BOTTOM SHEET -->
+  <div id="detailsModal" class="fixed inset-0 z-[60] hidden flex items-end justify-center bg-black/70 backdrop-blur-sm" onclick="if (event.target === this) closeDetails()">
+    <div class="details-sheet relative w-full max-w-md max-h-[90vh] overflow-y-auto overflow-x-hidden rounded-t-3xl">
+      <div class="absolute inset-x-0 top-0 h-56 overflow-hidden pointer-events-none">
+        <div id="detailsHero" class="absolute inset-0 bg-cover bg-center opacity-40 blur-xl scale-110"></div>
+        <div class="absolute inset-0 bg-gradient-to-b from-transparent via-[#0b0c0e]/60 to-[#0b0c0e]/95"></div>
+      </div>
+      <div class="relative px-5 pt-3 pb-4">
+        <div class="mx-auto w-10 h-1 rounded-full bg-white/25 mb-4"></div>
+        <button onclick="closeDetails()" class="absolute top-3 right-4 w-8 h-8 rounded-full bg-black/40 border border-white/10 text-gray-300 hover:text-white text-lg leading-none flex items-center justify-center cursor-pointer">&times;</button>
+        <div class="flex gap-4 items-end">
+          <div id="detPoster" class="shrink-0"></div>
+          <div class="flex-1 min-w-0 pb-1">
+            <h3 id="detTitle" class="text-xl font-extrabold text-white font-impact leading-tight tracking-wide"></h3>
+            <div id="detYear" class="text-xs text-gray-400 mt-0.5"></div>
+            <div id="detChips" class="flex flex-wrap gap-1.5 mt-2"></div>
+          </div>
+        </div>
+        <div id="detGenres" class="mt-4"></div>
+        <div class="mt-5">
+          <div class="text-[10px] font-bold text-amber-400 tracking-widest uppercase mb-1.5">Plot Synopsis</div>
+          <p id="detPlot" class="text-[13px] text-gray-300 leading-relaxed"></p>
+        </div>
+        <div class="mt-5 space-y-3">
+          <div>
+            <div class="text-[10px] font-bold text-red-500 tracking-widest uppercase mb-0.5">Director</div>
+            <div id="detDirector" class="text-[13px] text-gray-200"></div>
+          </div>
+          <div>
+            <div class="text-[10px] font-bold text-red-500 tracking-widest uppercase mb-0.5">Starring</div>
+            <div id="detActors" class="text-[13px] text-gray-200"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sticky bottom-0 px-5 py-3 bg-[#0b0c0e]/90 backdrop-blur-lg border-t border-white/10 flex items-center gap-2">
+        <div id="detActions" class="flex flex-1 space-x-2"></div>
+        <button id="detBookmark" onclick="toggleDetailsBookmark()" class="shrink-0 w-11 h-11 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-gray-300 cursor-pointer" title="Bookmark"></button>
+      </div>
+    </div>
+  </div>
+
   <!-- MOVIE REQUEST MODAL -->
   <div id="requestModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-5">
     <div class="glass-card w-full max-w-xs p-5 rounded-2xl">
@@ -226,6 +278,7 @@
         <!-- GENRE FILTER PILLS BAR -->
         <div id="genrePillsBar" class="flex items-center space-x-2 overflow-x-auto py-1 scrollbar-none no-scrollbar">
           <button onclick="filterByGenre('All')" class="genre-pill bg-red-600 text-white font-bold px-3.5 py-1.5 rounded-full text-[11px] whitespace-nowrap shadow-md cursor-pointer transition-all">🔥 All</button>
+          <button onclick="showTopRated()" data-genre="TOP" class="genre-pill bg-[#16181d] text-gray-300 border border-gray-800 font-semibold px-3.5 py-1.5 rounded-full text-[11px] whitespace-nowrap cursor-pointer hover:border-gray-700 transition-all">⭐ Top Rated</button>
           <button onclick="filterByGenre('Action')" class="genre-pill bg-[#16181d] text-gray-300 border border-gray-800 font-semibold px-3.5 py-1.5 rounded-full text-[11px] whitespace-nowrap cursor-pointer hover:border-gray-700 transition-all">Action</button>
           <button onclick="filterByGenre('Horror')" class="genre-pill bg-[#16181d] text-gray-300 border border-gray-800 font-semibold px-3.5 py-1.5 rounded-full text-[11px] whitespace-nowrap cursor-pointer hover:border-gray-700 transition-all">Horror</button>
           <button onclick="filterByGenre('Sci-Fi')" class="genre-pill bg-[#16181d] text-gray-300 border border-gray-800 font-semibold px-3.5 py-1.5 rounded-full text-[11px] whitespace-nowrap cursor-pointer hover:border-gray-700 transition-all">Sci-Fi</button>
@@ -432,6 +485,8 @@
           </div>
         `;
         attachPoster(card.querySelector('.poster-box'), movie);
+        card.classList.add('cursor-pointer');
+        card.addEventListener('click', e => { if (!e.target.closest('button, a')) openDetails(movie); });
         carouselContainer.appendChild(card);
       });
 
@@ -587,6 +642,7 @@
     }
 
     function filterByGenreFromCard(genre) {
+      closeDetails();
       const libraryView = document.getElementById('libraryView');
       if (libraryView && !libraryView.classList.contains('hidden')) {
         switchTab('home');
@@ -605,7 +661,7 @@
     function updateGenrePillsUI() {
       const pills = document.querySelectorAll('.genre-pill');
       pills.forEach(pill => {
-        const text = pill.innerText.replace('🔥 ', '').trim();
+        const text = (pill.dataset.genre || pill.innerText.replace('🔥 ', '')).trim();
         if (text.toLowerCase() === activeGenreFilter.toLowerCase() || (activeGenreFilter === 'All' && text === 'All')) {
           pill.className = "genre-pill bg-red-600 text-white font-bold px-3.5 py-1.5 rounded-full text-[11px] whitespace-nowrap shadow-md cursor-pointer transition-all";
         } else {
@@ -630,7 +686,7 @@
       localStorage.setItem('bold_cinema_watchlist', JSON.stringify(watchlist));
       renderHomeFeed();
       if (!document.getElementById('searchResultsFeed').classList.contains('hidden')) {
-        handleSearchInput();
+        refreshResultsView();
       }
       if (!document.getElementById('libraryView').classList.contains('hidden')) {
         renderLibrary();
@@ -753,6 +809,7 @@
       allMovies = parsed.filter(item => item.title && (item.links['480p'] || item.links['720p'] || item.links['1080p']));
 
       allMovies.reverse(); // newest rows first
+      allMovies.forEach(m => { if (!m.genres) { const e = getMetaCached(m); if (e && e.g) m.genres = e.g; } });
 
       try { showAdminDebug(cols, rows.length, parsed, allMovies); } catch (e) { console.error(e); }
 
@@ -774,11 +831,12 @@
         .toLowerCase();
     }
 
-    // ===================== POSTERS (OMDb) =====================
+    // ===================== OMDb METADATA + POSTERS =====================
     const OMDB_KEY = '9bce98fc';
-    const POSTER_CACHE_KEY = 'bold_cinema_poster_cache';
-    const POSTER_MISS_TTL = 7 * 24 * 60 * 60 * 1000; // retry "no poster" results after 7 days
-    const POSTER_CONCURRENCY = 4;
+    const POSTER_CACHE_KEY = 'bold_cinema_poster_cache'; // poster + rating + details, one entry per movie
+    const META_VERSION = 2;
+    const MISS_TTL = 7 * 24 * 60 * 60 * 1000; // retry "not found" results after 7 days
+    const META_CONCURRENCY = 4;
     let omdbDisabled = false; // set when the daily request limit is hit
 
     let posterCache = (() => {
@@ -795,8 +853,7 @@
         try {
           localStorage.setItem(POSTER_CACHE_KEY, JSON.stringify(posterCache));
         } catch (e) {
-          // Storage full: drop the oldest half and try once more
-          try {
+          try { // storage full: drop the oldest half and retry once
             const keys = Object.keys(posterCache);
             keys.slice(0, Math.ceil(keys.length / 2)).forEach(k => delete posterCache[k]);
             localStorage.setItem(POSTER_CACHE_KEY, JSON.stringify(posterCache));
@@ -805,7 +862,11 @@
       }, 400);
     }
 
-    // "The Mentalist S05", "Show S01 (E01-15)", "Show Season 2" -> clean title OMDb understands
+    function esc(s) {
+      return String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+    }
+
+    // "The Mentalist S05", "Show S01 (E01-15)" -> clean title OMDb understands
     function cleanTitleForOmdb(title) {
       return String(title || '')
         .replace(/\(\s*E\d+(?:\s*[-–]\s*E?\d+)?\s*\)/gi, '')
@@ -821,61 +882,100 @@
       return cleanTitleForOmdb(movie.title).toLowerCase() + '|' + String(movie.year || '').trim();
     }
 
-    // Returns { url } (url may be '' = no poster) or { error: true } (network/limit, do not cache)
-    async function fetchOmdbPoster(title, year) {
+    function entryFresh(e) {
+      return !!(e && e.v === META_VERSION && (e.m !== 1 || (Date.now() - (e.t || 0)) < MISS_TTL));
+    }
+    function getMetaCached(movie) {
+      const e = posterCache[posterKey(movie)];
+      return entryFresh(e) ? e : null;
+    }
+    function ratingOf(movie) {
+      const e = getMetaCached(movie);
+      return e ? (parseFloat(e.r) || 0) : 0;
+    }
+    function validCustom(movie) {
+      const c = movie && movie.customPoster;
+      return (c && /^https?:\/\/\S+$/i.test(c)) ? c : '';
+    }
+
+    const na = v => (v && v !== 'N/A') ? String(v) : '';
+
+    // Returns { entry } (entry.m === 1 means "not found") or { error: true } (network/limit: never cached)
+    async function fetchOmdbMeta(title, year) {
       const cleanTitle = cleanTitleForOmdb(title);
       const yearMatch = String(year || '').match(/\d{4}/);
       const attempts = [];
       if (yearMatch) attempts.push(`t=${encodeURIComponent(cleanTitle)}&y=${encodeURIComponent(yearMatch[0])}`);
-      attempts.push(`t=${encodeURIComponent(cleanTitle)}`); // series seasons often fail with a year, so retry without it
+      attempts.push(`t=${encodeURIComponent(cleanTitle)}`); // seasons often fail with a year, so retry without it
       let hadError = false;
 
       for (const q of attempts) {
         try {
-          const res = await fetch(`https://www.omdbapi.com/?${q}&apikey=${OMDB_KEY}`);
+          const res = await fetch(`https://www.omdbapi.com/?${q}&plot=full&apikey=${OMDB_KEY}`);
           if (res.status === 401) { omdbDisabled = true; return { error: true }; }
           if (!res.ok) { hadError = true; continue; }
           const d = await res.json();
-          if (d && d.Response === 'True' && d.Poster && d.Poster !== 'N/A') return { url: d.Poster };
+          if (d && d.Response === 'True') {
+            return { entry: {
+              v: META_VERSION, t: Date.now(),
+              u: na(d.Poster), r: na(d.imdbRating), rt: na(d.Runtime), ag: na(d.Rated),
+              pl: na(d.Plot), ac: na(d.Actors), di: na(d.Director), g: na(d.Genre)
+            } };
+          }
           if (d && /limit/i.test(d.Error || '')) { omdbDisabled = true; return { error: true }; }
         } catch (e) { hadError = true; }
       }
-      return hadError ? { error: true } : { url: '' };
+      return hadError ? { error: true } : { entry: { v: META_VERSION, t: Date.now(), m: 1 } };
     }
 
-    const pendingPosters = {};
-    const posterQueue = [];
-    let posterActive = 0;
+    const pendingMeta = {};   // key -> [callbacks]
+    const metaQueue = [];
+    let metaActive = 0;
 
-    function requestPoster(movie, el) {
+    function requestMeta(movie, cb, urgent) {
       const key = posterKey(movie);
-      (pendingPosters[key] = pendingPosters[key] || []).push(el);
-      if (pendingPosters[key].length > 1) return; // same movie already queued/in flight
-      posterQueue.push({ key, title: movie.title, year: movie.year });
-      runPosterQueue();
+      if (pendingMeta[key]) {
+        if (cb) pendingMeta[key].push(cb);
+        if (urgent) {
+          const i = metaQueue.findIndex(j => j.key === key);
+          if (i > 0) metaQueue.unshift(metaQueue.splice(i, 1)[0]);
+        }
+        return;
+      }
+      pendingMeta[key] = cb ? [cb] : [];
+      const job = { key, title: movie.title, year: movie.year };
+      if (urgent) metaQueue.unshift(job); else metaQueue.push(job);
+      runMetaQueue();
     }
 
-    function runPosterQueue() {
-      while (posterActive < POSTER_CONCURRENCY && posterQueue.length && !omdbDisabled) {
-        const job = posterQueue.shift();
-        posterActive++;
-        fetchOmdbPoster(job.title, job.year)
+    function runMetaQueue() {
+      if (omdbDisabled) { // limit reached: release everyone waiting
+        while (metaQueue.length) {
+          const j = metaQueue.shift();
+          (pendingMeta[j.key] || []).forEach(cb => { try { cb(null); } catch (e) {} });
+          delete pendingMeta[j.key];
+        }
+        return;
+      }
+      while (metaActive < META_CONCURRENCY && metaQueue.length) {
+        const job = metaQueue.shift();
+        metaActive++;
+        fetchOmdbMeta(job.title, job.year)
           .then(r => {
-            if (!r.error) {
-              posterCache[job.key] = { u: r.url, t: Date.now() };
-              schedulePosterCacheSave();
-            }
-            const els = pendingPosters[job.key] || [];
-            delete pendingPosters[job.key];
-            if (r.url) els.forEach(el => applyPoster(el, r.url));
+            let entry = null;
+            if (!r.error) { entry = r.entry; posterCache[job.key] = entry; schedulePosterCacheSave(); }
+            const cbs = pendingMeta[job.key] || [];
+            delete pendingMeta[job.key];
+            cbs.forEach(cb => { try { cb(entry); } catch (e) { console.error(e); } });
+            if (entry && activeGenreFilter === 'TOP') scheduleTopRender();
           })
-          .catch(() => { delete pendingPosters[job.key]; })
-          .finally(() => { posterActive--; runPosterQueue(); });
+          .catch(() => { delete pendingMeta[job.key]; })
+          .finally(() => { metaActive--; runMetaQueue(); });
       }
     }
 
     function applyPoster(el, url, onFail) {
-      if (!el || el.querySelector('img')) return;
+      if (!el || !url || el.querySelector('img')) return;
       const img = new Image();
       img.alt = '';
       img.decoding = 'async';
@@ -888,11 +988,55 @@
         const ph = el.querySelector('.poster-fallback');
         if (ph) ph.classList.add('opacity-0');
       };
-      img.onerror = () => { if (onFail) onFail(); }; // otherwise the gradient fallback simply stays
+      img.onerror = () => { if (onFail) onFail(); };
       img.src = String(url).replace(/^http:/i, 'https:');
     }
 
-    // Loads posters only for cards that are (almost) on screen, which keeps API usage low
+    function applyRating(el, r) {
+      const badge = el && el.querySelector('.rating-badge');
+      const v = parseFloat(r);
+      if (!badge || !v) return;
+      badge.textContent = '⭐ ' + v.toFixed(1);
+      badge.classList.remove('hidden');
+    }
+
+    function genrePillsHtml(genresStr, tone = 'red', limit = 3) {
+      const c = tone === 'amber'
+        ? 'bg-amber-500/20 hover:bg-amber-500/35 text-amber-400 border-amber-500/40'
+        : 'bg-red-500/20 hover:bg-red-500/35 text-red-400 border-red-500/40';
+      const items = String(genresStr || '').split(',').map(g => g.trim()).filter(Boolean).slice(0, limit)
+        .map(g => `<button type="button" onclick="filterByGenreFromCard(${jsq(g)})" class="${c} active:scale-95 border text-[9px] font-bold px-2 py-0.5 rounded-md uppercase cursor-pointer transition-all">${esc(g)}</button>`)
+        .join('');
+      return `<div class="genre-wrap flex flex-wrap gap-1.5">${items}</div>`;
+    }
+
+    // Poster priority: 1) Column I custom URL  2) OMDb poster  3) glass placeholder. Rating/genres/details come from OMDb.
+    function loadPoster(el, movie) {
+      const cat = allMovies.find(m => m.title === movie.title) || movie;
+      const custom = validCustom(cat);
+      let customFailed = false;
+
+      const onMeta = entry => {
+        if (!entry) return;
+        applyRating(el, entry.r);
+        if (!cat.genres && entry.g) { // Column C empty -> use OMDb genres
+          cat.genres = entry.g;
+          const host = el.closest('.glass-card, .spotlight-card');
+          const wrap = host && host.querySelector('.genre-wrap');
+          if (wrap) wrap.outerHTML = genrePillsHtml(cat.genres, host.classList.contains('spotlight-card') ? 'amber' : 'red', host.classList.contains('spotlight-card') ? 4 : 3);
+        }
+        if (!custom || customFailed) applyPoster(el, entry.u);
+      };
+
+      if (custom) {
+        applyPoster(el, custom, () => { customFailed = true; const e = getMetaCached(cat); if (e) applyPoster(el, e.u); });
+      }
+      const cached = getMetaCached(cat);
+      if (cached) onMeta(cached);
+      else if (!omdbDisabled) requestMeta(cat, onMeta, true);
+    }
+
+    // Loads posters/ratings only for cards that are (almost) on screen, which keeps API usage low
     const posterObserver = ('IntersectionObserver' in window)
       ? new IntersectionObserver(entries => {
           entries.forEach(entry => {
@@ -903,34 +1047,13 @@
         }, { rootMargin: '300px 0px' })
       : null;
 
-    // Priority: 1) Column I custom URL  2) OMDb (cached)  3) glass placeholder
-    function loadPoster(el, movie) {
-      // Library items (watchlist/history) don't store the custom URL, so look it up in the catalog
-      const entry = (movie.customPoster !== undefined) ? movie : (allMovies.find(m => m.title === movie.title) || {});
-      const custom = entry.customPoster;
-
-      const viaOmdb = () => {
-        const cached = posterCache[posterKey(movie)];
-        if (cached && cached.u) { applyPoster(el, cached.u); return; }
-        if (cached && !cached.u && (Date.now() - (cached.t || 0)) < POSTER_MISS_TTL) return; // known "no poster"
-        if (omdbDisabled) return;
-        requestPoster(movie, el);
-      };
-
-      if (custom && /^https?:\/\/\S+$/i.test(custom)) {
-        applyPoster(el, custom, viaOmdb); // if the custom image fails to load, fall back to OMDb
-      } else {
-        viaOmdb();
-      }
-    }
-
     function attachPoster(el, movie) {
       if (!el || !movie || !movie.title) return;
       el._posterMovie = movie;
       if (posterObserver) posterObserver.observe(el); else loadPoster(el, movie);
     }
 
-    // Poster slot: uniform 2:3 box with a glass-gradient cinema placeholder until the image arrives
+    // Poster slot: uniform 2:3 box, IMDb badge overlay, glass-gradient cinema placeholder
     function posterBoxHtml(widthClass) {
       return `
         <div class="poster-box relative ${widthClass} shrink-0 aspect-[2/3] rounded-xl overflow-hidden self-start ring-1 ring-white/10 shadow-lg shadow-black/50 bg-[#14161b]">
@@ -939,22 +1062,176 @@
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z"></path>
             </svg>
           </div>
+          <span class="rating-badge hidden absolute top-1 left-1 z-10 text-[10px] font-extrabold text-amber-300 bg-black/70 backdrop-blur-sm border border-amber-400/30 px-1.5 py-0.5 rounded-md"></span>
         </div>`;
     }
 
+    // ===================== CINEMATIC DETAILS SHEET =====================
+    let detailsMovie = null;
+
+    function qualityButtonsHtml(m) {
+      const t = jsq(m.title);
+      const defs = [
+        ['480p', 'bg-gray-800 hover:bg-gray-700 text-gray-200 border border-gray-700/60'],
+        ['720p', 'bg-red-600 hover:bg-red-700 text-white shadow-lg shadow-red-900/30'],
+        ['1080p', 'bg-amber-600 hover:bg-amber-700 text-white shadow-lg shadow-amber-900/30']
+      ];
+      return defs.filter(([q]) => m.links && m.links[q]).map(([q, c]) =>
+        `<button onclick="playClickSound(); openTelegramFile(${jsq(m.links[q])}, ${t})" class="flex-1 ${c} font-bold py-3 rounded-xl text-xs transition-all active:scale-[0.97] cursor-pointer">${q}</button>`
+      ).join('');
+    }
+
+    function setHero(url) {
+      const hero = document.getElementById('detailsHero');
+      if (hero && url) hero.style.backgroundImage = `url("${String(url).replace(/^http:/i, 'https:').replace(/"/g, '%22')}")`;
+    }
+
+    function renderDetailsBookmark() {
+      const btn = document.getElementById('detBookmark');
+      if (!btn || !detailsMovie) return;
+      const saved = readStore('bold_cinema_watchlist').some(i => i.title === detailsMovie.title);
+      btn.innerHTML = `<svg class="w-5 h-5 ${saved ? 'text-amber-400 fill-amber-400' : ''}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"></path></svg>`;
+    }
+
+    function toggleDetailsBookmark() {
+      if (!detailsMovie) return;
+      toggleWatchlist(detailsMovie.title, detailsMovie.year);
+      renderDetailsBookmark();
+    }
+
+    function fillDetails(m, entry) {
+      const plot = document.getElementById('detPlot');
+      plot.classList.remove('animate-pulse');
+      if (!entry) {
+        plot.textContent = 'Details are unavailable right now. Please try again later.';
+        return;
+      }
+      if (entry.u && !validCustom(m)) setHero(entry.u);
+      if (!m.genres && entry.g) {
+        m.genres = entry.g;
+        document.getElementById('detGenres').innerHTML = genrePillsHtml(m.genres, 'red', 6);
+      }
+      const chip = (txt, cls) => `<span class="${cls} text-[11px] font-bold px-2 py-0.5 rounded-md border">${esc(txt)}</span>`;
+      const chips = [];
+      if (entry.r) chips.push(chip('⭐ ' + entry.r + '/10', 'bg-amber-500/15 text-amber-300 border-amber-400/40'));
+      if (entry.rt) chips.push(chip(entry.rt, 'bg-white/5 text-gray-200 border-white/15'));
+      if (entry.ag) chips.push(chip(entry.ag, 'bg-white/5 text-gray-200 border-white/15'));
+      document.getElementById('detChips').innerHTML = chips.join('');
+      plot.textContent = entry.pl || 'No synopsis available.';
+      document.getElementById('detDirector').textContent = entry.di || '—';
+      document.getElementById('detActors').textContent = entry.ac || '—';
+    }
+
+    function openDetails(movie) {
+      const m = allMovies.find(x => x.title === movie.title) || movie;
+      detailsMovie = m;
+      playClickSound();
+
+      document.getElementById('detTitle').textContent = m.title;
+      document.getElementById('detYear').textContent = m.year || '';
+      document.getElementById('detChips').innerHTML = '';
+      const plot = document.getElementById('detPlot');
+      plot.textContent = 'Loading details…';
+      plot.classList.add('animate-pulse');
+      document.getElementById('detDirector').textContent = '—';
+      document.getElementById('detActors').textContent = '—';
+      document.getElementById('detailsHero').style.backgroundImage = '';
+      document.getElementById('detGenres').innerHTML = genrePillsHtml(m.genres, 'red', 6);
+      document.getElementById('detActions').innerHTML = qualityButtonsHtml(m);
+      const posterWrap = document.getElementById('detPoster');
+      posterWrap.innerHTML = posterBoxHtml('w-32');
+      renderDetailsBookmark();
+
+      const modal = document.getElementById('detailsModal');
+      modal.classList.remove('hidden');
+      if (modal.firstElementChild) modal.firstElementChild.scrollTop = 0;
+      document.body.style.overflow = 'hidden';
+
+      if (validCustom(m)) setHero(validCustom(m));
+      loadPoster(posterWrap.firstElementChild, m);
+
+      const cached = getMetaCached(m);
+      if (cached) fillDetails(m, cached);
+      else if (omdbDisabled) fillDetails(m, null);
+      else requestMeta(m, entry => { if (detailsMovie === m) fillDetails(m, entry); }, true);
+    }
+
+    function closeDetails() {
+      const modal = document.getElementById('detailsModal');
+      if (modal) modal.classList.add('hidden');
+      detailsMovie = null;
+      document.body.style.overflow = '';
+    }
+
+    // ===================== TOP RATED (IMDb) =====================
+    let topRenderTimer = null;
+    let topPrefetched = false;
+    let lastTopSig = '';
+
+    function scheduleTopRender() {
+      if (topRenderTimer) return;
+      topRenderTimer = setTimeout(() => { topRenderTimer = null; renderTopRated(); }, 1500);
+    }
+
+    function prefetchRatings() { // one-time cost per movie; results are cached for good
+      if (topPrefetched || omdbDisabled) return;
+      topPrefetched = true;
+      allMovies.forEach(m => { if (!getMetaCached(m)) requestMeta(m, null, false); });
+    }
+
+    function renderTopRated() {
+      if (activeGenreFilter !== 'TOP') return;
+      const container = document.getElementById('searchContainer');
+      const total = allMovies.length;
+      const done = allMovies.filter(m => getMetaCached(m)).length;
+      const rated = allMovies.map(m => ({ m, r: ratingOf(m) })).filter(x => x.r > 0)
+        .sort((a, b) => b.r - a.r).slice(0, 100);
+
+      document.getElementById('searchFeedSubtitle').innerText =
+        done < total ? (omdbDisabled ? 'IMDb · daily limit reached, partial list' : `IMDb · loading ratings ${done}/${total}`) : 'IMDb · highest rated first';
+      document.getElementById('searchFeedTitle').innerText = 'TOP RATED';
+      document.getElementById('searchCount').innerText = `${rated.length} movies`;
+
+      const sig = rated.map(x => x.m.title).join('|');
+      if (sig === lastTopSig) return;
+      lastTopSig = sig;
+
+      container.innerHTML = '';
+      if (rated.length === 0) {
+        container.innerHTML = `<div class="text-center text-gray-500 py-12 text-xs">Fetching IMDb ratings… the first results will appear in a moment.</div>`;
+        return;
+      }
+      rated.forEach(x => container.appendChild(createMovieCard(x.m)));
+    }
+
+    function showTopRated() {
+      playClickSound();
+      activeGenreFilter = 'TOP';
+      updateGenrePillsUI();
+      const si = document.getElementById('searchInput');
+      if (si) si.value = '';
+      document.getElementById('defaultHomeFeed').classList.add('hidden');
+      document.getElementById('searchResultsFeed').classList.remove('hidden');
+      lastTopSig = '';
+      prefetchRatings();
+      renderTopRated();
+    }
+
+    // Re-renders whichever results view is open (used after bookmarking)
+    function refreshResultsView() {
+      const q = document.getElementById('searchInput').value.trim();
+      if (q) handleSearchInput();
+      else if (activeGenreFilter === 'TOP') { lastTopSig = ''; renderTopRated(); }
+      else if (activeGenreFilter !== 'All') filterByGenre(activeGenreFilter);
+    }
+
+    // ===================== MOVIE CARD =====================
     function createMovieCard(movie) {
       const card = document.createElement("div");
-      card.className = "glass-card p-3.5 rounded-2xl flex gap-3";
+      card.className = "glass-card p-3.5 rounded-2xl flex gap-3 cursor-pointer";
 
       const genresStr = movie.genres || ((allMovies.find(m => m.title === movie.title) || {}).genres) || '';
-      let genreHtml = '<div class="flex flex-wrap gap-1.5"></div>';
-      if (genresStr) {
-        genreHtml = '<div class="flex flex-wrap gap-1.5">';
-        genresStr.split(',').map(g => g.trim()).filter(Boolean).slice(0, 3).forEach(g => {
-          genreHtml += `<button type="button" onclick="filterByGenreFromCard(${jsq(g)})" class="bg-red-500/20 hover:bg-red-500/35 active:scale-95 text-red-400 border border-red-500/40 text-[9px] font-bold px-2 py-0.5 rounded-md uppercase cursor-pointer transition-all">${g}</button>`;
-        });
-        genreHtml += '</div>';
-      }
+      const genreHtml = genrePillsHtml(genresStr, 'red', 3);
 
       const watchlist = readStore('bold_cinema_watchlist');
       const isBookmarked = watchlist.some(item => item.title === movie.title);
@@ -994,6 +1271,7 @@
       `;
 
       attachPoster(card.querySelector('.poster-box'), movie);
+      card.addEventListener('click', e => { if (!e.target.closest('button, a')) openDetails(movie); });
       return card;
     }
 
@@ -1007,14 +1285,7 @@
       const spotlightEl = document.getElementById("surpriseSpotlight");
       spotlightEl.classList.remove("hidden");
 
-      let genreHtml = '';
-      if (selectedMovie.genres) {
-        genreHtml = '<div class="flex flex-wrap gap-1.5 mb-2.5">';
-        selectedMovie.genres.split(',').forEach(g => {
-          if (g.trim()) genreHtml += `<button type="button" onclick="filterByGenreFromCard(${jsq(g.trim())})" class="bg-amber-500/20 hover:bg-amber-500/35 active:scale-95 text-amber-400 border border-amber-500/40 text-[9px] font-bold px-2 py-0.5 rounded-md uppercase cursor-pointer transition-all">${g.trim()}</button>`;
-        });
-        genreHtml += '</div>';
-      }
+      const genreHtml = genrePillsHtml(selectedMovie.genres, 'amber', 4);
 
       const watchlist = readStore('bold_cinema_watchlist');
       const isBookmarked = watchlist.some(item => item.title === selectedMovie.title);
@@ -1061,6 +1332,9 @@
         </div>
       `;
       attachPoster(spotlightEl.querySelector('.poster-box'), selectedMovie);
+      const spotCard = spotlightEl.querySelector('.spotlight-card');
+      spotCard.classList.add('cursor-pointer');
+      spotCard.addEventListener('click', e => { if (!e.target.closest('button, a')) openDetails(selectedMovie); });
     }
 
     function closeSpotlight() {
