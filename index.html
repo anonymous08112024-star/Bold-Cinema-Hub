@@ -264,6 +264,7 @@
           <input type="text" id="admPriority" placeholder="Priority 1,2.. (Col H)" class="bg-[#14161b] text-white text-xs rounded-xl p-2.5 border border-gray-800 focus:ring-1 focus:ring-amber-500 outline-none" />
         </div>
         <input type="text" id="admPoster" placeholder="Custom Poster URL (Column I)" class="w-full bg-[#14161b] text-white text-xs rounded-xl p-2.5 border border-gray-800 focus:ring-1 focus:ring-amber-500 outline-none" />
+        <input type="text" id="admImdbId" placeholder="IMDb ID e.g. tt1196946 (Column J)" class="w-full bg-[#14161b] text-white text-xs rounded-xl p-2.5 border border-gray-800 focus:ring-1 focus:ring-amber-500 outline-none" />
       </div>
 
       <div id="adminFeedback" class="text-[10px] text-amber-400 mt-2.5 hidden text-center font-medium"></div>
@@ -461,6 +462,7 @@
     const SHEET_ID = '1nxx-Mn7zQ9u02Bc8NhiEsBMyNrZ_Vx9_7QL-EgHH7Nc'; 
     const SHEET_NAME = 'Clean Catalog';
     const CHANNEL_INVITE_LINK = 'https://t.me/+-HxYFImrFsU3OGZl';
+    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzcZWhSsZH2Cn11VuGL9wrUfetaGMaY0cNgUOeoU5jJYfj1fBOM0WGOYqvoCqqyxF-fDQ/exec';
 
     let allMovies = [];
     let activeGenreFilter = 'All';
@@ -783,8 +785,8 @@
       if (!el || !checkAdminAccess()) return;
       const noTitle = parsed.filter(m => !m.title).length;
       const noLinks = parsed.filter(m => m.title && !m.links['480p'] && !m.links['720p'] && !m.links['1080p']).length;
-      const labels = cols.slice(0, 8).map(c => String(c.label || c.id || '?').slice(0, 20)).join(' | ').replace(/</g, '&lt;');
-      el.innerHTML = `🛠 Admin debug: ${rowCount} rows received from Sheet · ${valid.length} valid movies · ${noTitle} without title · ${noLinks} without links · ${valid.filter(m => m.customPoster).length} custom posters (Column I)<br>Columns: ${labels}`;
+      const labels = cols.slice(0, 10).map(c => String(c.label || c.id || '?').slice(0, 20)).join(' | ').replace(/</g, '&lt;');
+      el.innerHTML = `🛠 Admin debug: ${rowCount} rows received from Sheet · ${valid.length} valid movies · ${noTitle} without title · ${noLinks} without links · ${valid.filter(m => m.customPoster).length} custom posters · ${valid.filter(m => m.imdbId).length} IMDb IDs<br>Columns: ${labels}`;
       el.classList.remove('hidden');
     }
 
@@ -853,6 +855,7 @@
           },
           tags: String(cell(row, 6)).trim(),
           customPoster: (/^https?:\/\/\S+$/i.test(String(cell(row, 8)).trim())) ? String(cell(row, 8)).trim() : '', // Column I
+          imdbId: String(cell(row, 9)).trim(), // Column J: IMDb ID override
           featuredRaw,
           featured,
           priority: featured && isFinite(num) && num > 0 ? num : 999
@@ -932,7 +935,7 @@
     }
 
     function posterKey(movie) {
-      return cleanTitleForOmdb(movie.title).toLowerCase() + '|' + String(movie.year || '').trim();
+      return (movie.imdbId || (cleanTitleForOmdb(movie.title).toLowerCase() + '|' + String(movie.year || '').trim()));
     }
 
     function entryFresh(e) {
@@ -953,13 +956,15 @@
 
     const na = v => (v && v !== 'N/A') ? String(v) : '';
 
-    // Returns { entry } (entry.m === 1 means "not found") or { error: true } (network/limit: never cached)
-    async function fetchOmdbMeta(title, year) {
+    async function fetchOmdbMeta(title, year, imdbId) {
+      const attempts = [];
+      if (imdbId) {
+        attempts.push(`i=${encodeURIComponent(imdbId)}`);
+      }
       const cleanTitle = cleanTitleForOmdb(title);
       const yearMatch = String(year || '').match(/\d{4}/);
-      const attempts = [];
       if (yearMatch) attempts.push(`t=${encodeURIComponent(cleanTitle)}&y=${encodeURIComponent(yearMatch[0])}`);
-      attempts.push(`t=${encodeURIComponent(cleanTitle)}`); // seasons often fail with a year, so retry without it
+      attempts.push(`t=${encodeURIComponent(cleanTitle)}`);
       let hadError = false;
 
       for (const q of attempts) {
@@ -996,13 +1001,13 @@
         return;
       }
       pendingMeta[key] = cb ? [cb] : [];
-      const job = { key, title: movie.title, year: movie.year };
+      const job = { key, title: movie.title, year: movie.year, imdbId: movie.imdbId };
       if (urgent) metaQueue.unshift(job); else metaQueue.push(job);
       runMetaQueue();
     }
 
     function runMetaQueue() {
-      if (omdbDisabled) { // limit reached: release everyone waiting
+      if (omdbDisabled) {
         while (metaQueue.length) {
           const j = metaQueue.shift();
           (pendingMeta[j.key] || []).forEach(cb => { try { cb(null); } catch (e) {} });
@@ -1013,7 +1018,7 @@
       while (metaActive < META_CONCURRENCY && metaQueue.length) {
         const job = metaQueue.shift();
         metaActive++;
-        fetchOmdbMeta(job.title, job.year)
+        fetchOmdbMeta(job.title, job.year, job.imdbId)
           .then(r => {
             let entry = null;
             if (!r.error) { entry = r.entry; posterCache[job.key] = entry; schedulePosterCacheSave(); }
@@ -1063,7 +1068,6 @@
       return `<div class="genre-wrap flex flex-wrap gap-1.5">${items}</div>`;
     }
 
-    // Poster priority: 1) Column I custom URL  2) OMDb poster  3) glass placeholder. Rating/genres/details come from OMDb.
     function loadPoster(el, movie) {
       const cat = allMovies.find(m => m.title === movie.title) || movie;
       const custom = validCustom(cat);
@@ -1072,7 +1076,7 @@
       const onMeta = entry => {
         if (!entry) return;
         applyRating(el, entry.r);
-        if (!cat.genres && entry.g) { // Column C empty -> use OMDb genres
+        if (!cat.genres && entry.g) {
           cat.genres = entry.g;
           const host = el.closest('.glass-card, .spotlight-card');
           const wrap = host && host.querySelector('.genre-wrap');
@@ -1089,7 +1093,6 @@
       else if (!omdbDisabled) requestMeta(cat, onMeta, true);
     }
 
-    // Loads posters/ratings only for cards that are (almost) on screen, which keeps API usage low
     const posterObserver = ('IntersectionObserver' in window)
       ? new IntersectionObserver(entries => {
           entries.forEach(entry => {
@@ -1106,7 +1109,6 @@
       if (posterObserver) posterObserver.observe(el); else loadPoster(el, movie);
     }
 
-    // Poster slot: uniform 2:3 box, IMDb badge overlay, glass-gradient cinema placeholder
     function posterBoxHtml(widthClass) {
       return `
         <div class="poster-box relative ${widthClass} shrink-0 aspect-[2/3] rounded-xl overflow-hidden self-start ring-1 ring-white/10 shadow-lg shadow-black/50 bg-[#14161b]">
@@ -1128,12 +1130,10 @@
       const currentCore = getCoreFranchiseName(currentMovie.title);
       const otherMovies = allMovies.filter(m => m.title !== currentMovie.title);
 
-      // 1. Franchise & Season Matches First
       let franchiseMatches = otherMovies.filter(m => {
         return currentCore.length > 3 && getCoreFranchiseName(m.title) === currentCore;
       });
 
-      // 2. Fallback to Genre Matches
       let genreMatches = otherMovies.filter(m => {
         if (franchiseMatches.some(f => f.title === m.title)) return false;
         if (!m.genres || !currentMovie.genres) return false;
@@ -1247,7 +1247,7 @@
       posterWrap.innerHTML = posterBoxHtml('w-32');
       renderDetailsBookmark();
 
-      renderRelatedMovies(m); // Render More Like This carousel
+      renderRelatedMovies(m);
 
       const modal = document.getElementById('detailsModal');
       modal.classList.remove('hidden');
@@ -1280,7 +1280,7 @@
       topRenderTimer = setTimeout(() => { topRenderTimer = null; renderTopRated(); }, 1500);
     }
 
-    function prefetchRatings() { // one-time cost per movie; results are cached for good
+    function prefetchRatings() {
       if (topPrefetched || omdbDisabled) return;
       topPrefetched = true;
       allMovies.forEach(m => { if (!getMetaCached(m)) requestMeta(m, null, false); });
@@ -1324,7 +1324,6 @@
       renderTopRated();
     }
 
-    // Re-renders whichever results view is open (used after bookmarking)
     function refreshResultsView() {
       const q = document.getElementById('searchInput').value.trim();
       if (q) handleSearchInput();
@@ -1612,7 +1611,7 @@
     }
 
     function clearAdminForm() {
-      ['admTitle', 'admYear', 'admGenre', 'adm480p', 'adm720p', 'adm1080p', 'admTags', 'admPriority', 'admPoster'].forEach(id => {
+      ['admTitle', 'admYear', 'admGenre', 'adm480p', 'adm720p', 'adm1080p', 'admTags', 'admPriority', 'admPoster', 'admImdbId'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.value = '';
       });
@@ -1633,6 +1632,7 @@
       document.getElementById('admTags').value = movie.tags || '';
       document.getElementById('admPriority').value = movie.featuredRaw || '';
       document.getElementById('admPoster').value = movie.customPoster || '';
+      document.getElementById('admImdbId').value = movie.imdbId || '';
     }
 
     function getAdminFormPayload() {
@@ -1645,7 +1645,8 @@
         link1080p: document.getElementById('adm1080p').value.trim(),
         tags: document.getElementById('admTags').value.trim(),
         priority: document.getElementById('admPriority').value.trim(),
-        customPoster: document.getElementById('admPoster').value.trim()
+        customPoster: document.getElementById('admPoster').value.trim(),
+        imdbId: document.getElementById('admImdbId').value.trim()
       };
     }
 
@@ -1653,7 +1654,7 @@
       playClickSound();
       const p = getAdminFormPayload();
       if (!p.title) { alert('Title is required!'); return; }
-      const tsvRow = `${p.title}\t${p.year}\t${p.genres}\t${p.link480p}\t${p.link720p}\t${p.link1080p}\t${p.tags}\t${p.priority}\t${p.customPoster}`;
+      const tsvRow = `${p.title}\t${p.year}\t${p.genres}\t${p.link480p}\t${p.link720p}\t${p.link1080p}\t${p.tags}\t${p.priority}\t${p.customPoster}\t${p.imdbId}`;
       navigator.clipboard.writeText(tsvRow);
       const feedback = document.getElementById('adminFeedback');
       feedback.innerText = '📋 Formatted row copied to clipboard! Paste directly into Google Sheets.';
@@ -1673,37 +1674,35 @@
         return;
       }
 
-      feedback.innerText = 'Syncing to Google Sheet...';
+      feedback.innerText = 'Syncing directly to Google Sheet...';
       feedback.classList.remove('hidden', 'text-red-400', 'text-emerald-400');
       feedback.classList.add('text-amber-400');
 
       const tgUser = tg?.initDataUnsafe?.user || null;
 
       try {
-        const res = await fetch('/api/add-movie', {
+        const res = await fetch(APPS_SCRIPT_URL, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ entry: p, user: tgUser })
         });
 
         const data = await res.json();
 
         if (res.ok && data.success) {
-          feedback.innerText = '✅ Catalog entry synced successfully!';
+          feedback.innerText = '✅ Synced directly to Google Sheet!';
           feedback.classList.remove('text-amber-400');
           feedback.classList.add('text-emerald-400');
 
           setTimeout(() => {
             toggleAdminModal(false);
-            loadSheetData(); // Refresh catalog instantly
+            loadSheetData();
           }, 1500);
         } else {
           throw new Error(data.error || 'Failed to sync');
         }
       } catch (err) {
-        // Fallback: Copy row & inform admin
         copyAdminTSV();
-        feedback.innerText = '⚠️ Endpoint pending. TSV row copied to clipboard for direct sheet pasting!';
+        feedback.innerText = '⚠️ Network error. TSV row copied to clipboard for direct pasting!';
         feedback.classList.remove('text-amber-400');
         feedback.classList.add('text-amber-300');
       }
