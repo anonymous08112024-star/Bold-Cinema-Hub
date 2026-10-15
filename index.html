@@ -517,8 +517,8 @@
       if (subTitle) subTitle.innerText = "Genre Filter";
       if (feedTitle) feedTitle.innerText = `${genre.toUpperCase()} FILMS`;
 
-      const filtered = allMovies.filter(movie => 
-        movie.genres && movie.genres.toLowerCase().includes(genre.toLowerCase())
+      const filtered = allMovies.filter(movie =>
+        movie.genres && movie.genres.split(',').some(g => g.trim().toLowerCase() === genre.toLowerCase())
       );
 
       if (searchCount) searchCount.innerText = `${filtered.length} movies`;
@@ -532,6 +532,22 @@
       filtered.forEach(movie => {
         searchContainer.appendChild(createMovieCard(movie));
       });
+    }
+
+    function filterByGenreFromCard(genre) {
+      const libraryView = document.getElementById('libraryView');
+      if (libraryView && !libraryView.classList.contains('hidden')) {
+        switchTab('home');
+      }
+      const spotlight = document.getElementById('surpriseSpotlight');
+      if (spotlight) spotlight.classList.add('hidden');
+
+      filterByGenre(genre);
+
+      const results = document.getElementById('searchResultsFeed');
+      if (results) {
+        setTimeout(() => results.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
+      }
     }
 
     function updateGenrePillsUI() {
@@ -709,11 +725,12 @@
       const card = document.createElement("div");
       card.className = "glass-card p-4 rounded-2xl flex flex-col justify-between shadow-xl border border-gray-800/80 hover:border-gray-700/60 transition-all";
 
+      const genresStr = movie.genres || ((allMovies.find(m => m.title === movie.title) || {}).genres) || '';
       let genreHtml = '';
-      if (movie.genres) {
+      if (genresStr) {
         genreHtml = '<div class="flex flex-wrap gap-1.5 mb-2.5">';
-        movie.genres.split(',').forEach(g => {
-          genreHtml += `<span class="bg-red-500/20 text-red-400 border border-red-500/40 text-[9px] font-bold px-2 py-0.5 rounded-md uppercase">${g.trim()}</span>`;
+        genresStr.split(',').forEach(g => {
+          if (g.trim()) genreHtml += `<button type="button" onclick="filterByGenreFromCard(${jsq(g.trim())})" class="bg-red-500/20 hover:bg-red-500/35 active:scale-95 text-red-400 border border-red-500/40 text-[9px] font-bold px-2 py-0.5 rounded-md uppercase cursor-pointer transition-all">${g.trim()}</button>`;
         });
         genreHtml += '</div>';
       }
@@ -767,7 +784,7 @@
       if (selectedMovie.genres) {
         genreHtml = '<div class="flex flex-wrap gap-1.5 mb-2.5">';
         selectedMovie.genres.split(',').forEach(g => {
-          genreHtml += `<span class="bg-amber-500/20 text-amber-400 border border-amber-500/40 text-[9px] font-bold px-2 py-0.5 rounded-md uppercase">${g.trim()}</span>`;
+          if (g.trim()) genreHtml += `<button type="button" onclick="filterByGenreFromCard(${jsq(g.trim())})" class="bg-amber-500/20 hover:bg-amber-500/35 active:scale-95 text-amber-400 border border-amber-500/40 text-[9px] font-bold px-2 py-0.5 rounded-md uppercase cursor-pointer transition-all">${g.trim()}</button>`;
         });
         genreHtml += '</div>';
       }
