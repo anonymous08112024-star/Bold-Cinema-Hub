@@ -606,7 +606,7 @@
       if (!el || !checkAdminAccess()) return;
       const noTitle = parsed.filter(m => !m.title).length;
       const noLinks = parsed.filter(m => m.title && !m.links['480p'] && !m.links['720p'] && !m.links['1080p']).length;
-      const labels = cols.slice(0, 8).map(c => c.label || c.id || '?').join(' | ').replace(/</g, '&lt;');
+      const labels = cols.slice(0, 8).map(c => String(c.label || c.id || '?').slice(0, 20)).join(' | ').replace(/</g, '&lt;');
       el.innerHTML = `🛠 Admin debug: ${rowCount} rows received from Sheet · ${valid.length} valid movies · ${noTitle} without title · ${noLinks} without links<br>Columns: ${labels}`;
       el.classList.remove('hidden');
     }
@@ -634,7 +634,7 @@
       if (rec) rec.innerHTML = skeletonHtml();
       if (latest) latest.innerHTML = skeletonHtml();
 
-      const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?sheet=${encodeURIComponent(SHEET_NAME)}&tqx=out:json`;
+      const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?sheet=${encodeURIComponent(SHEET_NAME)}&headers=1&tqx=out:json`;
       let rows, cols;
 
       try {
