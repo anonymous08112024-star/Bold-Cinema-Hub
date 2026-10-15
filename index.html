@@ -322,56 +322,6 @@
       return false;
     }
 
-    function renderCarousel() {
-      const carouselSection = document.getElementById('carouselSection');
-      const carouselContainer = document.getElementById('carouselContainer');
-            // Sort featured movies by priority numbers (1, 2, 3...) entered in Column H
-      const featuredMovies = allMovies
-        .filter(m => m.featured)
-        .sort((a, b) => {
-          const numA = Number(a.featuredRaw) || 999;
-          const numB = Number(b.featuredRaw) || 999;
-          return numA - numB;
-        });
-      
-
-      if (featuredMovies.length === 0) {
-        carouselSection.classList.add('hidden');
-        return;
-      }
-
-      carouselSection.classList.remove('hidden');
-      carouselContainer.innerHTML = '';
-
-      featuredMovies.forEach(movie => {
-        const card = document.createElement('div');
-        card.className = 'carousel-card p-4 rounded-2xl flex-shrink-0 shadow-2xl relative flex flex-col justify-between';
-
-        let qualityButtons = '';
-        if (movie.links['480p']) qualityButtons += `<button onclick="playClickSound(); openTelegramFile('${movie.links['480p']}', '${movie.title.replace(/'/g, "\\'")}')" class="flex-1 bg-gray-800 hover:bg-gray-700 text-gray-200 font-bold py-2 rounded-xl text-xs border border-gray-700/60 cursor-pointer">480p</button>`;
-        if (movie.links['720p']) qualityButtons += `<button onclick="playClickSound(); openTelegramFile('${movie.links['720p']}', '${movie.title.replace(/'/g, "\\'")}')" class="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-2 rounded-xl text-xs shadow-lg cursor-pointer">720p</button>`;
-        if (movie.links['1080p']) qualityButtons += `<button onclick="playClickSound(); openTelegramFile('${movie.links['1080p']}', '${movie.title.replace(/'/g, "\\'")}')" class="flex-1 bg-amber-600 hover:bg-amber-700 text-white font-bold py-2 rounded-xl text-xs shadow-lg cursor-pointer">1080p</button>`;
-
-        card.innerHTML = `
-          <div>
-            <div class="flex items-center justify-between mb-1.5">
-              <span class="bg-red-600 text-white font-black text-[9px] px-2 py-0.5 rounded-md uppercase tracking-wider">FEATURED</span>
-              ${checkAdminAccess() ? `<button onclick="copySheetTitle('${movie.title.replace(/'/g, "\\'")}')" class="text-[10px] bg-amber-500/20 text-amber-400 border border-amber-500/40 px-2 py-0.5 rounded-md font-bold">📋 Copy Admin Title</button>` : ''}
-            </div>
-            <div class="text-base font-extrabold text-white leading-tight font-impact tracking-wide mb-1">
-              ${movie.title} ${movie.year ? `<span class="text-gray-400 font-normal text-xs">(${movie.year})</span>` : ''}
-            </div>
-          </div>
-          <div class="flex space-x-2 mt-3">
-            ${qualityButtons}
-          </div>
-        `;
-        carouselContainer.appendChild(card);
-      });
-
-      startAutoScrollCarousel();
-    }
-
     let carouselInterval;
     function startAutoScrollCarousel() {
       const container = document.getElementById('carouselContainer');
@@ -598,21 +548,22 @@
     }
 
     async function loadSheetData() {
+        async function loadSheetData() {
       const recContainer = document.getElementById("recommendationsContainer");
       const latestContainer = document.getElementById("latestContainer");
-      const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?sheet=${encodeURIComponent(SHEET_NAME)}&tqx=out:json`;
+      const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?sheet=${encodeURIComponent(SHEET_NAME)}`;
 
       try {
         const response = await fetch(url);
         const text = await response.text();
-        
+
         const jsonMatch = text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\);/);
         if (!jsonMatch) throw new Error("Format error");
-        
+
         const data = JSON.parse(jsonMatch[1]);
         const rows = data.table.rows;
 
-                allMovies = rows.map((row, index) => {
+        allMovies = rows.map((row, index) => {
           const title = row.c && row.c[0] ? row.c[0].v : '';
           const year = row.c && row.c[1] ? row.c[1].v : '';
           const genres = row.c && row.c[2] ? row.c[2].v : '';
@@ -633,13 +584,79 @@
               '1080p': link1080 ? String(link1080).trim() : ''
             },
             tags: tags ? String(tags).trim() : '',
-            featuredRaw: featured, // Keeps the raw value (e.g. "1", "2", or "YES")
+            featuredRaw: featured,
             featured: featured !== '' && featured !== null && String(featured).trim().toUpperCase() !== 'FALSE' && String(featured).trim().toUpperCase() !== 'NO'
           };
-                  
-        
-        allMovies.reverse();
+        }).filter(item => item.title && (item.links['480p'] || item.links['720p'] || item.links['1080p']));
 
+        allMovies.reverse();
+        renderHomeFeed();
+      } catch (error) {
+        console.error("Error loading Sheet:", error);
+        if (recContainer) recContainer.innerHTML = `<div class="text-center text-red-500 py-6 text-xs">Failed to load data.</div>`;
+      }
+    }
+
+    function checkAdminAccess() {
+      const tgUser = tg?.initDataUnsafe?.user;
+      if (tgUser && Number(tgUser.id) === ADMIN_TELEGRAM_ID) {
+        const badge = document.getElementById('adminBadge');
+        if (badge) badge.classList.remove('hidden');
+        return true;
+      }
+      return false;
+    }
+
+    function renderCarousel() {
+      const carouselSection = document.getElementById('carouselSection');
+      const carouselContainer = document.getElementById('carouselContainer');
+      if (!carouselSection || !carouselContainer) return;
+
+      const featuredMovies = allMovies
+        .filter(m => m.featured)
+        .sort((a, b) => {
+          const numA = Number(a.featuredRaw) || 999;
+          const numB = Number(b.featuredRaw) || 999;
+          return numA - numB;
+        });
+
+      if (featuredMovies.length === 0) {
+        carouselSection.classList.add('hidden');
+        return;
+      }
+
+      carouselSection.classList.remove('hidden');
+      carouselContainer.innerHTML = '';
+
+      featuredMovies.forEach(movie => {
+        const card = document.createElement('div');
+        card.className = 'carousel-card p-4 rounded-2xl flex-shrink-0 shadow-2xl relative flex flex-col justify-between';
+
+        let qualityButtons = '';
+        if (movie.links['480p']) qualityButtons += `<button onclick="playClickSound(); openTelegramFile('${movie.links['480p']}', '${movie.title.replace(/'/g, "\\'")}')" class="flex-1 bg-gray-800 hover:bg-gray-700 text-gray-200 font-bold py-2 rounded-xl text-xs border border-gray-700/60 cursor-pointer">480p</button>`;
+        if (movie.links['720p']) qualityButtons += `<button onclick="playClickSound(); openTelegramFile('${movie.links['720p']}', '${movie.title.replace(/'/g, "\\'")}')" class="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-2 rounded-xl text-xs shadow-lg cursor-pointer">720p</button>`;
+        if (movie.links['1080p']) qualityButtons += `<button onclick="playClickSound(); openTelegramFile('${movie.links['1080p']}', '${movie.title.replace(/'/g, "\\'")}')" class="flex-1 bg-amber-600 hover:bg-amber-700 text-white font-bold py-2 rounded-xl text-xs shadow-lg cursor-pointer">1080p</button>`;
+
+        card.innerHTML = `
+          <div>
+            <div class="flex items-center justify-between mb-1.5">
+              <span class="bg-red-600 text-white font-black text-[9px] px-2 py-0.5 rounded-md uppercase tracking-wider">FEATURED</span>
+              ${checkAdminAccess() ? `<button onclick="copySheetTitle('${movie.title.replace(/'/g, "\\'")}')" class="text-[10px] bg-amber-500/20 text-amber-400 border border-amber-500/40 px-2 py-0.5 rounded-md font-bold">📋 Copy Title</button>` : ''}
+            </div>
+            <div class="text-base font-extrabold text-white leading-tight font-impact tracking-wide mb-1">
+              ${movie.title} ${movie.year ? `<span class="text-gray-400 font-normal text-xs">(${movie.year})</span>` : ''}
+            </div>
+          </div>
+          <div class="flex space-x-2 mt-3">
+            ${qualityButtons}
+          </div>
+        `;
+        carouselContainer.appendChild(card);
+      });
+
+      startAutoScrollCarousel();
+    }
+      
         renderHomeFeed();
       } catch (error) {
         console.error("Error loading Sheet:", error);
