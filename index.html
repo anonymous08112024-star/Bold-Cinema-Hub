@@ -325,7 +325,15 @@
     function renderCarousel() {
       const carouselSection = document.getElementById('carouselSection');
       const carouselContainer = document.getElementById('carouselContainer');
-      const featuredMovies = allMovies.filter(m => m.featured);
+            // Sort featured movies by priority numbers (1, 2, 3...) entered in Column H
+      const featuredMovies = allMovies
+        .filter(m => m.featured)
+        .sort((a, b) => {
+          const numA = Number(a.featuredRaw) || 999;
+          const numB = Number(b.featuredRaw) || 999;
+          return numA - numB;
+        });
+      
 
       if (featuredMovies.length === 0) {
         carouselSection.classList.add('hidden');
@@ -625,9 +633,10 @@
               '1080p': link1080 ? String(link1080).trim() : ''
             },
             tags: tags ? String(tags).trim() : '',
-            featured: featured ? String(featured).trim().toUpperCase() === 'YES' || String(featured).trim().toUpperCase() === 'TRUE' : false
+            featuredRaw: featured, // Keeps the raw value (e.g. "1", "2", or "YES")
+            featured: featured !== '' && featured !== null && String(featured).trim().toUpperCase() !== 'FALSE' && String(featured).trim().toUpperCase() !== 'NO'
           };
-        }).filter(item => item.title && (item.links['480p'] || item.links['720p'] || item.links['1080p']));
+                  
         
         allMovies.reverse();
 
