@@ -202,6 +202,7 @@
 
     <!-- DEFAULT HOME FEED -->
     <main id="defaultHomeFeed" class="px-5 pt-6 flex-1 space-y-6">
+      <div id="adminDebug" class="hidden text-[10px] leading-relaxed text-amber-300 bg-amber-500/10 border border-amber-500/30 rounded-xl px-3 py-2 break-words"></div>
       <!-- FEATURED CAROUSEL SECTION -->
       <div id="carouselSection" class="hidden mb-6">
         <div class="flex items-center justify-between mb-2">
@@ -600,6 +601,16 @@
       }
     }
 
+    function showAdminDebug(cols, rowCount, parsed, valid) {
+      const el = document.getElementById('adminDebug');
+      if (!el || !checkAdminAccess()) return;
+      const noTitle = parsed.filter(m => !m.title).length;
+      const noLinks = parsed.filter(m => m.title && !m.links['480p'] && !m.links['720p'] && !m.links['1080p']).length;
+      const labels = cols.slice(0, 8).map(c => c.label || c.id || '?').join(' | ').replace(/</g, '&lt;');
+      el.innerHTML = `🛠 Admin debug: ${rowCount} rows received from Sheet · ${valid.length} valid movies · ${noTitle} without title · ${noLinks} without links<br>Columns: ${labels}`;
+      el.classList.remove('hidden');
+    }
+
     function skeletonHtml() {
       return '<div class="skeleton h-24 rounded-2xl w-full"></div><div class="skeleton h-24 rounded-2xl w-full"></div>';
     }
@@ -624,7 +635,7 @@
       if (latest) latest.innerHTML = skeletonHtml();
 
       const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?sheet=${encodeURIComponent(SHEET_NAME)}&tqx=out:json`;
-      let rows;
+      let rows, cols;
 
       try {
         const response = await fetch(url, { cache: 'no-store' });
@@ -639,6 +650,7 @@
           throw new Error((err && (err.detailed_message || err.message)) || 'Sheet query error');
         }
         rows = data.table.rows;
+        cols = data.table.cols || [];
       } catch (error) {
         console.error('Error loading Sheet:', error);
         showLoadError(error.message);
@@ -647,7 +659,7 @@
 
       const cell = (row, i) => (row.c && row.c[i] && row.c[i].v !== null && row.c[i].v !== undefined) ? row.c[i].v : '';
 
-      allMovies = rows.map((row, index) => {
+      const parsed = rows.map((row, index) => {
         const featuredRaw = cell(row, 7); // Column H
         const fs = String(featuredRaw).trim().toUpperCase();
         const featured = fs !== '' && fs !== 'FALSE' && fs !== 'NO';
@@ -667,9 +679,13 @@
           featured,
           priority: featured && isFinite(num) && num > 0 ? num : 999
         };
-      }).filter(item => item.title && (item.links['480p'] || item.links['720p'] || item.links['1080p']));
+      });
+
+      allMovies = parsed.filter(item => item.title && (item.links['480p'] || item.links['720p'] || item.links['1080p']));
 
       allMovies.reverse(); // newest rows first
+
+      try { showAdminDebug(cols, rows.length, parsed, allMovies); } catch (e) { console.error(e); }
 
       try {
         renderHomeFeed();
