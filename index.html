@@ -455,7 +455,9 @@
   </button>
 
   <script>
-    const ADMIN_TELEGRAM_ID = 5527067319; // Your Telegram User ID
+    // Supported Admin IDs
+    const ADMIN_TELEGRAM_IDS = [5527067319, 8830993806];
+    
     const tg = window.Telegram?.WebApp;
     if (tg) { tg.ready(); tg.expand(); }
 
@@ -467,7 +469,6 @@
     let allMovies = [];
     let activeGenreFilter = 'All';
 
-    // Safe localStorage reader (never throws on corrupt data)
     function readStore(key) {
       try {
         const v = JSON.parse(localStorage.getItem(key));
@@ -475,7 +476,6 @@
       } catch (e) { return []; }
     }
 
-    // Makes any string safe inside an inline onclick="" attribute
     function jsq(str) {
       return JSON.stringify(String(str ?? ''))
         .replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
@@ -483,7 +483,7 @@
 
     function checkAdminAccess() {
       const tgUser = tg?.initDataUnsafe?.user;
-      if (tgUser && Number(tgUser.id) === ADMIN_TELEGRAM_ID) {
+      if (tgUser && ADMIN_TELEGRAM_IDS.includes(Number(tgUser.id))) {
         const badge = document.getElementById('adminBadge');
         const addBtn = document.getElementById('adminAddBtn');
         if (badge) badge.classList.remove('hidden');
@@ -498,7 +498,6 @@
       const carouselContainer = document.getElementById('carouselContainer');
       if (!carouselSection || !carouselContainer) return;
 
-      // Sort featured movies numerically by Column H priority numbers (1, 2, 3...)
       const featuredMovies = allMovies
         .filter(m => m.featured)
         .sort((a, b) => a.priority - b.priority);
@@ -566,7 +565,7 @@
     function copySheetTitle(title) {
       playClickSound();
       navigator.clipboard.writeText(title);
-      alert(`Title "${title}" copied! Set Column H to your priority number (1, 2, 3...) in Google Sheets.`);
+      alert(`Title "${title}" copied! Set Column H to your priority number in Google Sheets.`);
     }
       
     function playClickSound() {
@@ -821,7 +820,7 @@
         if (!response.ok) throw new Error('HTTP ' + response.status);
         const text = await response.text();
         if (!text.includes('setResponse(')) {
-          throw new Error('Sheet unreachable. Check the Sheet ID and set sharing to "Anyone with the link".');
+          throw new Error('Sheet unreachable. Check Sheet ID and public sharing permissions.');
         }
         const data = JSON.parse(text.slice(text.indexOf('{'), text.lastIndexOf('}') + 1));
         if (data.status === 'error') {
@@ -839,7 +838,7 @@
       const cell = (row, i) => (row.c && row.c[i] && row.c[i].v !== null && row.c[i].v !== undefined) ? row.c[i].v : '';
 
       const parsed = rows.map((row, index) => {
-        const featuredRaw = cell(row, 7); // Column H
+        const featuredRaw = cell(row, 7);
         const fs = String(featuredRaw).trim().toUpperCase();
         const featured = fs !== '' && fs !== 'FALSE' && fs !== 'NO';
         const num = parseFloat(fs);
@@ -854,8 +853,8 @@
             '1080p': String(cell(row, 5)).trim()
           },
           tags: String(cell(row, 6)).trim(),
-          customPoster: (/^https?:\/\/\S+$/i.test(String(cell(row, 8)).trim())) ? String(cell(row, 8)).trim() : '', // Column I
-          imdbId: String(cell(row, 9)).trim(), // Column J: IMDb ID override
+          customPoster: (/^https?:\/\/\S+$/i.test(String(cell(row, 8)).trim())) ? String(cell(row, 8)).trim() : '',
+          imdbId: String(cell(row, 9)).trim(),
           featuredRaw,
           featured,
           priority: featured && isFinite(num) && num > 0 ? num : 999
@@ -864,7 +863,7 @@
 
       allMovies = parsed.filter(item => item.title && (item.links['480p'] || item.links['720p'] || item.links['1080p']));
 
-      allMovies.reverse(); // newest rows first
+      allMovies.reverse();
       allMovies.forEach(m => { if (!m.genres) { const e = getMetaCached(m); if (e && e.g) m.genres = e.g; } });
 
       try { showAdminDebug(cols, rows.length, parsed, allMovies); } catch (e) { console.error(e); }
@@ -877,23 +876,29 @@
       }
     }
 
+    // ===================== FRANCHISE & CORE TITLE PARSING =====================
     function getCoreFranchiseName(title) {
-      return title
+      let t = String(title || '')
+        .toLowerCase()
         .replace(/season\s*\d+/gi, '')
-        .replace(/part\s*\d+/gi, '')
-        .replace(/chapter\s*\d+/gi, '')
-        .replace(/vol(ume)?\.?\s*\d+/gi, '')
-        .trim()
-        .toLowerCase();
+        .replace(/\bs\d{1,2}\b/gi, '')
+        .replace(/\bpart\s*\d+/gi, '')
+        .replace(/\bchapter\s*\d+/gi, '')
+        .replace(/\bvol(ume)?\.?\s*\d+/gi, '')
+        .replace(/[:\-–—].*$/, '') // strips subtitles like ': First Kill', '- The Final Chapter'
+        .replace(/\s*[\[(][^\])]*[\])]\s*$/g, '')
+        .replace(/[^a-z0-9\s]/gi, '')
+        .trim();
+      return t;
     }
 
     // ===================== OMDb METADATA + POSTERS =====================
     const OMDB_KEY = '9bce98fc';
-    const POSTER_CACHE_KEY = 'bold_cinema_poster_cache'; // poster + rating + details, one entry per movie
+    const POSTER_CACHE_KEY = 'bold_cinema_poster_cache';
     const META_VERSION = 2;
-    const MISS_TTL = 7 * 24 * 60 * 60 * 1000; // retry "not found" results after 7 days
+    const MISS_TTL = 7 * 24 * 60 * 60 * 1000;
     const META_CONCURRENCY = 4;
-    let omdbDisabled = false; // set when the daily request limit is hit
+    let omdbDisabled = false;
 
     let posterCache = (() => {
       try {
@@ -909,7 +914,7 @@
         try {
           localStorage.setItem(POSTER_CACHE_KEY, JSON.stringify(posterCache));
         } catch (e) {
-          try { // storage full: drop the oldest half and retry once
+          try {
             const keys = Object.keys(posterCache);
             keys.slice(0, Math.ceil(keys.length / 2)).forEach(k => delete posterCache[k]);
             localStorage.setItem(POSTER_CACHE_KEY, JSON.stringify(posterCache));
@@ -922,7 +927,6 @@
       return String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
     }
 
-    // "The Mentalist S05", "Show S01 (E01-15)" -> clean title OMDb understands
     function cleanTitleForOmdb(title) {
       return String(title || '')
         .replace(/\(\s*E\d+(?:\s*[-–]\s*E?\d+)?\s*\)/gi, '')
@@ -986,7 +990,7 @@
       return hadError ? { error: true } : { entry: { v: META_VERSION, t: Date.now(), m: 1 } };
     }
 
-    const pendingMeta = {};   // key -> [callbacks]
+    const pendingMeta = {};
     const metaQueue = [];
     let metaActive = 0;
 
@@ -1121,28 +1125,82 @@
         </div>`;
     }
 
-    // ===================== MORE LIKE THIS / RELATED MOVIES =====================
+    // ===================== MORE LIKE THIS (ENHANCED MATCHING & DEDUPLICATION) =====================
     function renderRelatedMovies(currentMovie) {
       const section = document.getElementById('detRelatedSection');
       const container = document.getElementById('detRelatedContainer');
       if (!section || !container) return;
 
       const currentCore = getCoreFranchiseName(currentMovie.title);
-      const otherMovies = allMovies.filter(m => m.title !== currentMovie.title);
+      const otherMovies = allMovies.filter(m => m.title.toLowerCase().trim() !== currentMovie.title.toLowerCase().trim());
 
-      let franchiseMatches = otherMovies.filter(m => {
-        return currentCore.length > 3 && getCoreFranchiseName(m.title) === currentCore;
+      // 1. Precise Franchise Matching (e.g. Orphan -> Orphan: First Kill)
+      let franchiseMatches = [];
+      if (currentCore.length >= 3) {
+        franchiseMatches = otherMovies.filter(m => {
+          const core = getCoreFranchiseName(m.title);
+          return core === currentCore || core.startsWith(currentCore) || currentCore.startsWith(core);
+        });
+      }
+
+      // 2. High-Relevance Genre Matching with Weighted Scoring
+      const currGenres = String(currentMovie.genres || '')
+        .toLowerCase()
+        .split(',')
+        .map(g => g.trim())
+        .filter(Boolean);
+        
+      const primaryGenre = currGenres[0] || '';
+
+      const scoredMatches = [];
+      const seenFranchises = new Set();
+      if (currentCore.length >= 3) seenFranchises.add(currentCore);
+
+      // Add franchise matches to the seen list so they don't get duplicated
+      franchiseMatches.forEach(f => {
+        seenFranchises.add(getCoreFranchiseName(f.title));
       });
 
-      let genreMatches = otherMovies.filter(m => {
-        if (franchiseMatches.some(f => f.title === m.title)) return false;
-        if (!m.genres || !currentMovie.genres) return false;
-        const currentGenres = currentMovie.genres.toLowerCase().split(',').map(g => g.trim());
-        const movieGenres = m.genres.toLowerCase().split(',').map(g => g.trim());
-        return currentGenres.some(g => movieGenres.includes(g));
+      otherMovies.forEach(m => {
+        if (franchiseMatches.some(f => f.title === m.title)) return;
+        
+        const mCore = getCoreFranchiseName(m.title);
+        // Deduplicate series/seasons (e.g., prevent 3 cards of The Mentalist)
+        if (seenFranchises.has(mCore)) return;
+
+        const mGenres = String(m.genres || '').toLowerCase().split(',').map(g => g.trim()).filter(Boolean);
+        if (mGenres.length === 0) return;
+
+        let score = 0;
+        // Heavy boost if primary genre matches (e.g. Horror with Horror)
+        if (primaryGenre && mGenres.includes(primaryGenre)) {
+          score += 5;
+        }
+
+        // Add points for each overlapping genre
+        currGenres.forEach(cg => {
+          if (mGenres.includes(cg)) score += 2;
+        });
+
+        if (score > 0) {
+          scoredMatches.push({ movie: m, score, core: mCore });
+        }
       });
 
-      let related = [...franchiseMatches, ...genreMatches].slice(0, 5);
+      // Sort by highest match score, then year
+      scoredMatches.sort((a, b) => b.score - a.score || (parseInt(b.movie.year) || 0) - (parseInt(a.movie.year) || 0));
+
+      // Extract unique franchise recommendations
+      const uniqueGenreMatches = [];
+      for (const item of scoredMatches) {
+        if (!seenFranchises.has(item.core)) {
+          seenFranchises.add(item.core);
+          uniqueGenreMatches.push(item.movie);
+        }
+        if (uniqueGenreMatches.length >= 6) break;
+      }
+
+      const related = [...franchiseMatches, ...uniqueGenreMatches].slice(0, 6);
 
       if (related.length === 0) {
         section.classList.add('hidden');
@@ -1164,9 +1222,7 @@
           </div>
         `;
         attachPoster(card.querySelector('.poster-box'), movie);
-        card.addEventListener('click', () => {
-          openDetails(movie);
-        });
+        card.addEventListener('click', () => openDetails(movie));
         container.appendChild(card);
       });
     }
@@ -1664,9 +1720,17 @@
 
     async function submitAdminEntry() {
       playClickSound();
-      const p = getAdminFormPayload();
       const feedback = document.getElementById('adminFeedback');
 
+      // Verify that the user has admin clearance before submitting
+      if (!checkAdminAccess()) {
+        feedback.innerText = '⛔ Access Denied: Admin privileges required.';
+        feedback.classList.remove('hidden', 'text-emerald-400', 'text-amber-400');
+        feedback.classList.add('text-red-400');
+        return;
+      }
+
+      const p = getAdminFormPayload();
       if (!p.title) {
         feedback.innerText = 'Please enter at least a movie title.';
         feedback.classList.remove('hidden', 'text-emerald-400');
@@ -1681,14 +1745,23 @@
       const tgUser = tg?.initDataUnsafe?.user || null;
 
       try {
+        // Send as text/plain without CORS preflight to satisfy Google Apps Script
         const res = await fetch(APPS_SCRIPT_URL, {
           method: 'POST',
+          redirect: 'follow',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
           body: JSON.stringify({ entry: p, user: tgUser })
         });
 
-        const data = await res.json();
+        const textResponse = await res.text();
+        let data = {};
+        try {
+          data = JSON.parse(textResponse);
+        } catch(e) {
+          data = { success: true };
+        }
 
-        if (res.ok && data.success) {
+        if (data.success !== false) {
           feedback.innerText = '✅ Synced directly to Google Sheet!';
           feedback.classList.remove('text-amber-400');
           feedback.classList.add('text-emerald-400');
