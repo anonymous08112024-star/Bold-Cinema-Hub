@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -149,7 +150,7 @@
           BOLD
         </div>
       </div>
-      <span class="absolute bottom-0 right-0 w-7 h-7 bg-red-600 border-2 border-[#0b0c0e] rounded-full flex items-center justify-center text-white text-xs font-bold">鉁�</span>
+      <span class="absolute bottom-0 right-0 w-7 h-7 bg-red-600 border-2 border-[#0b0c0e] rounded-full flex items-center justify-center text-white text-xs font-bold">✓</span>
     </div>
 
     <h2 class="text-3xl font-bold text-white font-impact tracking-wide mb-2">JOIN OUR CHANNEL</h2>
@@ -161,7 +162,7 @@
       <button 
         onclick="openChannel()" 
         class="w-full bg-red-600 hover:bg-red-700 active:scale-[0.98] transition-all text-white font-bold py-3 px-4 rounded-xl text-xs flex items-center justify-center space-x-2 shadow-lg shadow-red-900/30 cursor-pointer">
-        <span>馃摙 Join Channel Now</span>
+        <span>📢 Join Channel Now</span>
       </button>
 
       <button 
@@ -177,14 +178,14 @@
     <div class="glass-card gold-glow w-full max-w-xs p-6 rounded-3xl border border-amber-500/50 text-center relative overflow-hidden animate-pop">
       <div class="absolute -top-16 left-1/2 -translate-x-1/2 w-44 h-44 bg-amber-500/25 rounded-full blur-2xl pointer-events-none"></div>
       <span class="inline-block text-[10px] font-extrabold uppercase tracking-widest px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-400/40 mb-3">
-        馃帀 New Avatar Badge Unlocked!
+        🎉 New Avatar Badge Unlocked!
       </span>
       <div id="unlockAvatarPreview" class="w-24 h-24 mx-auto my-3 rounded-full p-1 bg-gradient-to-tr from-amber-500 via-red-500 to-amber-300 shadow-2xl"></div>
       <h3 id="unlockAvatarTitle" class="text-2xl font-black text-white font-impact tracking-wide mt-2">NIGHT STROLLER</h3>
       <p id="unlockAvatarDesc" class="text-xs text-gray-300 mt-1 mb-5 leading-relaxed">Congratulations! You unlocked this exclusive cinema badge.</p>
       <div class="space-y-2.5">
         <button onclick="equipUnlockedAvatar()" class="w-full bg-gradient-to-r from-amber-500 to-orange-600 hover:opacity-95 text-black font-extrabold py-3 rounded-xl text-xs shadow-lg shadow-amber-900/40 active:scale-[0.98] transition-all cursor-pointer">
-          鉁� Use as Profile
+          ✨ Use as Profile
         </button>
         <button onclick="closeAvatarUnlockModal()" class="w-full bg-gray-800/90 hover:bg-gray-700 text-gray-200 font-semibold py-2.5 rounded-xl text-xs border border-gray-700 cursor-pointer">
           Continue
@@ -198,7 +199,7 @@
     <div class="details-sheet w-full max-w-md max-h-[85vh] flex flex-col rounded-t-3xl sm:rounded-3xl overflow-hidden">
       <div class="px-5 py-4 border-b border-gray-800/80 flex items-center justify-between">
         <div class="flex items-center space-x-2">
-          <span class="text-amber-400 text-base">馃敂</span>
+          <span class="text-amber-400 text-base">🔔</span>
           <div>
             <h3 class="text-base font-bold text-white font-impact tracking-wider">NOTIFICATIONS INBOX</h3>
             <p class="text-[10px] text-gray-400">Admin replies, movie uploads & rewards</p>
@@ -206,7 +207,7 @@
         </div>
         <div class="flex items-center space-x-2">
           <button onclick="enablePushAlerts()" id="pushPermBtn" class="text-[10px] bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 px-2.5 py-1 rounded-lg font-semibold cursor-pointer">
-            馃摬 Enable Alerts
+            📲 Enable Alerts
           </button>
           <button onclick="toggleNotifModal(false)" class="w-8 h-8 rounded-full bg-white/5 border border-white/10 text-gray-300 hover:text-white text-lg flex items-center justify-center cursor-pointer">&times;</button>
         </div>
@@ -220,7 +221,7 @@
     <div class="glass-card gold-glow w-full max-w-xs p-5 rounded-3xl border border-amber-500/40 relative overflow-hidden">
       <div class="flex justify-between items-center mb-3">
         <div class="flex items-center space-x-1.5">
-          <span class="text-base">馃巵</span>
+          <span class="text-base">🎁</span>
           <h3 class="text-base font-bold text-white font-impact tracking-wider">REFER & EARN BOLDCOINS</h3>
         </div>
         <button onclick="toggleReferModal(false)" class="text-gray-400 hover:text-white text-lg font-bold px-2 cursor-pointer">&times;</button>
@@ -247,7 +248,7 @@
         </div>
       </div>
       <button onclick="shareReferralTelegram()" class="w-full bg-gradient-to-r from-amber-500 via-orange-500 to-red-600 hover:opacity-95 text-white font-extrabold py-3 rounded-xl text-xs shadow-lg shadow-orange-900/30 flex items-center justify-center space-x-2 cursor-pointer">
-        <span>馃殌 Share Invite on Telegram</span>
+        <span>🚀 Share Invite on Telegram</span>
       </button>
     </div>
   </div>
@@ -279,9 +280,9 @@
       <div id="replyModalMeta" class="text-[11px] text-amber-300 bg-amber-500/10 border border-amber-500/20 rounded-xl p-2.5 mb-3"></div>
       <label class="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">Status Action</label>
       <select id="adminReplyStatus" onchange="prefillReplyTemplate()" class="w-full bg-[#14161b] text-white text-xs rounded-xl p-2.5 border border-gray-800 mb-3 focus:outline-none focus:ring-1 focus:ring-amber-500">
-        <option value="Replied">馃挰 Ask Info / Reply to User</option>
-        <option value="Uploaded">鉁� Mark Uploaded (+50 BoldCoins to User)</option>
-        <option value="Pending">鈴� Keep Pending</option>
+        <option value="Replied">💬 Ask Info / Reply to User</option>
+        <option value="Uploaded">✅ Mark Uploaded (+50 BoldCoins to User)</option>
+        <option value="Pending">⏳ Keep Pending</option>
       </select>
       <label class="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">Message to User (In-App + Bot Push)</label>
       <textarea id="adminReplyText" rows="3" placeholder="e.g. Which release year or language do you need?" class="w-full bg-[#14161b] text-white text-xs rounded-xl p-2.5 border border-gray-800 focus:outline-none focus:ring-1 focus:ring-amber-500 mb-3"></textarea>
@@ -381,7 +382,7 @@
     <div class="glass-card w-full max-w-sm p-5 rounded-2xl border border-amber-500/40 my-auto">
       <div class="flex justify-between items-center mb-3">
         <div class="flex items-center space-x-1.5">
-          <span class="text-amber-400 text-base">馃憫</span>
+          <span class="text-amber-400 text-base">👑</span>
           <h3 id="adminModalTitle" class="text-sm font-bold text-white font-impact tracking-wider">ADMIN: ADD CATALOG ENTRY</h3>
         </div>
         <button onclick="toggleAdminModal(false)" class="text-gray-400 hover:text-white text-lg font-bold px-2 cursor-pointer">&times;</button>
@@ -409,10 +410,10 @@
 
       <div class="mt-4 space-y-2">
         <button onclick="submitAdminEntry()" class="w-full bg-amber-600 hover:bg-amber-700 text-white font-bold py-2.5 rounded-xl text-xs shadow-lg shadow-amber-900/30 active:scale-[0.98] transition-all cursor-pointer">
-          鈿� Sync directly to Google Sheet
+          ⚡ Sync directly to Google Sheet
         </button>
         <button onclick="copyAdminTSV()" class="w-full bg-gray-800 hover:bg-gray-700 text-gray-200 font-semibold py-2 rounded-xl text-xs border border-gray-700 cursor-pointer">
-          馃搵 Copy Formatted Row (TSV)
+          📋 Copy Formatted Row (TSV)
         </button>
       </div>
     </div>
@@ -437,7 +438,7 @@
         <div class="flex items-center space-x-1.5 flex-wrap justify-end">
           <!-- Refer Button on Top in Home Page -->
           <button onclick="toggleReferModal(true)" class="text-[10px] bg-gradient-to-r from-amber-500/20 to-orange-500/20 text-amber-300 border border-amber-500/40 px-2.5 py-1 rounded-full font-bold hover:bg-amber-500/30 transition-all flex items-center space-x-1 cursor-pointer" title="Refer Friends & Earn +100 BoldCoins">
-            <span>馃巵 Refer</span>
+            <span>🎁 Refer</span>
           </button>
 
           <!-- Request Button -->
@@ -447,7 +448,7 @@
 
           <!-- Join Channel Button -->
           <button onclick="openChannel()" class="text-[10px] bg-amber-600/20 text-amber-400 border border-amber-600/40 px-2 py-1 rounded-full font-semibold hover:bg-amber-600/30 transition-all flex items-center space-x-1 cursor-pointer" title="Join Official Channel">
-            <span>馃摙 Join Channel</span>
+            <span>📢 Join Channel</span>
           </button>
 
           <!-- Notification Bell Button with Unread Badge -->
@@ -491,8 +492,8 @@
 
         <!-- GENRE FILTER PILLS BAR -->
         <div id="genrePillsBar" class="flex items-center space-x-2 overflow-x-auto py-1 scrollbar-none no-scrollbar">
-          <button onclick="filterByGenre('All')" class="genre-pill bg-red-600 text-white font-bold px-3.5 py-1.5 rounded-full text-[11px] whitespace-nowrap shadow-md cursor-pointer transition-all">馃敟 All</button>
-          <button onclick="showTopRated()" data-genre="TOP" class="genre-pill bg-[#16181d] text-gray-300 border border-gray-800 font-semibold px-3.5 py-1.5 rounded-full text-[11px] whitespace-nowrap cursor-pointer hover:border-gray-700 transition-all">猸� Top Rated</button>
+          <button onclick="filterByGenre('All')" class="genre-pill bg-red-600 text-white font-bold px-3.5 py-1.5 rounded-full text-[11px] whitespace-nowrap shadow-md cursor-pointer transition-all">🔥 All</button>
+          <button onclick="showTopRated()" data-genre="TOP" class="genre-pill bg-[#16181d] text-gray-300 border border-gray-800 font-semibold px-3.5 py-1.5 rounded-full text-[11px] whitespace-nowrap cursor-pointer hover:border-gray-700 transition-all">⭐ Top Rated</button>
           <button onclick="filterByGenre('Action')" class="genre-pill bg-[#16181d] text-gray-300 border border-gray-800 font-semibold px-3.5 py-1.5 rounded-full text-[11px] whitespace-nowrap cursor-pointer hover:border-gray-700 transition-all">Action</button>
           <button onclick="filterByGenre('Horror')" class="genre-pill bg-[#16181d] text-gray-300 border border-gray-800 font-semibold px-3.5 py-1.5 rounded-full text-[11px] whitespace-nowrap cursor-pointer hover:border-gray-700 transition-all">Horror</button>
           <button onclick="filterByGenre('Sci-Fi')" class="genre-pill bg-[#16181d] text-gray-300 border border-gray-800 font-semibold px-3.5 py-1.5 rounded-full text-[11px] whitespace-nowrap cursor-pointer hover:border-gray-700 transition-all">Sci-Fi</button>
@@ -505,7 +506,7 @@
         <button 
           onclick="surpriseMe()" 
           class="w-full bg-gradient-to-r from-amber-600 via-orange-600 to-red-600 hover:opacity-95 active:scale-[0.98] transition-all text-white font-bold py-3 px-4 rounded-xl text-xs flex items-center justify-center space-x-2 shadow-lg shadow-orange-900/30 cursor-pointer">
-          <span>馃幉 Surprise Me! (Random Mystery Pick)</span>
+          <span>🎲 Surprise Me! (Random Mystery Pick)</span>
         </button>
 
         <!-- SURPRISE SPOTLIGHT CONTAINER -->
@@ -520,10 +521,10 @@
       <div id="carouselSection" class="hidden mb-6">
         <div class="flex items-center justify-between mb-2">
           <span class="text-[10px] font-extrabold text-red-500 tracking-widest uppercase flex items-center space-x-1">
-            <span>馃敟 SPOTLIGHT HIGHLIGHTS</span>
+            <span>🔥 SPOTLIGHT HIGHLIGHTS</span>
           </span>
           <span id="adminBadge" class="hidden text-[9px] bg-amber-500/20 text-amber-400 border border-amber-500/50 px-2 py-0.5 rounded-full font-black uppercase tracking-wider">
-            馃憫 ADMIN ACTIVE
+            👑 ADMIN ACTIVE
           </span>
         </div>
         <div id="carouselContainer" class="carousel-container space-x-3 py-1"></div>
@@ -575,11 +576,11 @@
   <div id="leaderboardView" class="flex-1 flex flex-col hidden px-5 pt-7 space-y-5">
     <div class="flex items-center justify-between">
       <div>
-        <span class="text-[10px] font-bold text-amber-400 tracking-widest uppercase block">Weekly Competition 路 Resets Monday</span>
+        <span class="text-[10px] font-bold text-amber-400 tracking-widest uppercase block">Weekly Competition · Resets Monday</span>
         <h2 class="text-3xl font-black text-white font-impact tracking-wide">LEADERBOARD</h2>
       </div>
       <button onclick="fetchLeaderboard(true)" class="bg-[#16181d] hover:bg-gray-800 text-amber-400 border border-gray-800 px-3 py-1.5 rounded-xl text-xs font-bold flex items-center space-x-1 cursor-pointer">
-        <span>鈫� Refresh</span>
+        <span>↻ Refresh</span>
       </button>
     </div>
 
@@ -623,13 +624,13 @@
       <div class="flex items-center space-x-3.5">
         <div id="youProfileAvatar" class="w-16 h-16 rounded-full p-0.5 bg-gradient-to-tr from-red-600 via-amber-500 to-orange-500 shadow-xl shrink-0"></div>
         <div>
-          <span id="youBadgeTitle" class="text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-md bg-red-600/20 text-red-400 border border-red-500/30">馃嵖 Rookie Viewer</span>
+          <span id="youBadgeTitle" class="text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-md bg-red-600/20 text-red-400 border border-red-500/30">🍿 Rookie Viewer</span>
           <h2 id="youUserName" class="text-xl font-black text-white font-impact tracking-wide mt-1">CINEMA FAN</h2>
           <p id="youUserHandle" class="text-[11px] text-gray-400">Tap any unlocked badge below to switch avatar</p>
         </div>
       </div>
       <button onclick="toggleReferModal(true)" class="bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 px-3 py-2 rounded-xl text-[11px] font-bold cursor-pointer shrink-0">
-        馃巵 Invite
+        🎁 Invite
       </button>
     </div>
 
@@ -641,7 +642,7 @@
           <h3 class="text-xl font-black text-white font-impact tracking-wide">BOLDPOINTS BALANCE</h3>
         </div>
         <button onclick="togglePointsGuide()" class="text-[10px] text-amber-400 hover:underline font-semibold cursor-pointer">
-          鈩癸笍 How to Earn?
+          ℹ️ How to Earn?
         </button>
       </div>
 
@@ -672,13 +673,13 @@
       <!-- Collapsible BoldCoins Earning Rules -->
       <div id="pointsGuideBox" class="hidden mt-2.5 glass-card p-3.5 rounded-2xl border border-amber-500/30 text-[11px] space-y-1.5 text-gray-300">
         <div class="font-bold text-amber-400 uppercase text-[10px] tracking-wider mb-1">BoldCoins Reward Table</div>
-        <div class="flex justify-between"><span>馃巵 Refer a New Friend</span><span class="text-amber-400 font-bold">+100 Coins</span></div>
-        <div class="flex justify-between"><span>馃幀 Approved Movie Request</span><span class="text-amber-400 font-bold">+50 Coins</span></div>
-        <div class="flex justify-between"><span>馃嵖 Watch a Movie (max 4/day)</span><span class="text-amber-400 font-bold">+25 Coins</span></div>
-        <div class="flex justify-between"><span>馃摛 Share Movie Card (max 3/day)</span><span class="text-amber-400 font-bold">+15 Coins</span></div>
-        <div class="flex justify-between"><span>鉃� Request a Movie (max 2/day)</span><span class="text-amber-400 font-bold">+10 Coins</span></div>
-        <div class="flex justify-between"><span>馃幉 Surprise Me Roll (max 3/day)</span><span class="text-amber-400 font-bold">+5 Coins</span></div>
-        <div class="flex justify-between"><span>馃攳 Search Catalog (max 5/day)</span><span class="text-amber-400 font-bold">+2 Coins</span></div>
+        <div class="flex justify-between"><span>🎁 Refer a New Friend</span><span class="text-amber-400 font-bold">+100 Coins</span></div>
+        <div class="flex justify-between"><span>🎬 Approved Movie Request</span><span class="text-amber-400 font-bold">+50 Coins</span></div>
+        <div class="flex justify-between"><span>🍿 Watch a Movie (max 4/day)</span><span class="text-amber-400 font-bold">+25 Coins</span></div>
+        <div class="flex justify-between"><span>📤 Share Movie Card (max 3/day)</span><span class="text-amber-400 font-bold">+15 Coins</span></div>
+        <div class="flex justify-between"><span>➕ Request a Movie (max 2/day)</span><span class="text-amber-400 font-bold">+10 Coins</span></div>
+        <div class="flex justify-between"><span>🎲 Surprise Me Roll (max 3/day)</span><span class="text-amber-400 font-bold">+5 Coins</span></div>
+        <div class="flex justify-between"><span>🔍 Search Catalog (max 5/day)</span><span class="text-amber-400 font-bold">+2 Coins</span></div>
       </div>
     </div>
 
@@ -702,7 +703,7 @@
           <h2 class="text-xl font-black text-white font-impact tracking-wide">MY WISHLIST</h2>
         </div>
         <button id="seeAllWishlistBtn" onclick="openFullListModal('wishlist')" class="hidden text-xs text-amber-400 hover:text-amber-300 font-bold cursor-pointer">
-          See All 鈫�
+          See All →
         </button>
       </div>
       <div id="watchlistContainer" class="flex space-x-3 overflow-x-auto no-scrollbar py-1"></div>
@@ -716,7 +717,7 @@
           <h2 class="text-xl font-black text-white font-impact tracking-wide">WATCH HISTORY</h2>
         </div>
         <button id="seeAllHistoryBtn" onclick="openFullListModal('history')" class="hidden text-xs text-red-400 hover:text-red-300 font-bold cursor-pointer">
-          See All 鈫�
+          See All →
         </button>
       </div>
       <div id="historyContainer" class="flex space-x-3 overflow-x-auto no-scrollbar py-1"></div>
@@ -746,7 +747,7 @@
           <h3 class="text-lg font-black text-white font-impact tracking-wide">PLATFORM ANALYTICS</h3>
         </div>
         <button onclick="fetchAdminDashboard(activeAdminPeriod, true)" class="text-[10px] bg-gray-800 hover:bg-gray-700 text-gray-200 px-2.5 py-1 rounded-lg border border-gray-700 font-semibold cursor-pointer">
-          鈫� Sync
+          ↻ Sync
         </button>
       </div>
 
@@ -762,32 +763,32 @@
       <!-- 7 Detailed Metric Cards -->
       <div class="grid grid-cols-2 gap-2.5">
         <div class="bg-[#14161b] border border-gray-800/90 rounded-xl p-3">
-          <div class="text-[10px] text-gray-400 uppercase font-semibold">馃憗锔� App Views</div>
+          <div class="text-[10px] text-gray-400 uppercase font-semibold">👁️ App Views</div>
           <div id="statViews" class="text-xl font-black text-white font-impact mt-0.5">0</div>
         </div>
         <div class="bg-[#14161b] border border-gray-800/90 rounded-xl p-3">
-          <div class="text-[10px] text-gray-400 uppercase font-semibold">馃嵖 Movies Watched</div>
+          <div class="text-[10px] text-gray-400 uppercase font-semibold">🍿 Movies Watched</div>
           <div id="statWatch" class="text-xl font-black text-emerald-400 font-impact mt-0.5">0</div>
         </div>
         <div class="bg-[#14161b] border border-gray-800/90 rounded-xl p-3">
-          <div class="text-[10px] text-gray-400 uppercase font-semibold">馃攳 Searches</div>
+          <div class="text-[10px] text-gray-400 uppercase font-semibold">🔍 Searches</div>
           <div id="statSearch" class="text-xl font-black text-blue-400 font-impact mt-0.5">0</div>
         </div>
         <div class="bg-[#14161b] border border-gray-800/90 rounded-xl p-3">
-          <div class="text-[10px] text-gray-400 uppercase font-semibold">馃幉 Surprise Me</div>
+          <div class="text-[10px] text-gray-400 uppercase font-semibold">🎲 Surprise Me</div>
           <div id="statSurprise" class="text-xl font-black text-amber-400 font-impact mt-0.5">0</div>
         </div>
         <div class="bg-[#14161b] border border-gray-800/90 rounded-xl p-3">
-          <div class="text-[10px] text-gray-400 uppercase font-semibold">馃摛 Movies Shared</div>
+          <div class="text-[10px] text-gray-400 uppercase font-semibold">📤 Movies Shared</div>
           <div id="statShare" class="text-xl font-black text-purple-400 font-impact mt-0.5">0</div>
         </div>
         <div class="bg-[#14161b] border border-gray-800/90 rounded-xl p-3">
-          <div class="text-[10px] text-gray-400 uppercase font-semibold">馃巵 Users Referred</div>
+          <div class="text-[10px] text-gray-400 uppercase font-semibold">🎁 Users Referred</div>
           <div id="statReferrals" class="text-xl font-black text-orange-400 font-impact mt-0.5">0</div>
         </div>
         <div class="col-span-2 bg-gradient-to-r from-red-900/25 via-[#14161b] to-amber-900/20 border border-amber-500/30 rounded-xl p-3 flex items-center justify-between">
           <div>
-            <div class="text-[10px] text-amber-300 uppercase font-bold">馃懃 Total Registered Users</div>
+            <div class="text-[10px] text-amber-300 uppercase font-bold">👥 Total Registered Users</div>
             <div id="statNewUsersSub" class="text-[10px] text-gray-400">New in selected period: 0</div>
           </div>
           <div id="statTotalUsers" class="text-2xl font-black text-white font-impact">0</div>
@@ -817,16 +818,16 @@
       <!-- Broadcast Input Source Toggle -->
       <div class="grid grid-cols-2 gap-2 bg-[#14161b] p-1 rounded-xl border border-gray-800">
         <button id="bcastTabApp" onclick="switchBroadcastInputMode('app')" class="bg-red-600 text-white font-bold py-2 rounded-lg text-[11px] transition-all cursor-pointer">
-          鉁嶏笍 Direct In-App Input
+          ✍️ Direct In-App Input
         </button>
         <button id="bcastTabBot" onclick="switchBroadcastInputMode('telegram')" class="text-gray-400 hover:text-white font-semibold py-2 rounded-lg text-[11px] transition-all cursor-pointer">
-          馃 From Telegram Chat
+          🤖 From Telegram Chat
         </button>
       </div>
 
       <!-- Option A: Direct In-App Broadcast Form -->
       <div id="bcastAppForm" class="space-y-2.5">
-        <input id="bcastTitle" type="text" placeholder="Broadcast Title (e.g. 馃敟 Weekend Blockbusters Added!)" class="w-full bg-[#14161b] text-white text-xs rounded-xl p-2.5 border border-gray-800 focus:outline-none focus:ring-1 focus:ring-red-600" />
+        <input id="bcastTitle" type="text" placeholder="Broadcast Title (e.g. 🔥 Weekend Blockbusters Added!)" class="w-full bg-[#14161b] text-white text-xs rounded-xl p-2.5 border border-gray-800 focus:outline-none focus:ring-1 focus:ring-red-600" />
         <textarea id="bcastMessage" rows="3" placeholder="Enter broadcast message... (HTML tags like <b>bold</b> supported for Bot DM)" class="w-full bg-[#14161b] text-white text-xs rounded-xl p-2.5 border border-gray-800 focus:outline-none focus:ring-1 focus:ring-red-600"></textarea>
         <div class="grid grid-cols-2 gap-2">
           <input id="bcastBtnText" type="text" placeholder="Inline Button Text (Optional)" class="bg-[#14161b] text-white text-xs rounded-xl p-2.5 border border-gray-800 focus:outline-none focus:ring-1 focus:ring-red-600" />
@@ -838,19 +839,19 @@
           <label class="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1.5">Delivery Target</label>
           <div class="grid grid-cols-3 gap-1.5">
             <button type="button" onclick="selectBroadcastTarget('inapp')" data-btarget="inapp" class="bcast-target-btn bg-[#14161b] text-gray-300 border border-gray-800 py-2 rounded-xl text-[10px] font-bold cursor-pointer">
-              馃敂 In-App Only
+              🔔 In-App Only
             </button>
             <button type="button" onclick="selectBroadcastTarget('bot')" data-btarget="bot" class="bcast-target-btn bg-[#14161b] text-gray-300 border border-gray-800 py-2 rounded-xl text-[10px] font-bold cursor-pointer">
-              馃 Telegram Bot
+              🤖 Telegram Bot
             </button>
             <button type="button" onclick="selectBroadcastTarget('both')" data-btarget="both" class="bcast-target-btn bg-amber-500/20 text-amber-300 border border-amber-500 py-2 rounded-xl text-[10px] font-extrabold cursor-pointer">
-              鈿� Both Channels
+              ⚡ Both Channels
             </button>
           </div>
         </div>
 
         <button onclick="sendAdminBroadcast()" id="sendBroadcastBtn" class="w-full bg-gradient-to-r from-red-600 to-amber-600 hover:opacity-95 text-white font-extrabold py-3 rounded-xl text-xs shadow-lg shadow-red-900/30 cursor-pointer">
-          馃摙 Launch Broadcast Now
+          📢 Launch Broadcast Now
         </button>
       </div>
 
@@ -864,10 +865,10 @@
         </ol>
         <div class="grid grid-cols-2 gap-2 pt-1">
           <button onclick="copyTextCommand('/broadcast')" class="bg-gray-800 hover:bg-gray-700 text-amber-300 border border-gray-700 p-2 rounded-xl text-[11px] font-mono font-bold cursor-pointer">
-            馃搵 /broadcast<br><span class="text-[9px] text-gray-400 font-sans font-normal">Bot DM Only</span>
+            📋 /broadcast<br><span class="text-[9px] text-gray-400 font-sans font-normal">Bot DM Only</span>
           </button>
           <button onclick="copyTextCommand('/broadcast_both')" class="bg-gray-800 hover:bg-gray-700 text-emerald-300 border border-gray-700 p-2 rounded-xl text-[11px] font-mono font-bold cursor-pointer">
-            馃搵 /broadcast_both<br><span class="text-[9px] text-gray-400 font-sans font-normal">Bot DM + In-App Bell</span>
+            📋 /broadcast_both<br><span class="text-[9px] text-gray-400 font-sans font-normal">Bot DM + In-App Bell</span>
           </button>
         </div>
       </div>
@@ -876,7 +877,7 @@
 
   <!-- ====================================================================== -->
   <!-- FIXED FOOTER NAVIGATION BAR                                            -->
-  <!-- [馃弳 Leaderboard] 鈥� [馃彔 Elevated Center Home] 鈥� [馃懁 You] 鈥� [馃洝锔� Admin]   -->
+  <!-- [🏆 Leaderboard] — [🏠 Elevated Center Home] — [👤 You] — [🛡️ Admin]   -->
   <!-- ====================================================================== -->
   <nav class="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-[#0b0c0e]/95 backdrop-blur-xl border-t border-gray-800/80 px-4 py-2 z-40 flex items-end justify-around">
     <!-- Left: Leaderboard Button -->
@@ -964,26 +965,16 @@
       {
         id: 'rookie',
         name: 'Rookie Viewer',
-        icon: '馃嵖',
+        icon: '🍿',
         ruleText: 'Unlocked Free (Starter Avatar)',
         bg: 'from-red-600 to-amber-600',
         svg: `<svg viewBox="0 0 64 64" class="w-full h-full"><defs><linearGradient id="av_rookie" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#dc2626"/><stop offset="100%" stop-color="#d97706"/></linearGradient></defs><circle cx="32" cy="32" r="32" fill="url(#av_rookie)"/><circle cx="24" cy="22" r="6" fill="#fef3c7"/><circle cx="32" cy="19" r="7" fill="#fde68a"/><circle cx="40" cy="22" r="6" fill="#fef3c7"/><path d="M20 26h24l-3 24H23z" fill="#fff"/><path d="M25 26h4l-1.5 24h-3.5zm10 0h4l-1 24h-3.5z" fill="#dc2626"/></svg>`,
         progress: () => ({ current: 1, target: 1 })
       },
       {
-        id: 'sovereign',
-        name: 'Supreme Overlord',
-        icon: '⚡',
-        ruleText: 'Exclusive to Bold Cinema Emperors (Admins Only)',
-        bg: 'from-amber-500 via-red-600 to-yellow-300',
-        svg: `<svg viewBox="0 0 64 64" class="w-full h-full"><defs><linearGradient id="av_sov" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#f59e0b"/><stop offset="50%" stop-color="#dc2626"/><stop offset="100%" stop-color="#fef08a"/></linearGradient></defs><circle cx="32" cy="32" r="32" fill="url(#av_sov)"/><path d="M18 38l4-16 10 8 10-8 4 16z" fill="#fef08a" stroke="#78350f" stroke-width="1.5"/><circle cx="32" cy="20" r="3" fill="#fff"/><path d="M14 44h36v4H14z" fill="#b45309"/><path d="M22 28l10-4 10 4" stroke="#dc2626" stroke-width="2" fill="none"/></svg>`,
-        progress: () => ({ current: 1, target: 1 })
-      },
-
-      {
         id: 'stroller',
         name: 'Night Stroller',
-        icon: '馃暥锔�',
+        icon: '🕶️',
         ruleText: 'Watch 3 Movies',
         bg: 'from-indigo-600 to-slate-900',
         svg: `<svg viewBox="0 0 64 64" class="w-full h-full"><defs><linearGradient id="av_stroller" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#312e81"/><stop offset="100%" stop-color="#0f172a"/></linearGradient></defs><circle cx="32" cy="32" r="32" fill="url(#av_stroller)"/><circle cx="32" cy="32" r="18" fill="#1e293b" stroke="#6366f1" stroke-width="2"/><path d="M16 28h14l2 4h0l2-4h14v6c0 4-3 7-7 7h-4c-3 0-5-2-6-4-1 2-3 4-6 4h-4c-4 0-7-3-7-7v-6z" fill="#090d16" stroke="#38bdf8" stroke-width="2"/><path d="M24 44c3 3 13 3 16 0" stroke="#94a3b8" stroke-width="2.5" fill="none" stroke-linecap="round"/></svg>`,
@@ -992,7 +983,7 @@
       {
         id: 'horror',
         name: 'Cult of Horror',
-        icon: '馃懟',
+        icon: '👻',
         ruleText: 'Watch 3 Horror/Thriller Films',
         bg: 'from-purple-900 to-rose-900',
         svg: `<svg viewBox="0 0 64 64" class="w-full h-full"><defs><linearGradient id="av_horror" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#581c87"/><stop offset="100%" stop-color="#881337"/></linearGradient></defs><circle cx="32" cy="32" r="32" fill="url(#av_horror)"/><path d="M20 30c0-8 5.4-14 12-14s12 6 12 14v18l-4-3-4 3-4-3-4 3-4-3-4 3V30z" fill="#f8fafc"/><circle cx="27" cy="29" r="3" fill="#0f172a"/><circle cx="37" cy="29" r="3" fill="#0f172a"/><ellipse cx="32" cy="36" rx="3" ry="4" fill="#e11d48"/></svg>`,
@@ -1001,7 +992,7 @@
       {
         id: 'detective',
         name: 'Master Detective',
-        icon: '馃暤锔�',
+        icon: '🕵️',
         ruleText: 'Watch 3 Crime/Mystery Films',
         bg: 'from-amber-700 to-stone-900',
         svg: `<svg viewBox="0 0 64 64" class="w-full h-full"><defs><linearGradient id="av_det" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#b45309"/><stop offset="100%" stop-color="#1c1917"/></linearGradient></defs><circle cx="32" cy="32" r="32" fill="url(#av_det)"/><ellipse cx="32" cy="26" rx="20" ry="4" fill="#451a03"/><path d="M21 26l3-10h16l3 10z" fill="#78350f"/><circle cx="29" cy="37" r="7" fill="none" stroke="#fcd34d" stroke-width="2.5"/><line x1="34" y1="42" x2="43" y2="50" stroke="#fcd34d" stroke-width="3.5" stroke-linecap="round"/></svg>`,
@@ -1010,7 +1001,7 @@
       {
         id: 'chaos',
         name: 'Chaos Roller',
-        icon: '馃幉',
+        icon: '🎲',
         ruleText: 'Use "Surprise Me" 10 Times',
         bg: 'from-emerald-600 to-teal-900',
         svg: `<svg viewBox="0 0 64 64" class="w-full h-full"><defs><linearGradient id="av_chaos" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#059669"/><stop offset="100%" stop-color="#134e4a"/></linearGradient></defs><circle cx="32" cy="32" r="32" fill="url(#av_chaos)"/><rect x="17" y="17" width="30" height="30" rx="7" fill="#ecfdf5" stroke="#10b981" stroke-width="2"/><circle cx="24" cy="24" r="2.8" fill="#065f46"/><circle cx="40" cy="24" r="2.8" fill="#065f46"/><circle cx="32" cy="32" r="3" fill="#e11d48"/><circle cx="24" cy="40" r="2.8" fill="#065f46"/><circle cx="40" cy="40" r="2.8" fill="#065f46"/></svg>`,
@@ -1019,7 +1010,7 @@
       {
         id: 'promoter',
         name: 'Hype Promoter',
-        icon: '馃摚',
+        icon: '📣',
         ruleText: 'Share 5 Movies or Refer 1 Friend',
         bg: 'from-blue-600 to-cyan-900',
         svg: `<svg viewBox="0 0 64 64" class="w-full h-full"><defs><linearGradient id="av_prom" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#2563eb"/><stop offset="100%" stop-color="#164e63"/></linearGradient></defs><circle cx="32" cy="32" r="32" fill="url(#av_prom)"/><path d="M18 28h8l14-8v24l-14-8h-8z" fill="#38bdf8"/><path d="M21 36l2 9h5l-2-9z" fill="#facc15"/><path d="M44 25c3 3 3 11 0 14m4-18c5 5 5 17 0 22" stroke="#fef08a" stroke-width="2.5" fill="none" stroke-linecap="round"/></svg>`,
@@ -1028,7 +1019,7 @@
       {
         id: 'vip',
         name: 'Gold VIP',
-        icon: '馃憫',
+        icon: '👑',
         ruleText: 'Reach 500 Total BoldCoins',
         bg: 'from-amber-400 to-yellow-700',
         svg: `<svg viewBox="0 0 64 64" class="w-full h-full"><defs><linearGradient id="av_vip" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#f59e0b"/><stop offset="100%" stop-color="#78350f"/></linearGradient></defs><circle cx="32" cy="32" r="32" fill="url(#av_vip)"/><path d="M14 42l4-18 14 10 14-10 4 18z" fill="#fef08a" stroke="#fff" stroke-width="1.5"/><circle cx="18" cy="21" r="2.5" fill="#fff"/><circle cx="32" cy="18" r="3" fill="#ef4444"/><circle cx="46" cy="21" r="2.5" fill="#fff"/></svg>`,
@@ -1037,7 +1028,7 @@
       {
         id: 'apex',
         name: 'Apex Legend',
-        icon: '馃敟',
+        icon: '🔥',
         ruleText: 'Finish Top 3 on Weekly Leaderboard',
         bg: 'from-red-600 via-orange-500 to-yellow-500',
         svg: `<svg viewBox="0 0 64 64" class="w-full h-full"><defs><linearGradient id="av_apex" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#dc2626"/><stop offset="100%" stop-color="#f59e0b"/></linearGradient></defs><circle cx="32" cy="32" r="32" fill="url(#av_apex)"/><path d="M33 12c4 8-2 12 3 18 4-3 6-7 6-7 5 7 3 19-6 24-9 4-19-2-19-13 0-8 6-13 16-22z" fill="#fef08a"/><path d="M32 28c2 4-1 6 2 9 2-2 3-4 3-4 2 4 1 10-4 12-5 2-9-1-9-6 0-4 3-7 8-11z" fill="#dc2626"/></svg>`,
@@ -1339,7 +1330,6 @@
         }
       };
       tryUnlock('rookie');
-      if (checkAdminAccess()) tryUnlock('sovereign');
       if ((userProfile.watchedCount || 0) >= 3) tryUnlock('stroller');
       if ((userProfile.horrorCount || 0) >= 3) tryUnlock('horror');
       if ((userProfile.crimeCount || 0) >= 3) tryUnlock('detective');
@@ -1403,7 +1393,7 @@
         userProfile.totalCoins = (Number(userProfile.totalCoins) || 0) + coins;
         userProfile.monthlyCoins = (Number(userProfile.monthlyCoins) || 0) + coins;
         userProfile.weeklyCoins = (Number(userProfile.weeklyCoins) || 0) + coins;
-        showToast(`馃獧 +${coins} BoldCoins Earned!`, 'amber');
+        showToast(`🪙 +${coins} BoldCoins Earned!`, 'amber');
       }
 
       const gLower = String(genres || '').toLowerCase();
@@ -1542,7 +1532,7 @@
         card.innerHTML = `
           <div class="relative w-12 h-12 rounded-full shrink-0 p-0.5 bg-gradient-to-tr ${av.bg}">
             ${av.svg}
-            ${!isUnlocked ? `<div class="absolute inset-0 rounded-full bg-black/65 flex items-center justify-center text-xs">馃敀</div>` : ''}
+            ${!isUnlocked ? `<div class="absolute inset-0 rounded-full bg-black/65 flex items-center justify-center text-xs">🔒</div>` : ''}
           </div>
           <div class="flex-1 min-w-0">
             <div class="flex items-center justify-between">
@@ -1551,7 +1541,7 @@
             <div class="text-[10px] text-gray-400 leading-tight mt-0.5 line-clamp-1">${esc(av.ruleText)}</div>
             ${
               isEquipped
-                ? `<span class="inline-block mt-1.5 text-[9px] font-black uppercase px-2 py-0.5 rounded bg-amber-400 text-black">鉁� Equipped</span>`
+                ? `<span class="inline-block mt-1.5 text-[9px] font-black uppercase px-2 py-0.5 rounded bg-amber-400 text-black">✓ Equipped</span>`
                 : isUnlocked
                   ? `<span class="inline-block mt-1.5 text-[9px] font-bold uppercase px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">Tap to Use</span>`
                   : `<div class="mt-1.5 w-full bg-gray-800 h-1.5 rounded-full overflow-hidden"><div class="bg-amber-500 h-full" style="width:${pct}%"></div></div><div class="text-[9px] text-gray-500 mt-0.5">${prog.current}/${prog.target}</div>`
@@ -1564,7 +1554,7 @@
             selectAvatar(av.id);
           } else {
             playClickSound();
-            showToast(`馃敀 Locked: ${av.ruleText} (${prog.current}/${prog.target})`, 'red');
+            showToast(`🔒 Locked: ${av.ruleText} (${prog.current}/${prog.target})`, 'red');
           }
         });
 
@@ -1680,7 +1670,7 @@
       if (brandNewUnread.length > 0) {
         playChimeSound();
         const latest = brandNewUnread[0];
-        showToast(`馃敂 ${latest.title}`, 'amber');
+        showToast(`🔔 ${latest.title}`, 'amber');
         triggerBrowserNotification(latest.title, latest.message);
       }
     }
@@ -1699,16 +1689,16 @@
     function enablePushAlerts() {
       playClickSound();
       if (!('Notification' in window)) {
-        showToast('馃敂 In-app sound & Telegram Bot push alerts are active!', 'emerald');
+        showToast('🔔 In-app sound & Telegram Bot push alerts are active!', 'emerald');
         return;
       }
       Notification.requestPermission().then(perm => {
         if (perm === 'granted') {
-          showToast('鉁� Phone browser notifications enabled!', 'emerald');
+          showToast('✅ Phone browser notifications enabled!', 'emerald');
           const btn = document.getElementById('pushPermBtn');
-          if (btn) btn.textContent = '鉁� Alerts Active';
+          if (btn) btn.textContent = '✓ Alerts Active';
         } else {
-          showToast('鈩癸笍 Telegram Bot push notifications are active!', 'amber');
+          showToast('ℹ️ Telegram Bot push notifications are active!', 'amber');
         }
       });
     }
@@ -1758,7 +1748,7 @@
       if (!userNotifications || userNotifications.length === 0) {
         container.innerHTML = `
           <div class="text-center py-12 px-4">
-            <div class="text-3xl mb-2">馃敂</div>
+            <div class="text-3xl mb-2">🔔</div>
             <div class="text-xs font-bold text-gray-300">No notifications yet</div>
             <div class="text-[11px] text-gray-500 mt-1">When admins reply to your movie requests or announce new drops, they will appear right here with a chime.</div>
           </div>`;
@@ -1803,13 +1793,13 @@
       playClickSound();
       const link = `https://t.me/${BOT_USERNAME}?startapp=ref_${userProfile.id}`;
       copyToClipboardSafe(link);
-      showToast('馃搵 Referral invite link copied!', 'emerald');
+      showToast('📋 Referral invite link copied!', 'emerald');
     }
 
     function shareReferralTelegram() {
       playClickSound();
       const link = `https://t.me/${BOT_USERNAME}?startapp=ref_${userProfile.id}`;
-      const text = `馃嵖 Join me on Bold Cinema Hub! Stream & download HD movies (480p, 720p, 1080p) directly on Telegram and earn BoldCoins! 馃敟`;
+      const text = `🍿 Join me on Bold Cinema Hub! Stream & download HD movies (480p, 720p, 1080p) directly on Telegram and earn BoldCoins! 🔥`;
       const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(text)}`;
       if (tg && tg.openTelegramLink) {
         tg.openTelegramLink(shareUrl);
@@ -1824,9 +1814,9 @@
       const deepLink = `https://t.me/${BOT_USERNAME}?startapp=ref_${userProfile.id}__movie_${slug}`;
       const movieObj = allMovies.find(m => m.title === title) || { title, year, genres };
       const cached = getMetaCached(movieObj);
-      const ratingTxt = (cached && cached.r) ? ` 猸� IMDb ${cached.r}/10` : '';
-      const genreTxt = (movieObj.genres || genres) ? `\n馃幁 Genre: ${movieObj.genres || genres}` : '';
-      const shareText = `馃幀 ${title}${year ? ` (${year})` : ''}${ratingTxt}${genreTxt}\n\n馃嵖 Watch or download in 480p / 720p / 1080p HD on Bold Cinema Hub:`;
+      const ratingTxt = (cached && cached.r) ? ` ⭐ IMDb ${cached.r}/10` : '';
+      const genreTxt = (movieObj.genres || genres) ? `\n🎭 Genre: ${movieObj.genres || genres}` : '';
+      const shareText = `🎬 ${title}${year ? ` (${year})` : ''}${ratingTxt}${genreTxt}\n\n🍿 Watch or download in 480p / 720p / 1080p HD on Bold Cinema Hub:`;
 
       const coins = checkCooldownAndAward('share', title);
       logGamificationEvent('share', title, coins, movieObj.genres || genres);
@@ -1836,7 +1826,7 @@
         tg.openTelegramLink(tgShareUrl);
       } else {
         copyToClipboardSafe(`${shareText}\n${deepLink}`);
-        showToast('馃摛 Share link copied! Opening Telegram share...', 'blue');
+        showToast('📤 Share link copied! Opening Telegram share...', 'blue');
         window.open(tgShareUrl, '_blank');
       }
     }
@@ -1976,7 +1966,7 @@
             if (lbl) lbl.textContent = `Week of ${data.weekKey}`;
           }
           renderLeaderboardRows(data.top20);
-          if (showFeedback) showToast('馃弳 Leaderboard updated!', 'emerald');
+          if (showFeedback) showToast('🏆 Leaderboard updated!', 'emerald');
           return;
         }
       } catch (e) {}
@@ -2008,7 +1998,7 @@
         const rank = u.rank || (idx + 1);
         const av = getAvatarObj(u.avatar);
         const isMe = String(u.id) === String(userProfile.id);
-        const medal = rank === 1 ? '馃' : rank === 2 ? '馃' : rank === 3 ? '馃' : `#${rank}`;
+        const medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : `#${rank}`;
         const borderCls = rank === 1
           ? 'border-amber-400/60 bg-amber-500/10'
           : rank === 2
@@ -2074,7 +2064,7 @@
 
       if (seeAllWishlistBtn) {
         if (watchlist.length > 0) {
-          seeAllWishlistBtn.textContent = `See All (${watchlist.length}) 鈫抈;
+          seeAllWishlistBtn.textContent = `See All (${watchlist.length}) →`;
           seeAllWishlistBtn.classList.remove('hidden');
         } else {
           seeAllWishlistBtn.classList.add('hidden');
@@ -2095,7 +2085,7 @@
 
       if (seeAllHistoryBtn) {
         if (history.length > 0) {
-          seeAllHistoryBtn.textContent = `See All (${history.length}) 鈫抈;
+          seeAllHistoryBtn.textContent = `See All (${history.length}) →`;
           seeAllHistoryBtn.classList.remove('hidden');
         } else {
           seeAllHistoryBtn.classList.add('hidden');
@@ -2196,7 +2186,7 @@
           adminRequestsCache = Array.isArray(data.requests) ? data.requests : [];
           updateAdminBadges(Number(data.unreadRequestsCount || 0));
           renderAdminRequestsInbox();
-          if (showSyncToast) showToast('馃搳 Admin telemetry synced!', 'emerald');
+          if (showSyncToast) showToast('📊 Admin telemetry synced!', 'emerald');
           return;
         }
       } catch (e) {}
@@ -2232,17 +2222,17 @@
                 ${req.unread ? `<span class="w-2 h-2 rounded-full bg-red-500 inline-block"></span>` : ''}
                 <span class="text-xs font-extrabold text-white">${esc(req.movieName)}</span>
               </div>
-              <div class="text-[10px] text-gray-400 mt-0.5">By ${esc(req.userName || 'User')} (${esc(req.userId)}) 路 ${esc(timeStr)}</div>
+              <div class="text-[10px] text-gray-400 mt-0.5">By ${esc(req.userName || 'User')} (${esc(req.userId)}) · ${esc(timeStr)}</div>
             </div>
             <span class="text-[9px] font-bold uppercase px-2 py-0.5 rounded border ${stCls}">${esc(req.status || 'Pending')}</span>
           </div>
-          ${req.adminReply ? `<div class="text-[10px] text-gray-300 bg-black/40 p-2 rounded-lg border border-white/5">馃挰 <b>Admin Reply:</b> ${esc(req.adminReply)}</div>` : ''}
+          ${req.adminReply ? `<div class="text-[10px] text-gray-300 bg-black/40 p-2 rounded-lg border border-white/5">💬 <b>Admin Reply:</b> ${esc(req.adminReply)}</div>` : ''}
           <div class="flex items-center space-x-2 pt-1">
             <button onclick="openAdminReplyModal(${jsq(req.reqId)}, ${jsq(req.movieName)}, ${jsq(req.userName)}, 'Replied')" class="flex-1 bg-gray-800 hover:bg-gray-700 text-amber-300 font-bold py-1.5 px-2.5 rounded-lg text-[10px] border border-gray-700 cursor-pointer">
-              馃挰 Reply / Ask Info
+              💬 Reply / Ask Info
             </button>
             <button onclick="openAdminReplyModal(${jsq(req.reqId)}, ${jsq(req.movieName)}, ${jsq(req.userName)}, 'Uploaded')" class="flex-1 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 font-bold py-1.5 px-2.5 rounded-lg text-[10px] border border-emerald-500/30 cursor-pointer">
-              鉁� Mark Uploaded (+50)
+              ✅ Mark Uploaded (+50)
             </button>
           </div>
         `;
@@ -2303,14 +2293,14 @@
         });
         const data = await res.json();
         if (data && data.success) {
-          showToast('鉁� Reply sent to user (In-App + Telegram Bot)!', 'emerald');
+          showToast('✅ Reply sent to user (In-App + Telegram Bot)!', 'emerald');
           closeAdminReplyModal();
           fetchAdminDashboard(activeAdminPeriod);
         } else {
           throw new Error(data?.error || 'Failed');
         }
       } catch (e) {
-        showToast('鈿狅笍 Could not reach server. Check deployment.', 'red');
+        showToast('⚠️ Could not reach server. Check deployment.', 'red');
       } finally {
         btn.textContent = 'Send Reply & Notify';
       }
@@ -2351,12 +2341,12 @@
     function copyTextCommand(cmd) {
       playClickSound();
       copyToClipboardSafe(cmd);
-      showToast(`馃搵 Copied "${cmd}"! Reply to any post in @${BOT_USERNAME}.`, 'emerald');
+      showToast(`📋 Copied "${cmd}"! Reply to any post in @${BOT_USERNAME}.`, 'emerald');
     }
 
     async function sendAdminBroadcast() {
       playClickSound();
-      const title = document.getElementById('bcastTitle').value.trim() || '馃摙 Official Announcement';
+      const title = document.getElementById('bcastTitle').value.trim() || '📢 Official Announcement';
       const message = document.getElementById('bcastMessage').value.trim();
       const buttonText = document.getElementById('bcastBtnText').value.trim();
       const buttonUrl = document.getElementById('bcastBtnUrl').value.trim();
@@ -2386,16 +2376,16 @@
         });
         const data = await res.json();
         if (data && data.success) {
-          showToast(`鉁� Broadcast sent! (${activeBroadcastTarget.toUpperCase()})`, 'emerald');
+          showToast(`✅ Broadcast sent! (${activeBroadcastTarget.toUpperCase()})`, 'emerald');
           document.getElementById('bcastMessage').value = '';
           syncUserWithBackend();
         } else {
           throw new Error(data?.error || 'Broadcast error');
         }
       } catch (e) {
-        showToast('鈿狅笍 Broadcast request failed. Check connection.', 'red');
+        showToast('⚠️ Broadcast request failed. Check connection.', 'red');
       } finally {
-        btn.textContent = '馃摙 Launch Broadcast Now';
+        btn.textContent = '📢 Launch Broadcast Now';
       }
     }
 
@@ -2439,8 +2429,8 @@
                 <div class="flex items-center justify-between gap-1.5 mb-1.5">
                   <span class="bg-red-600 text-white font-black text-[9px] px-2 py-0.5 rounded-md uppercase tracking-wider">FEATURED</span>
                   <div class="flex items-center space-x-1">
-                    <button onclick="shareMovieToTelegram(${jsq(movie.title)}, ${jsq(movie.year || '')}, ${jsq(movie.genres || '')})" class="text-[10px] bg-blue-500/20 text-blue-300 border border-blue-500/40 px-2 py-0.5 rounded-md font-bold cursor-pointer" title="Share to Telegram">馃摛 Share</button>
-                    ${checkAdminAccess() ? `<button onclick="copySheetTitle(${jsq(movie.title)})" class="text-[10px] bg-amber-500/20 text-amber-400 border border-amber-500/40 px-2 py-0.5 rounded-md font-bold cursor-pointer" title="Copy admin title">馃搵 Copy</button>` : ''}
+                    <button onclick="shareMovieToTelegram(${jsq(movie.title)}, ${jsq(movie.year || '')}, ${jsq(movie.genres || '')})" class="text-[10px] bg-blue-500/20 text-blue-300 border border-blue-500/40 px-2 py-0.5 rounded-md font-bold cursor-pointer" title="Share to Telegram">📤 Share</button>
+                    ${checkAdminAccess() ? `<button onclick="copySheetTitle(${jsq(movie.title)})" class="text-[10px] bg-amber-500/20 text-amber-400 border border-amber-500/40 px-2 py-0.5 rounded-md font-bold cursor-pointer" title="Copy admin title">📋 Copy</button>` : ''}
                   </div>
                 </div>
                 <div class="text-base font-extrabold text-white leading-tight font-impact tracking-wide line-clamp-3">
@@ -2480,7 +2470,7 @@
     function copySheetTitle(title) {
       playClickSound();
       copyToClipboardSafe(title);
-      showToast(`馃搵 Title "${title}" copied for Google Sheets!`, 'amber');
+      showToast(`📋 Title "${title}" copied for Google Sheets!`, 'amber');
     }
 
     function resetToHome() {
@@ -2554,7 +2544,7 @@
     function updateGenrePillsUI() {
       const pills = document.querySelectorAll('.genre-pill');
       pills.forEach(pill => {
-        const text = (pill.dataset.genre || pill.innerText.replace('馃敟 ', '')).trim();
+        const text = (pill.dataset.genre || pill.innerText.replace('🔥 ', '')).trim();
         if (text.toLowerCase() === activeGenreFilter.toLowerCase() || (activeGenreFilter === 'All' && text === 'All')) {
           pill.className = "genre-pill bg-red-600 text-white font-bold px-3.5 py-1.5 rounded-full text-[11px] whitespace-nowrap shadow-md cursor-pointer transition-all";
         } else {
@@ -2575,7 +2565,7 @@
         const movieObj = allMovies.find(m => m.title === title);
         const links = movieObj ? movieObj.links : {};
         watchlist.unshift({ title, year, links });
-        showToast('馃敄 Saved to your Wishlist!', 'emerald');
+        showToast('🔖 Saved to your Wishlist!', 'emerald');
       }
 
       writeStore('bold_cinema_watchlist', watchlist);
@@ -2597,7 +2587,7 @@
       const noTitle = parsed.filter(m => !m.title).length;
       const noLinks = parsed.filter(m => m.title && !m.links['480p'] && !m.links['720p'] && !m.links['1080p']).length;
       const labels = cols.slice(0, 10).map(c => String(c.label || c.id || '?').slice(0, 20)).join(' | ').replace(/</g, '&lt;');
-      el.innerHTML = `馃洜 Admin debug: ${rowCount} rows received from Sheet 路 ${valid.length} valid movies 路 ${noTitle} without title 路 ${noLinks} without links 路 ${valid.filter(m => m.customPoster).length} custom posters 路 ${valid.filter(m => m.imdbId).length} IMDb IDs<br>Columns: ${labels}`;
+      el.innerHTML = `🛠 Admin debug: ${rowCount} rows received from Sheet · ${valid.length} valid movies · ${noTitle} without title · ${noLinks} without links · ${valid.filter(m => m.customPoster).length} custom posters · ${valid.filter(m => m.imdbId).length} IMDb IDs<br>Columns: ${labels}`;
       el.classList.remove('hidden');
     }
 
@@ -2613,7 +2603,7 @@
         <div class="text-center py-6 text-xs">
           <div class="text-red-500 font-semibold">Failed to load data.</div>
           <div class="text-gray-500 mt-1 px-4">${safeReason}</div>
-          <button onclick="loadSheetData()" class="mt-3 bg-red-600 hover:bg-red-700 text-white font-bold px-4 py-2 rounded-xl text-xs cursor-pointer">鈫� Retry</button>
+          <button onclick="loadSheetData()" class="mt-3 bg-red-600 hover:bg-red-700 text-white font-bold px-4 py-2 rounded-xl text-xs cursor-pointer">↻ Retry</button>
         </div>`;
       if (latest) latest.innerHTML = `<div class="text-center text-gray-500 py-6 text-xs">Nothing to show yet.</div>`;
     }
@@ -2698,7 +2688,7 @@
         .replace(/\bpart\s*\d+/gi, '')
         .replace(/\bchapter\s*\d+/gi, '')
         .replace(/\bvol(ume)?\.?\s*\d+/gi, '')
-        .replace(/[:\-鈥撯€擼.*$/, '')
+        .replace(/[:\-–—].*$/, '')
         .replace(/\s*[\[(][^\])]*[\])]\s*$/g, '')
         .replace(/[^a-z0-9\s]/gi, '')
         .trim();
@@ -2738,8 +2728,8 @@
 
     function cleanTitleForOmdb(title) {
       return String(title || '')
-        .replace(/\(\s*E\d+(?:\s*[-鈥揮\s*E?\d+)?\s*\)/gi, '')
-        .replace(/\bS\d{1,2}\s*E\d{1,3}(?:\s*[-鈥揮\s*E?\d{1,3})?\b/gi, '')
+        .replace(/\(\s*E\d+(?:\s*[-–]\s*E?\d+)?\s*\)/gi, '')
+        .replace(/\bS\d{1,2}\s*E\d{1,3}(?:\s*[-–]\s*E?\d{1,3})?\b/gi, '')
         .replace(/\bS\d{1,2}\b/gi, '')
         .replace(/\bseason\s*\d+\b/gi, '')
         .replace(/\s*[\[(][^\])]*[\])]\s*$/g, '')
@@ -2867,7 +2857,7 @@
       const badge = el && el.querySelector('.rating-badge');
       const v = parseFloat(r);
       if (!badge || !v) return;
-      badge.textContent = '猸� ' + v.toFixed(1);
+      badge.textContent = '⭐ ' + v.toFixed(1);
       badge.classList.remove('hidden');
     }
 
@@ -2931,7 +2921,7 @@
             </svg>
           </div>
           <span class="rating-badge hidden absolute top-1 left-1 z-10 text-[10px] font-extrabold text-amber-300 bg-black/70 backdrop-blur-sm border border-amber-400/30 px-1.5 py-0.5 rounded-md"></span>
-          ${isWatched ? `<span class="watched-badge absolute bottom-1 right-1 z-10 text-[8px] font-black uppercase tracking-wider bg-emerald-600/95 text-white px-1.5 py-0.5 rounded shadow">鉁� Watched</span>` : ''}
+          ${isWatched ? `<span class="watched-badge absolute bottom-1 right-1 z-10 text-[8px] font-black uppercase tracking-wider bg-emerald-600/95 text-white px-1.5 py-0.5 rounded shadow">✓ Watched</span>` : ''}
         </div>`;
     }
 
@@ -3076,14 +3066,14 @@
       const chip = (txt, cls) => `<span class="${cls} text-[11px] font-bold px-2 py-0.5 rounded-md border">${esc(txt)}</span>`;
       const chips = [];
       const isWatched = readStore('bold_cinema_history').some(h => h.title === m.title);
-      if (isWatched) chips.push(chip('鉁� Watched', 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'));
-      if (entry.r) chips.push(chip('猸� ' + entry.r + '/10', 'bg-amber-500/15 text-amber-300 border-amber-400/40'));
+      if (isWatched) chips.push(chip('✓ Watched', 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'));
+      if (entry.r) chips.push(chip('⭐ ' + entry.r + '/10', 'bg-amber-500/15 text-amber-300 border-amber-400/40'));
       if (entry.rt) chips.push(chip(entry.rt, 'bg-white/5 text-gray-200 border-white/15'));
       if (entry.ag) chips.push(chip(entry.ag, 'bg-white/5 text-gray-200 border-white/15'));
       document.getElementById('detChips').innerHTML = chips.join('');
       plot.textContent = entry.pl || 'No synopsis available.';
-      document.getElementById('detDirector').textContent = entry.di || '鈥�';
-      document.getElementById('detActors').textContent = entry.ac || '鈥�';
+      document.getElementById('detDirector').textContent = entry.di || '—';
+      document.getElementById('detActors').textContent = entry.ac || '—';
     }
 
     function openDetails(movie) {
@@ -3096,13 +3086,13 @@
       document.getElementById('detTitle').textContent = m.title;
       document.getElementById('detYear').textContent = m.year || '';
       document.getElementById('detChips').innerHTML = isWatched
-        ? `<span class="bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[11px] font-bold px-2 py-0.5 rounded-md">鉁� Watched</span>`
+        ? `<span class="bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[11px] font-bold px-2 py-0.5 rounded-md">✓ Watched</span>`
         : '';
       const plot = document.getElementById('detPlot');
-      plot.textContent = 'Loading details鈥�';
+      plot.textContent = 'Loading details…';
       plot.classList.add('animate-pulse');
-      document.getElementById('detDirector').textContent = '鈥�';
-      document.getElementById('detActors').textContent = '鈥�';
+      document.getElementById('detDirector').textContent = '—';
+      document.getElementById('detActors').textContent = '—';
       document.getElementById('detailsHero').style.backgroundImage = '';
       document.getElementById('detGenres').innerHTML = genrePillsHtml(m.genres, 'red', 6);
       document.getElementById('detActions').innerHTML = qualityButtonsHtml(m);
@@ -3158,7 +3148,7 @@
         .sort((a, b) => b.r - a.r).slice(0, 100);
 
       document.getElementById('searchFeedSubtitle').innerText =
-        done < total ? (omdbDisabled ? 'IMDb 路 daily limit reached, partial list' : `IMDb 路 loading ratings ${done}/${total}`) : 'IMDb 路 highest rated first';
+        done < total ? (omdbDisabled ? 'IMDb · daily limit reached, partial list' : `IMDb · loading ratings ${done}/${total}`) : 'IMDb · highest rated first';
       document.getElementById('searchFeedTitle').innerText = 'TOP RATED';
       document.getElementById('searchCount').innerText = `${rated.length} movies`;
 
@@ -3168,7 +3158,7 @@
 
       container.innerHTML = '';
       if (rated.length === 0) {
-        container.innerHTML = `<div class="text-center text-gray-500 py-12 text-xs">Fetching IMDb ratings鈥� the first results will appear in a moment.</div>`;
+        container.innerHTML = `<div class="text-center text-gray-500 py-12 text-xs">Fetching IMDb ratings… the first results will appear in a moment.</div>`;
         return;
       }
       rated.forEach(x => container.appendChild(createMovieCard(x.m)));
@@ -3226,7 +3216,7 @@
             <div class="flex items-start justify-between gap-1 mb-1.5">
               ${genreHtml}
               <div class="flex items-center space-x-1 shrink-0">
-                ${checkAdminAccess() ? `<button onclick="editAdminEntry(${t})" class="p-1 -mt-1 text-amber-400 hover:text-amber-300 transition-colors cursor-pointer shrink-0" title="Edit Catalog Entry">鉁忥笍</button>` : ''}
+                ${checkAdminAccess() ? `<button onclick="editAdminEntry(${t})" class="p-1 -mt-1 text-amber-400 hover:text-amber-300 transition-colors cursor-pointer shrink-0" title="Edit Catalog Entry">✏️</button>` : ''}
                 <button onclick="shareMovieToTelegram(${t}, ${jsq(movie.year || '')}, ${jsq(genresStr)})" class="p-1 -mt-1 text-gray-400 hover:text-blue-400 transition-colors cursor-pointer shrink-0" title="Share to Telegram (+15 BoldCoins)">
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path></svg>
                 </button>
@@ -3280,7 +3270,7 @@
         <div class="spotlight-card p-4 rounded-2xl relative">
           <div class="flex items-center justify-between mb-3">
             <span class="text-[10px] font-extrabold text-amber-400 tracking-widest uppercase flex items-center space-x-1">
-              <span>鉁� YOUR MYSTERY SPOTLIGHT</span>
+              <span>✨ YOUR MYSTERY SPOTLIGHT</span>
             </span>
             <div class="flex items-center space-x-1">
               <button onclick="shareMovieToTelegram(${jsq(selectedMovie.title)}, ${jsq(selectedMovie.year || '')}, ${jsq(selectedMovie.genres || '')})" class="p-1 text-gray-400 hover:text-blue-400 transition-colors cursor-pointer" title="Share to Telegram">
@@ -3311,7 +3301,7 @@
           <button 
             onclick="surpriseMe()" 
             class="w-full mt-3 bg-gray-800 hover:bg-gray-700 text-gray-300 font-semibold py-2 rounded-xl text-xs border border-gray-700/60 cursor-pointer">
-            馃幉 Roll Again
+            🎲 Roll Again
           </button>
         </div>
       `;
@@ -3470,11 +3460,11 @@
             userProfile.monthlyCoins = (Number(userProfile.monthlyCoins) || 0) + coinsAwarded;
             userProfile.weeklyCoins = (Number(userProfile.weeklyCoins) || 0) + coinsAwarded;
             saveUserProfile();
-            showToast(`馃獧 +${coinsAwarded} BoldCoins for Movie Request!`, 'amber');
+            showToast(`🪙 +${coinsAwarded} BoldCoins for Movie Request!`, 'amber');
           }
           if (data.profile) mergeServerProfile(data.profile);
 
-          feedbackEl.innerText = '鉁� Request sent to Admin Inbox!';
+          feedbackEl.innerText = '✅ Request sent to Admin Inbox!';
           feedbackEl.classList.remove('text-amber-400');
           feedbackEl.classList.add('text-emerald-400');
 
@@ -3486,7 +3476,7 @@
           throw new Error(data.error || 'Failed to send request');
         }
       } catch (err) {
-        feedbackEl.innerText = '鉂� Failed to send. Please try again.';
+        feedbackEl.innerText = '❌ Failed to send. Please try again.';
         feedbackEl.classList.remove('text-amber-400');
         feedbackEl.classList.add('text-red-400');
       }
@@ -3552,14 +3542,14 @@
       const p = getAdminFormPayload();
       const feedback = document.getElementById('adminFeedback');
       if (!p.title) {
-        feedback.innerText = '鈿狅笍 Movie Title is required!';
+        feedback.innerText = '⚠️ Movie Title is required!';
         feedback.classList.remove('hidden', 'text-emerald-400');
         feedback.classList.add('text-red-400');
         return;
       }
       const tsvRow = `${p.title}\t${p.year}\t${p.genres}\t${p.link480p}\t${p.link720p}\t${p.link1080p}\t${p.tags}\t${p.priority}\t${p.customPoster}\t${p.imdbId}`;
       copyToClipboardSafe(tsvRow);
-      feedback.innerText = '馃搵 Formatted row copied to clipboard! Paste directly into Google Sheets.';
+      feedback.innerText = '📋 Formatted row copied to clipboard! Paste directly into Google Sheets.';
       feedback.classList.remove('hidden', 'text-red-400');
       feedback.classList.add('text-emerald-400');
     }
@@ -3569,7 +3559,7 @@
       const feedback = document.getElementById('adminFeedback');
 
       if (!checkAdminAccess()) {
-        feedback.innerText = '鉀� Access Denied: Admin privileges required.';
+        feedback.innerText = '⛔ Access Denied: Admin privileges required.';
         feedback.classList.remove('hidden', 'text-emerald-400', 'text-amber-400');
         feedback.classList.add('text-red-400');
         return;
@@ -3608,7 +3598,7 @@
         }
 
         if (data.success !== false) {
-          feedback.innerText = '鉁� Synced directly to Google Sheet!';
+          feedback.innerText = '✅ Synced directly to Google Sheet!';
           feedback.classList.remove('text-amber-400');
           feedback.classList.add('text-emerald-400');
 
@@ -3621,7 +3611,7 @@
         }
       } catch (err) {
         copyAdminTSV();
-        feedback.innerText = '鈿狅笍 Network error. TSV row copied to clipboard for direct pasting!';
+        feedback.innerText = '⚠️ Network error. TSV row copied to clipboard for direct pasting!';
         feedback.classList.remove('text-amber-400');
         feedback.classList.add('text-amber-300');
       }
@@ -3742,3 +3732,4 @@
   </script>
 </body>
 </html>
+```
