@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -11,20 +12,26 @@
   <!-- Custom Fonts & Styling -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     .hidden { display: none !important; }
     /* Cinematic details bottom sheet */
     .details-sheet {
-      background: linear-gradient(160deg, rgba(26, 28, 34, 0.92) 0%, rgba(11, 12, 14, 0.96) 100%);
+      background: linear-gradient(160deg, rgba(26, 28, 34, 0.95) 0%, rgba(11, 12, 14, 0.98) 100%);
       border: 1px solid rgba(255, 255, 255, 0.08);
       border-bottom: none;
       -webkit-backdrop-filter: blur(20px);
       backdrop-filter: blur(20px);
-      box-shadow: 0 -20px 60px rgba(0, 0, 0, 0.7), 0 0 40px rgba(220, 38, 38, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.10);
+      box-shadow: 0 -20px 60px rgba(0, 0, 0, 0.75), 0 0 40px rgba(220, 38, 38, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.10);
       animation: sheetUp 0.35s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
     }
     @keyframes sheetUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+    @keyframes popScale {
+      0% { opacity: 0; transform: scale(0.82); }
+      70% { opacity: 1; transform: scale(1.04); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+    .animate-pop { animation: popScale 0.38s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
     /* Cinema ambient lighting + vignette */
     .ambient-layer { position: fixed; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; }
     .ambient-pool { position: absolute; border-radius: 9999px; will-change: transform; }
@@ -61,7 +68,6 @@
         0 6px 14px rgba(0, 0, 0, 0.45),
         0 0 28px rgba(220, 38, 38, 0.12);
     }
-    
     body {
       background-color: #0b0c0e;
       color: #f3f4f6;
@@ -73,7 +79,7 @@
       letter-spacing: -0.02em;
     }
     .glass-card {
-      background: linear-gradient(145deg, rgba(22, 24, 29, 0.75) 0%, rgba(17, 18, 22, 0.80) 50%, rgba(11, 12, 14, 0.85) 100%);
+      background: linear-gradient(145deg, rgba(22, 24, 29, 0.78) 0%, rgba(17, 18, 22, 0.84) 50%, rgba(11, 12, 14, 0.90) 100%);
       border: 1px solid rgba(255, 255, 255, 0.08);
       -webkit-backdrop-filter: blur(16px);
       backdrop-filter: blur(16px);
@@ -104,6 +110,9 @@
         0 0 36px rgba(245, 158, 11, 0.22);
       animation: fadeIn 0.4s ease-out forwards;
     }
+    .gold-glow {
+      box-shadow: 0 0 25px rgba(245, 158, 11, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    }
     @keyframes shimmer {
       0% { background-position: -200% 0; }
       100% { background-position: 200% 0; }
@@ -119,7 +128,7 @@
     }
   </style>
 </head>
-<body class="pb-24 max-w-md mx-auto min-h-screen flex flex-col relative">
+<body class="pb-28 max-w-md mx-auto min-h-screen flex flex-col relative select-none">
 
   <!-- CINEMA AMBIENT LIGHTING -->
   <div class="ambient-layer" aria-hidden="true">
@@ -129,6 +138,9 @@
     <div class="ambient-pool bg-amber-600/10 blur-3xl w-[18rem] h-[18rem] -bottom-20 right-0"></div>
   </div>
   <div class="vignette" aria-hidden="true"></div>
+
+  <!-- FLOATING TOAST & COIN REWARD CONTAINER -->
+  <div id="toastContainer" class="fixed top-4 left-1/2 -translate-x-1/2 z-[100] w-full max-w-xs px-4 space-y-2 pointer-events-none"></div>
 
   <!-- FORCE JOIN OVERLAY -->
   <div id="joinModal" class="fixed inset-0 z-50 bg-[#0b0c0e]/95 backdrop-blur-xl flex flex-col items-center justify-center p-6 text-center">
@@ -158,6 +170,130 @@
         class="w-full bg-gray-800 hover:bg-gray-700 active:scale-[0.98] transition-all text-gray-200 font-semibold py-3 px-4 rounded-xl text-xs border border-gray-700/60 cursor-pointer">
         <span>Already Joined</span>
       </button>
+    </div>
+  </div>
+
+  <!-- AVATAR UNLOCK CELEBRATION POPUP MODAL -->
+  <div id="avatarUnlockModal" class="fixed inset-0 z-[95] bg-black/85 backdrop-blur-lg hidden flex items-center justify-center p-5">
+    <div class="glass-card gold-glow w-full max-w-xs p-6 rounded-3xl border border-amber-500/50 text-center relative overflow-hidden animate-pop">
+      <div class="absolute -top-16 left-1/2 -translate-x-1/2 w-44 h-44 bg-amber-500/25 rounded-full blur-2xl pointer-events-none"></div>
+      <span class="inline-block text-[10px] font-extrabold uppercase tracking-widest px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-400/40 mb-3">
+        🎉 New Avatar Badge Unlocked!
+      </span>
+      <div id="unlockAvatarPreview" class="w-24 h-24 mx-auto my-3 rounded-full p-1 bg-gradient-to-tr from-amber-500 via-red-500 to-amber-300 shadow-2xl"></div>
+      <h3 id="unlockAvatarTitle" class="text-2xl font-black text-white font-impact tracking-wide mt-2">NIGHT STROLLER</h3>
+      <p id="unlockAvatarDesc" class="text-xs text-gray-300 mt-1 mb-5 leading-relaxed">Congratulations! You unlocked this exclusive cinema badge.</p>
+      <div class="space-y-2.5">
+        <button onclick="equipUnlockedAvatar()" class="w-full bg-gradient-to-r from-amber-500 to-orange-600 hover:opacity-95 text-black font-extrabold py-3 rounded-xl text-xs shadow-lg shadow-amber-900/40 active:scale-[0.98] transition-all cursor-pointer">
+          ✨ Use as Profile
+        </button>
+        <button onclick="closeAvatarUnlockModal()" class="w-full bg-gray-800/90 hover:bg-gray-700 text-gray-200 font-semibold py-2.5 rounded-xl text-xs border border-gray-700 cursor-pointer">
+          Continue
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- NOTIFICATIONS INBOX MODAL (HOME PAGE) -->
+  <div id="notifModal" class="fixed inset-0 z-[75] bg-black/80 backdrop-blur-md hidden flex items-end sm:items-center justify-center p-0 sm:p-4" onclick="if (event.target === this) toggleNotifModal(false)">
+    <div class="details-sheet w-full max-w-md max-h-[85vh] flex flex-col rounded-t-3xl sm:rounded-3xl overflow-hidden">
+      <div class="px-5 py-4 border-b border-gray-800/80 flex items-center justify-between">
+        <div class="flex items-center space-x-2">
+          <span class="text-amber-400 text-base">🔔</span>
+          <div>
+            <h3 class="text-base font-bold text-white font-impact tracking-wider">NOTIFICATIONS INBOX</h3>
+            <p class="text-[10px] text-gray-400">Admin replies, movie uploads & rewards</p>
+          </div>
+        </div>
+        <div class="flex items-center space-x-2">
+          <button onclick="enablePushAlerts()" id="pushPermBtn" class="text-[10px] bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 px-2.5 py-1 rounded-lg font-semibold cursor-pointer">
+            📲 Enable Alerts
+          </button>
+          <button onclick="toggleNotifModal(false)" class="w-8 h-8 rounded-full bg-white/5 border border-white/10 text-gray-300 hover:text-white text-lg flex items-center justify-center cursor-pointer">&times;</button>
+        </div>
+      </div>
+      <div id="notifListContainer" class="p-4 overflow-y-auto space-y-2.5 flex-1"></div>
+    </div>
+  </div>
+
+  <!-- REFER & EARN MODAL -->
+  <div id="referModal" class="fixed inset-0 z-[75] bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-5" onclick="if (event.target === this) toggleReferModal(false)">
+    <div class="glass-card gold-glow w-full max-w-xs p-5 rounded-3xl border border-amber-500/40 relative overflow-hidden">
+      <div class="flex justify-between items-center mb-3">
+        <div class="flex items-center space-x-1.5">
+          <span class="text-base">🎁</span>
+          <h3 class="text-base font-bold text-white font-impact tracking-wider">REFER & EARN BOLDCOINS</h3>
+        </div>
+        <button onclick="toggleReferModal(false)" class="text-gray-400 hover:text-white text-lg font-bold px-2 cursor-pointer">&times;</button>
+      </div>
+      <div class="p-3.5 rounded-2xl bg-gradient-to-br from-amber-500/15 via-red-600/10 to-transparent border border-amber-500/30 mb-4 text-center">
+        <div class="text-2xl font-black text-amber-400 font-impact tracking-wide">+100 BOLDCOINS</div>
+        <div class="text-[11px] text-gray-300 mt-0.5">For every friend who opens Bold Cinema Hub via your invite link!</div>
+      </div>
+      <div class="grid grid-cols-2 gap-2 mb-4 text-center">
+        <div class="bg-[#14161b] border border-gray-800 rounded-xl p-2.5">
+          <div id="referCountStat" class="text-lg font-black text-white font-impact">0</div>
+          <div class="text-[10px] text-gray-400 uppercase font-semibold">Friends Joined</div>
+        </div>
+        <div class="bg-[#14161b] border border-gray-800 rounded-xl p-2.5">
+          <div id="referCoinsStat" class="text-lg font-black text-amber-400 font-impact">0</div>
+          <div class="text-[10px] text-gray-400 uppercase font-semibold">Coins Earned</div>
+        </div>
+      </div>
+      <div class="mb-3">
+        <label class="text-[10px] text-gray-400 uppercase font-bold tracking-wider block mb-1">Your Personal Invite Link</label>
+        <div class="flex items-center space-x-1.5">
+          <input id="referLinkInput" type="text" readonly class="flex-1 bg-[#14161b] text-gray-300 text-[11px] rounded-xl py-2.5 px-3 border border-gray-800 focus:outline-none" />
+          <button onclick="copyReferralLink()" class="bg-gray-800 hover:bg-gray-700 text-amber-400 font-bold text-xs px-3 py-2.5 rounded-xl border border-gray-700 cursor-pointer">Copy</button>
+        </div>
+      </div>
+      <button onclick="shareReferralTelegram()" class="w-full bg-gradient-to-r from-amber-500 via-orange-500 to-red-600 hover:opacity-95 text-white font-extrabold py-3 rounded-xl text-xs shadow-lg shadow-orange-900/30 flex items-center justify-center space-x-2 cursor-pointer">
+        <span>🚀 Share Invite on Telegram</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- FULL LIST POPUP MODAL (FOR WISHLIST & WATCH HISTORY "SEE ALL") -->
+  <div id="fullListModal" class="fixed inset-0 z-[75] bg-black/85 backdrop-blur-md hidden flex items-end sm:items-center justify-center p-0 sm:p-4" onclick="if (event.target === this) closeFullListModal()">
+    <div class="details-sheet w-full max-w-md h-[88vh] flex flex-col rounded-t-3xl sm:rounded-3xl overflow-hidden">
+      <div class="px-5 py-4 border-b border-gray-800/80 flex items-center justify-between">
+        <div>
+          <span id="fullListSubtitle" class="text-[10px] font-bold text-amber-400 tracking-widest uppercase block">Saved Collection</span>
+          <h3 id="fullListTitle" class="text-xl font-black text-white font-impact tracking-wide">FULL WISHLIST</h3>
+        </div>
+        <button onclick="closeFullListModal()" class="w-8 h-8 rounded-full bg-white/5 border border-white/10 text-gray-300 hover:text-white text-lg flex items-center justify-center cursor-pointer">&times;</button>
+      </div>
+      <div class="px-5 pt-3 pb-2">
+        <input id="fullListSearchInput" type="text" oninput="renderFullListItems()" placeholder="Filter movies in this list..." class="w-full bg-[#14161b] text-white text-xs rounded-xl py-2.5 px-3.5 border border-gray-800 focus:outline-none focus:ring-1 focus:ring-red-600" />
+      </div>
+      <div id="fullListContainer" class="p-5 overflow-y-auto space-y-3 flex-1"></div>
+    </div>
+  </div>
+
+  <!-- ADMIN REQUEST REPLY MODAL -->
+  <div id="adminReplyModal" class="fixed inset-0 z-[80] bg-black/85 backdrop-blur-md hidden flex items-center justify-center p-4" onclick="if (event.target === this) closeAdminReplyModal()">
+    <div class="glass-card w-full max-w-xs p-5 rounded-2xl border border-amber-500/40">
+      <div class="flex justify-between items-center mb-2">
+        <h3 class="text-sm font-bold text-white font-impact tracking-wider">REPLY TO MOVIE REQUEST</h3>
+        <button onclick="closeAdminReplyModal()" class="text-gray-400 hover:text-white text-lg font-bold px-2 cursor-pointer">&times;</button>
+      </div>
+      <div id="replyModalMeta" class="text-[11px] text-amber-300 bg-amber-500/10 border border-amber-500/20 rounded-xl p-2.5 mb-3"></div>
+      <label class="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">Status Action</label>
+      <select id="adminReplyStatus" onchange="prefillReplyTemplate()" class="w-full bg-[#14161b] text-white text-xs rounded-xl p-2.5 border border-gray-800 mb-3 focus:outline-none focus:ring-1 focus:ring-amber-500">
+        <option value="Replied">💬 Ask Info / Reply to User</option>
+        <option value="Uploaded">✅ Mark Uploaded (+50 BoldCoins to User)</option>
+        <option value="Pending">⏳ Keep Pending</option>
+      </select>
+      <label class="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">Message to User (In-App + Bot Push)</label>
+      <textarea id="adminReplyText" rows="3" placeholder="e.g. Which release year or language do you need?" class="w-full bg-[#14161b] text-white text-xs rounded-xl p-2.5 border border-gray-800 focus:outline-none focus:ring-1 focus:ring-amber-500 mb-3"></textarea>
+      <div class="flex space-x-2">
+        <button onclick="sendAdminRequestReply()" id="sendReplyBtn" class="flex-1 bg-amber-600 hover:bg-amber-700 text-white font-bold py-2.5 rounded-xl text-xs shadow-lg cursor-pointer">
+          Send Reply & Notify
+        </button>
+        <button onclick="closeAdminReplyModal()" class="bg-gray-800 hover:bg-gray-700 text-gray-300 font-semibold px-4 py-2.5 rounded-xl text-xs cursor-pointer">
+          Cancel
+        </button>
+      </div>
     </div>
   </div>
 
@@ -204,6 +340,9 @@
 
       <div class="sticky bottom-0 px-5 py-3 bg-[#0b0c0e]/90 backdrop-blur-lg border-t border-white/10 flex items-center gap-2">
         <div id="detActions" class="flex flex-1 space-x-2"></div>
+        <button id="detShareBtn" onclick="shareDetailsMovie()" class="shrink-0 w-11 h-11 rounded-xl bg-blue-500/15 border border-blue-500/30 hover:bg-blue-500/25 flex items-center justify-center text-blue-400 cursor-pointer" title="Share to Telegram (+15 BoldCoins)">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path></svg>
+        </button>
         <button id="detBookmark" onclick="toggleDetailsBookmark()" class="shrink-0 w-11 h-11 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-gray-300 cursor-pointer" title="Bookmark"></button>
       </div>
     </div>
@@ -212,11 +351,11 @@
   <!-- MOVIE REQUEST MODAL -->
   <div id="requestModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-5">
     <div class="glass-card w-full max-w-xs p-5 rounded-2xl">
-      <div class="flex justify-between items-center mb-3">
+      <div class="flex justify-between items-center mb-2">
         <h3 class="text-sm font-bold text-white font-impact tracking-wider">REQUEST A MOVIE</h3>
         <button onclick="toggleRequestModal(false)" class="text-gray-400 hover:text-white text-lg font-bold px-2 cursor-pointer">&times;</button>
       </div>
-      <p class="text-[11px] text-gray-400 mb-4">Can't find what you're looking for? Submit your request directly to our admins.</p>
+      <p class="text-[11px] text-gray-400 mb-3">Can't find what you're looking for? Submit your request directly to our admins and earn <span class="text-amber-400 font-bold">+10 BoldCoins</span> (+50 more when uploaded!).</p>
       
       <input 
         type="text" 
@@ -280,34 +419,58 @@
     </div>
   </div>
 
-  <!-- HOME VIEW CONTAINER -->
+  <!-- ====================================================================== -->
+  <!-- 1. HOME VIEW CONTAINER                                                 -->
+  <!-- ====================================================================== -->
   <div id="homeView" class="flex-1 flex flex-col">
-    <header id="topHeader" class="relative px-5 pt-8 pb-4 border-b border-gray-800/60 overflow-hidden">
+    <header id="topHeader" class="relative px-5 pt-7 pb-4 border-b border-gray-800/60 overflow-hidden">
       <div class="absolute -top-10 left-1/2 -translate-x-1/2 w-80 h-44 bg-red-600/20 rounded-full blur-3xl pointer-events-none"></div>
       <div class="absolute top-6 -right-16 w-56 h-56 bg-amber-500/15 rounded-full blur-3xl pointer-events-none"></div>
       <div class="absolute -bottom-10 -left-16 w-56 h-40 bg-red-800/15 rounded-full blur-3xl pointer-events-none"></div>
 
-      <div class="flex items-center justify-between mb-1">
-        <div onclick="resetToHome()" class="flex items-center space-x-2 text-[11px] font-semibold text-blue-400 tracking-widest uppercase cursor-pointer hover:opacity-85 transition-opacity">
+      <!-- Top Action Row: Brand + Refer + Notifications + Request + Channel -->
+      <div class="flex items-center justify-between gap-1.5 mb-2">
+        <div onclick="resetToHome()" class="flex items-center space-x-1.5 text-[11px] font-semibold text-blue-400 tracking-widest uppercase cursor-pointer hover:opacity-85 transition-opacity shrink-0">
           <span class="w-2 h-2 rounded-full bg-blue-500 inline-block animate-pulse"></span>
           <span>Bold Cinema</span>
         </div>
-        <div class="flex items-center space-x-2">
-          <button id="adminAddBtn" onclick="toggleAdminModal(true)" class="hidden text-[10px] bg-amber-500/20 text-amber-400 border border-amber-500/50 px-2.5 py-1 rounded-full font-bold hover:bg-amber-500/30 transition-all cursor-pointer">
-            <span>+ Add Movie</span>
+
+        <div class="flex items-center space-x-1.5 flex-wrap justify-end">
+          <!-- Refer Button on Top in Home Page -->
+          <button onclick="toggleReferModal(true)" class="text-[10px] bg-gradient-to-r from-amber-500/20 to-orange-500/20 text-amber-300 border border-amber-500/40 px-2.5 py-1 rounded-full font-bold hover:bg-amber-500/30 transition-all flex items-center space-x-1 cursor-pointer" title="Refer Friends & Earn +100 BoldCoins">
+            <span>🎁 Refer</span>
           </button>
-          <button onclick="openChannel()" class="text-[10px] bg-amber-600/20 text-amber-400 border border-amber-600/40 px-2.5 py-1 rounded-full font-semibold hover:bg-amber-600/30 transition-all flex items-center space-x-1 cursor-pointer">
-            <span>📢 Join Channel</span>
-          </button>
+
+          <!-- Request Button -->
           <button onclick="toggleRequestModal(true)" class="text-[10px] bg-red-600/20 text-red-400 border border-red-600/40 px-2.5 py-1 rounded-full font-semibold hover:bg-red-600/30 transition-all flex items-center space-x-1 cursor-pointer">
             <span>+ Request</span>
+          </button>
+
+          <!-- Join Channel Button -->
+          <button onclick="openChannel()" class="text-[10px] bg-amber-600/20 text-amber-400 border border-amber-600/40 px-2 py-1 rounded-full font-semibold hover:bg-amber-600/30 transition-all flex items-center space-x-1 cursor-pointer" title="Join Official Channel">
+            <span>📢 Join Channel</span>
+          </button>
+
+          <!-- Notification Bell Button with Unread Badge -->
+          <button onclick="toggleNotifModal(true)" class="relative w-8 h-8 rounded-full bg-[#16181d] border border-gray-800 hover:border-amber-500/50 flex items-center justify-center text-gray-200 transition-all cursor-pointer" title="Notifications">
+            <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
+            </svg>
+            <span id="notifBadge" class="hidden absolute -top-1 -right-1 min-w-[16px] h-4 px-1 bg-red-600 text-white text-[9px] font-extrabold rounded-full flex items-center justify-center border border-[#0b0c0e]">0</span>
           </button>
         </div>
       </div>
 
-      <h1 onclick="resetToHome()" class="text-4xl font-black text-white font-impact leading-none tracking-tight my-2 cursor-pointer hover:opacity-90 transition-opacity">
-        BOLD CINEMA HUB
-      </h1>
+      <!-- Title & Live User Coin Pill -->
+      <div class="flex items-end justify-between my-1.5">
+        <h1 onclick="resetToHome()" class="text-4xl font-black text-white font-impact leading-none tracking-tight cursor-pointer hover:opacity-90 transition-opacity">
+          BOLD CINEMA HUB
+        </h1>
+        <button onclick="switchTab('library')" class="flex items-center space-x-1.5 bg-[#14161b]/90 hover:bg-[#1b1e26] border border-amber-500/30 px-2.5 py-1 rounded-full cursor-pointer transition-all" title="Your BoldCoins">
+          <span id="headerCoinIcon" class="w-4 h-4 flex items-center justify-center"></span>
+          <span id="headerCoinBalance" class="text-xs font-extrabold text-amber-400">0</span>
+        </button>
+      </div>
 
       <p class="text-xs text-gray-400 leading-relaxed font-normal max-w-xs mb-4">
         Explore structured films by genre and year with multi-quality streaming links.
@@ -407,41 +570,357 @@
     </main>
   </div>
 
-  <!-- LIBRARY VIEW CONTAINER -->
-  <div id="libraryView" class="flex-1 flex flex-col hidden px-5 pt-6 space-y-6">
-    <div>
-      <div class="mb-3">
-        <span class="text-[10px] font-bold text-amber-400 tracking-widest uppercase block">Saved For Later</span>
-        <h2 class="text-2xl font-black text-white font-impact tracking-wide">MY WATCHLIST</h2>
+  <!-- ====================================================================== -->
+  <!-- 2. LEADERBOARD VIEW CONTAINER (WEEKLY BOLDCOINS RANKINGS)              -->
+  <!-- ====================================================================== -->
+  <div id="leaderboardView" class="flex-1 flex flex-col hidden px-5 pt-7 space-y-5">
+    <div class="flex items-center justify-between">
+      <div>
+        <span class="text-[10px] font-bold text-amber-400 tracking-widest uppercase block">Weekly Competition · Resets Monday</span>
+        <h2 class="text-3xl font-black text-white font-impact tracking-wide">LEADERBOARD</h2>
       </div>
-      <div id="watchlistContainer" class="space-y-3.5"></div>
+      <button onclick="fetchLeaderboard(true)" class="bg-[#16181d] hover:bg-gray-800 text-amber-400 border border-gray-800 px-3 py-1.5 rounded-xl text-xs font-bold flex items-center space-x-1 cursor-pointer">
+        <span>↻ Refresh</span>
+      </button>
     </div>
 
-    <div>
-      <div class="mb-3">
-        <span class="text-[10px] font-bold text-red-500 tracking-widest uppercase block">Recently Opened</span>
-        <h2 class="text-2xl font-black text-white font-impact tracking-wide">WATCH HISTORY</h2>
+    <!-- User's Own Rank Banner -->
+    <div id="myRankBanner" class="glass-card gold-glow p-4 rounded-2xl border border-amber-500/40 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div id="myRankAvatar" class="w-12 h-12 rounded-full p-0.5 bg-gradient-to-tr from-amber-500 to-red-600 shrink-0"></div>
+        <div>
+          <div class="flex items-center space-x-1.5">
+            <span class="text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">Your Rank</span>
+            <span id="myRankNumber" class="text-sm font-black text-white font-impact">#--</span>
+          </div>
+          <div id="myRankName" class="text-sm font-bold text-white mt-0.5">Cinema Fan</div>
+        </div>
       </div>
-      <div id="historyContainer" class="space-y-3.5"></div>
+      <div class="text-right">
+        <div class="flex items-center justify-end space-x-1">
+          <span class="w-4 h-4 inline-flex" id="myRankCoinIcon"></span>
+          <span id="myRankCoins" class="text-lg font-black text-amber-400 font-impact">0</span>
+        </div>
+        <div class="text-[10px] text-gray-400">This Week</div>
+      </div>
+    </div>
+
+    <!-- Top 20 List -->
+    <div>
+      <div class="flex items-center justify-between mb-2.5">
+        <span class="text-[10px] font-bold text-red-500 tracking-widest uppercase">Top 20 Weekly Earners</span>
+        <span id="leaderboardWeekLabel" class="text-[10px] text-gray-400">Monday 00:00 IST Cycle</span>
+      </div>
+      <div id="leaderboardList" class="space-y-2.5"></div>
     </div>
   </div>
 
-  <!-- FIXED FOOTER NAVIGATION -->
-  <nav class="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-[#0b0c0e]/95 backdrop-blur-lg border-t border-gray-800/80 px-6 py-3 z-40 flex items-center justify-around">
+  <!-- ====================================================================== -->
+  <!-- 3. YOU PAGE VIEW CONTAINER (REPLACES LIBRARY)                          -->
+  <!-- ====================================================================== -->
+  <div id="libraryView" class="flex-1 flex flex-col hidden px-5 pt-7 space-y-6">
+    <!-- User Profile & Active Avatar Card -->
+    <div class="glass-card p-4 rounded-2xl flex items-center justify-between border border-white/10">
+      <div class="flex items-center space-x-3.5">
+        <div id="youProfileAvatar" class="w-16 h-16 rounded-full p-0.5 bg-gradient-to-tr from-red-600 via-amber-500 to-orange-500 shadow-xl shrink-0"></div>
+        <div>
+          <span id="youBadgeTitle" class="text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-md bg-red-600/20 text-red-400 border border-red-500/30">🍿 Rookie Viewer</span>
+          <h2 id="youUserName" class="text-xl font-black text-white font-impact tracking-wide mt-1">CINEMA FAN</h2>
+          <p id="youUserHandle" class="text-[11px] text-gray-400">Tap any unlocked badge below to switch avatar</p>
+        </div>
+      </div>
+      <button onclick="toggleReferModal(true)" class="bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 px-3 py-2 rounded-xl text-[11px] font-bold cursor-pointer shrink-0">
+        🎁 Invite
+      </button>
+    </div>
+
+    <!-- 1. BoldPoints / BoldCoins Summary (This Week, This Month, Total) -->
+    <div>
+      <div class="flex items-center justify-between mb-2.5">
+        <div>
+          <span class="text-[10px] font-bold text-amber-400 tracking-widest uppercase block">Gamification Wallet</span>
+          <h3 class="text-xl font-black text-white font-impact tracking-wide">BOLDPOINTS BALANCE</h3>
+        </div>
+        <button onclick="togglePointsGuide()" class="text-[10px] text-amber-400 hover:underline font-semibold cursor-pointer">
+          ℹ️ How to Earn?
+        </button>
+      </div>
+
+      <div class="grid grid-cols-3 gap-2.5">
+        <div class="glass-card p-3 rounded-2xl text-center border border-amber-500/25">
+          <div class="flex items-center justify-center space-x-1">
+            <span class="coin-svg-slot w-4 h-4 inline-flex"></span>
+            <span id="youWeeklyCoins" class="text-xl font-black text-amber-400 font-impact">0</span>
+          </div>
+          <div class="text-[10px] text-gray-400 font-semibold uppercase mt-1">This Week</div>
+        </div>
+        <div class="glass-card p-3 rounded-2xl text-center border border-white/10">
+          <div class="flex items-center justify-center space-x-1">
+            <span class="coin-svg-slot w-4 h-4 inline-flex"></span>
+            <span id="youMonthlyCoins" class="text-xl font-black text-white font-impact">0</span>
+          </div>
+          <div class="text-[10px] text-gray-400 font-semibold uppercase mt-1">This Month</div>
+        </div>
+        <div class="glass-card p-3 rounded-2xl text-center border border-red-500/25">
+          <div class="flex items-center justify-center space-x-1">
+            <span class="coin-svg-slot w-4 h-4 inline-flex"></span>
+            <span id="youTotalCoins" class="text-xl font-black text-red-400 font-impact">0</span>
+          </div>
+          <div class="text-[10px] text-gray-400 font-semibold uppercase mt-1">Total Earned</div>
+        </div>
+      </div>
+
+      <!-- Collapsible BoldCoins Earning Rules -->
+      <div id="pointsGuideBox" class="hidden mt-2.5 glass-card p-3.5 rounded-2xl border border-amber-500/30 text-[11px] space-y-1.5 text-gray-300">
+        <div class="font-bold text-amber-400 uppercase text-[10px] tracking-wider mb-1">BoldCoins Reward Table</div>
+        <div class="flex justify-between"><span>🎁 Refer a New Friend</span><span class="text-amber-400 font-bold">+100 Coins</span></div>
+        <div class="flex justify-between"><span>🎬 Approved Movie Request</span><span class="text-amber-400 font-bold">+50 Coins</span></div>
+        <div class="flex justify-between"><span>🍿 Watch a Movie (max 4/day)</span><span class="text-amber-400 font-bold">+25 Coins</span></div>
+        <div class="flex justify-between"><span>📤 Share Movie Card (max 3/day)</span><span class="text-amber-400 font-bold">+15 Coins</span></div>
+        <div class="flex justify-between"><span>➕ Request a Movie (max 2/day)</span><span class="text-amber-400 font-bold">+10 Coins</span></div>
+        <div class="flex justify-between"><span>🎲 Surprise Me Roll (max 3/day)</span><span class="text-amber-400 font-bold">+5 Coins</span></div>
+        <div class="flex justify-between"><span>🔍 Search Catalog (max 5/day)</span><span class="text-amber-400 font-bold">+2 Coins</span></div>
+      </div>
+    </div>
+
+    <!-- 2. Select Avatar Logo (Curated SVG Avatar Progression System) -->
+    <div>
+      <div class="flex items-center justify-between mb-2.5">
+        <div>
+          <span class="text-[10px] font-bold text-red-500 tracking-widest uppercase block">Unlockable Profile Logos</span>
+          <h3 class="text-xl font-black text-white font-impact tracking-wide">SELECT AVATAR BADGE</h3>
+        </div>
+        <span id="avatarUnlockedCount" class="text-[10px] bg-gray-800 text-gray-300 px-2.5 py-1 rounded-full font-bold border border-gray-700">1/8 Unlocked</span>
+      </div>
+      <div id="avatarGridContainer" class="grid grid-cols-2 gap-2.5"></div>
+    </div>
+
+    <!-- 3. Compact Wishlist (Horizontal Scroll + Popup for Full List) -->
+    <div>
+      <div class="flex items-center justify-between mb-2.5">
+        <div>
+          <span class="text-[10px] font-bold text-amber-400 tracking-widest uppercase block">Saved For Later</span>
+          <h2 class="text-xl font-black text-white font-impact tracking-wide">MY WISHLIST</h2>
+        </div>
+        <button id="seeAllWishlistBtn" onclick="openFullListModal('wishlist')" class="hidden text-xs text-amber-400 hover:text-amber-300 font-bold cursor-pointer">
+          See All →
+        </button>
+      </div>
+      <div id="watchlistContainer" class="flex space-x-3 overflow-x-auto no-scrollbar py-1"></div>
+    </div>
+
+    <!-- 4. Compact Watch History (Horizontal Scroll + Popup for Full List) -->
+    <div>
+      <div class="flex items-center justify-between mb-2.5">
+        <div>
+          <span class="text-[10px] font-bold text-red-500 tracking-widest uppercase block">Recently Watched</span>
+          <h2 class="text-xl font-black text-white font-impact tracking-wide">WATCH HISTORY</h2>
+        </div>
+        <button id="seeAllHistoryBtn" onclick="openFullListModal('history')" class="hidden text-xs text-red-400 hover:text-red-300 font-bold cursor-pointer">
+          See All →
+        </button>
+      </div>
+      <div id="historyContainer" class="flex space-x-3 overflow-x-auto no-scrollbar py-1"></div>
+    </div>
+  </div>
+
+  <!-- ====================================================================== -->
+  <!-- 4. ADMIN PANEL VIEW CONTAINER                                          -->
+  <!-- ====================================================================== -->
+  <div id="adminView" class="flex-1 flex flex-col hidden px-5 pt-7 space-y-6">
+    <!-- Admin Header + "Add New Movie" Button (Moved here from Home screen) -->
+    <div class="flex items-center justify-between gap-2">
+      <div>
+        <span class="text-[10px] font-extrabold text-amber-400 tracking-widest uppercase block">Command Center</span>
+        <h2 class="text-3xl font-black text-white font-impact tracking-wide">ADMIN PANEL</h2>
+      </div>
+      <button id="adminAddBtn" onclick="toggleAdminModal(true)" class="bg-gradient-to-r from-amber-500 to-orange-600 hover:opacity-95 text-black font-extrabold px-3.5 py-2.5 rounded-xl text-xs shadow-lg shadow-amber-900/30 flex items-center space-x-1.5 cursor-pointer">
+        <span>+ Add New Movie</span>
+      </button>
+    </div>
+
+    <!-- 1. Dynamic Analytics & Detailed Stats -->
+    <div class="glass-card p-4 rounded-2xl border border-amber-500/30 space-y-3.5">
+      <div class="flex items-center justify-between">
+        <div>
+          <span class="text-[10px] font-bold text-amber-400 uppercase tracking-wider block">Real-Time Telemetry</span>
+          <h3 class="text-lg font-black text-white font-impact tracking-wide">PLATFORM ANALYTICS</h3>
+        </div>
+        <button onclick="fetchAdminDashboard(activeAdminPeriod, true)" class="text-[10px] bg-gray-800 hover:bg-gray-700 text-gray-200 px-2.5 py-1 rounded-lg border border-gray-700 font-semibold cursor-pointer">
+          ↻ Sync
+        </button>
+      </div>
+
+      <!-- Dynamic Duration Filter Pills -->
+      <div class="flex items-center space-x-1.5 overflow-x-auto no-scrollbar py-0.5">
+        <button onclick="fetchAdminDashboard('today')" data-period="today" class="adm-period-pill bg-amber-500 text-black font-extrabold px-3 py-1 rounded-full text-[10px] whitespace-nowrap cursor-pointer">Today</button>
+        <button onclick="fetchAdminDashboard('week')" data-period="week" class="adm-period-pill bg-[#14161b] text-gray-300 border border-gray-800 font-semibold px-3 py-1 rounded-full text-[10px] whitespace-nowrap cursor-pointer">Last Week</button>
+        <button onclick="fetchAdminDashboard('month28')" data-period="month28" class="adm-period-pill bg-[#14161b] text-gray-300 border border-gray-800 font-semibold px-3 py-1 rounded-full text-[10px] whitespace-nowrap cursor-pointer">Last 28 Days</button>
+        <button onclick="fetchAdminDashboard('year')" data-period="year" class="adm-period-pill bg-[#14161b] text-gray-300 border border-gray-800 font-semibold px-3 py-1 rounded-full text-[10px] whitespace-nowrap cursor-pointer">This Year</button>
+        <button onclick="fetchAdminDashboard('total')" data-period="total" class="adm-period-pill bg-[#14161b] text-gray-300 border border-gray-800 font-semibold px-3 py-1 rounded-full text-[10px] whitespace-nowrap cursor-pointer">Total</button>
+      </div>
+
+      <!-- 7 Detailed Metric Cards -->
+      <div class="grid grid-cols-2 gap-2.5">
+        <div class="bg-[#14161b] border border-gray-800/90 rounded-xl p-3">
+          <div class="text-[10px] text-gray-400 uppercase font-semibold">👁️ App Views</div>
+          <div id="statViews" class="text-xl font-black text-white font-impact mt-0.5">0</div>
+        </div>
+        <div class="bg-[#14161b] border border-gray-800/90 rounded-xl p-3">
+          <div class="text-[10px] text-gray-400 uppercase font-semibold">🍿 Movies Watched</div>
+          <div id="statWatch" class="text-xl font-black text-emerald-400 font-impact mt-0.5">0</div>
+        </div>
+        <div class="bg-[#14161b] border border-gray-800/90 rounded-xl p-3">
+          <div class="text-[10px] text-gray-400 uppercase font-semibold">🔍 Searches</div>
+          <div id="statSearch" class="text-xl font-black text-blue-400 font-impact mt-0.5">0</div>
+        </div>
+        <div class="bg-[#14161b] border border-gray-800/90 rounded-xl p-3">
+          <div class="text-[10px] text-gray-400 uppercase font-semibold">🎲 Surprise Me</div>
+          <div id="statSurprise" class="text-xl font-black text-amber-400 font-impact mt-0.5">0</div>
+        </div>
+        <div class="bg-[#14161b] border border-gray-800/90 rounded-xl p-3">
+          <div class="text-[10px] text-gray-400 uppercase font-semibold">📤 Movies Shared</div>
+          <div id="statShare" class="text-xl font-black text-purple-400 font-impact mt-0.5">0</div>
+        </div>
+        <div class="bg-[#14161b] border border-gray-800/90 rounded-xl p-3">
+          <div class="text-[10px] text-gray-400 uppercase font-semibold">🎁 Users Referred</div>
+          <div id="statReferrals" class="text-xl font-black text-orange-400 font-impact mt-0.5">0</div>
+        </div>
+        <div class="col-span-2 bg-gradient-to-r from-red-900/25 via-[#14161b] to-amber-900/20 border border-amber-500/30 rounded-xl p-3 flex items-center justify-between">
+          <div>
+            <div class="text-[10px] text-amber-300 uppercase font-bold">👥 Total Registered Users</div>
+            <div id="statNewUsersSub" class="text-[10px] text-gray-400">New in selected period: 0</div>
+          </div>
+          <div id="statTotalUsers" class="text-2xl font-black text-white font-impact">0</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. Requested Movie Inbox -->
+    <div class="glass-card p-4 rounded-2xl border border-white/10 space-y-3">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-2">
+          <h3 class="text-lg font-black text-white font-impact tracking-wide">REQUESTED MOVIE INBOX</h3>
+          <span id="adminInboxBadge" class="bg-red-600 text-white text-[10px] font-extrabold px-2 py-0.5 rounded-full">0 Unread</span>
+        </div>
+      </div>
+      <p class="text-[11px] text-gray-400">Tap <b>Reply</b> on any request to ask the user for details or mark as <b>Uploaded</b> (sends In-App + Bot notification).</p>
+      <div id="adminRequestsContainer" class="space-y-2.5 max-h-96 overflow-y-auto pr-0.5"></div>
+    </div>
+
+    <!-- 4. Dual-Channel Broadcast Studio -->
+    <div class="glass-card p-4 rounded-2xl border border-red-500/30 space-y-3.5">
+      <div>
+        <span class="text-[10px] font-bold text-red-400 uppercase tracking-wider block">Mass Messaging Engine</span>
+        <h3 class="text-lg font-black text-white font-impact tracking-wide">BROADCAST STUDIO</h3>
+      </div>
+
+      <!-- Broadcast Input Source Toggle -->
+      <div class="grid grid-cols-2 gap-2 bg-[#14161b] p-1 rounded-xl border border-gray-800">
+        <button id="bcastTabApp" onclick="switchBroadcastInputMode('app')" class="bg-red-600 text-white font-bold py-2 rounded-lg text-[11px] transition-all cursor-pointer">
+          ✍️ Direct In-App Input
+        </button>
+        <button id="bcastTabBot" onclick="switchBroadcastInputMode('telegram')" class="text-gray-400 hover:text-white font-semibold py-2 rounded-lg text-[11px] transition-all cursor-pointer">
+          🤖 From Telegram Chat
+        </button>
+      </div>
+
+      <!-- Option A: Direct In-App Broadcast Form -->
+      <div id="bcastAppForm" class="space-y-2.5">
+        <input id="bcastTitle" type="text" placeholder="Broadcast Title (e.g. 🔥 Weekend Blockbusters Added!)" class="w-full bg-[#14161b] text-white text-xs rounded-xl p-2.5 border border-gray-800 focus:outline-none focus:ring-1 focus:ring-red-600" />
+        <textarea id="bcastMessage" rows="3" placeholder="Enter broadcast message... (HTML tags like <b>bold</b> supported for Bot DM)" class="w-full bg-[#14161b] text-white text-xs rounded-xl p-2.5 border border-gray-800 focus:outline-none focus:ring-1 focus:ring-red-600"></textarea>
+        <div class="grid grid-cols-2 gap-2">
+          <input id="bcastBtnText" type="text" placeholder="Inline Button Text (Optional)" class="bg-[#14161b] text-white text-xs rounded-xl p-2.5 border border-gray-800 focus:outline-none focus:ring-1 focus:ring-red-600" />
+          <input id="bcastBtnUrl" type="text" placeholder="Button URL (https://...)" class="bg-[#14161b] text-white text-xs rounded-xl p-2.5 border border-gray-800 focus:outline-none focus:ring-1 focus:ring-red-600" />
+        </div>
+
+        <!-- Delivery Channel Options: I. In-App, II. Through Bot, III. Both -->
+        <div>
+          <label class="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1.5">Delivery Target</label>
+          <div class="grid grid-cols-3 gap-1.5">
+            <button type="button" onclick="selectBroadcastTarget('inapp')" data-btarget="inapp" class="bcast-target-btn bg-[#14161b] text-gray-300 border border-gray-800 py-2 rounded-xl text-[10px] font-bold cursor-pointer">
+              🔔 In-App Only
+            </button>
+            <button type="button" onclick="selectBroadcastTarget('bot')" data-btarget="bot" class="bcast-target-btn bg-[#14161b] text-gray-300 border border-gray-800 py-2 rounded-xl text-[10px] font-bold cursor-pointer">
+              🤖 Telegram Bot
+            </button>
+            <button type="button" onclick="selectBroadcastTarget('both')" data-btarget="both" class="bcast-target-btn bg-amber-500/20 text-amber-300 border border-amber-500 py-2 rounded-xl text-[10px] font-extrabold cursor-pointer">
+              ⚡ Both Channels
+            </button>
+          </div>
+        </div>
+
+        <button onclick="sendAdminBroadcast()" id="sendBroadcastBtn" class="w-full bg-gradient-to-r from-red-600 to-amber-600 hover:opacity-95 text-white font-extrabold py-3 rounded-xl text-xs shadow-lg shadow-red-900/30 cursor-pointer">
+          📢 Launch Broadcast Now
+        </button>
+      </div>
+
+      <!-- Option B: From Telegram Chat (Preserves Native Inline Buttons & Media) -->
+      <div id="bcastTelegramGuide" class="hidden space-y-3 bg-[#14161b] p-3.5 rounded-2xl border border-gray-800 text-xs text-gray-300">
+        <div class="text-amber-400 font-bold text-[11px]">How to Broadcast Posts with Inline Buttons from Telegram:</div>
+        <ol class="list-decimal list-inside space-y-1.5 text-[11px] text-gray-300 leading-relaxed">
+          <li>Open your bot chat (<b>@boldcinema_bot</b>) on Telegram.</li>
+          <li>Send or forward any message, poster photo, or post containing custom <b>inline buttons</b>.</li>
+          <li><b>Reply</b> to that message with one of these commands:</li>
+        </ol>
+        <div class="grid grid-cols-2 gap-2 pt-1">
+          <button onclick="copyTextCommand('/broadcast')" class="bg-gray-800 hover:bg-gray-700 text-amber-300 border border-gray-700 p-2 rounded-xl text-[11px] font-mono font-bold cursor-pointer">
+            📋 /broadcast<br><span class="text-[9px] text-gray-400 font-sans font-normal">Bot DM Only</span>
+          </button>
+          <button onclick="copyTextCommand('/broadcast_both')" class="bg-gray-800 hover:bg-gray-700 text-emerald-300 border border-gray-700 p-2 rounded-xl text-[11px] font-mono font-bold cursor-pointer">
+            📋 /broadcast_both<br><span class="text-[9px] text-gray-400 font-sans font-normal">Bot DM + In-App Bell</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====================================================================== -->
+  <!-- FIXED FOOTER NAVIGATION BAR                                            -->
+  <!-- [🏆 Leaderboard] — [🏠 Elevated Center Home] — [👤 You] — [🛡️ Admin]   -->
+  <!-- ====================================================================== -->
+  <nav class="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-[#0b0c0e]/95 backdrop-blur-xl border-t border-gray-800/80 px-4 py-2 z-40 flex items-end justify-around">
+    <!-- Left: Leaderboard Button -->
+    <button 
+      id="navLeaderboardBtn" 
+      onclick="switchTab('leaderboard')" 
+      class="flex flex-col items-center justify-center py-1 px-2 text-gray-400 hover:text-gray-200 transition-all cursor-pointer">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.1" d="M8 21h8m-4-4v4m-5-9h10l1-7H6l1 7zm-3-5h2v3a2 2 0 01-2-2v-1zm16 0h-2v3a2 2 0 002-2v-1z"></path>
+      </svg>
+      <span class="text-[10px] font-bold tracking-wide uppercase mt-1">Leaderboard</span>
+    </button>
+
+    <!-- Center: Elevated Bigger Home Button -->
     <button 
       id="navHomeBtn" 
       onclick="switchTab('home')" 
-      class="flex flex-col items-center space-y-1 text-red-500 transition-all cursor-pointer">
-      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
-      <span class="text-[10px] font-bold tracking-wide uppercase">Home</span>
+      class="flex flex-col items-center justify-center -mt-5 cursor-pointer group">
+      <div id="navHomeCircle" class="w-13 h-13 p-3.5 rounded-full bg-gradient-to-tr from-red-600 via-red-500 to-amber-500 text-white shadow-xl shadow-red-900/50 border-4 border-[#0b0c0e] transition-transform group-active:scale-95 flex items-center justify-center">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.4" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+      </div>
+      <span id="navHomeLabel" class="text-[10px] font-extrabold tracking-wider uppercase text-red-500 mt-1">Home</span>
     </button>
 
+    <!-- Right: You Button (Icon is current user's SVG Avatar) -->
     <button 
       id="navLibraryBtn" 
       onclick="switchTab('library')" 
-      class="flex flex-col items-center space-y-1 text-gray-400 hover:text-gray-200 transition-all cursor-pointer">
-      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
-      <span class="text-[10px] font-bold tracking-wide uppercase">Library</span>
+      class="flex flex-col items-center justify-center py-1 px-2 text-gray-400 hover:text-gray-200 transition-all cursor-pointer">
+      <div id="navYouAvatarIcon" class="w-6 h-6 rounded-full overflow-hidden ring-1 ring-white/30 flex items-center justify-center bg-[#16181d]"></div>
+      <span class="text-[10px] font-bold tracking-wide uppercase mt-1">You</span>
+    </button>
+
+    <!-- Bottom-Right Corner: Admin Panel Button (Visible for Admins) -->
+    <button 
+      id="navAdminBtn" 
+      onclick="switchTab('admin')" 
+      class="hidden relative flex flex-col items-center justify-center py-1 px-2 text-gray-400 hover:text-amber-400 transition-all cursor-pointer">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.1" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+      </svg>
+      <span class="text-[10px] font-bold tracking-wide uppercase mt-1">Admin Panel</span>
+      <span id="adminNavBadge" class="hidden absolute top-0 right-1 min-w-[16px] h-4 px-1 bg-red-600 text-white text-[9px] font-extrabold rounded-full flex items-center justify-center border border-[#0b0c0e]">0</span>
     </button>
   </nav>
 
@@ -449,26 +928,125 @@
   <button 
     id="backToSearchBtn" 
     onclick="scrollToSearch()" 
-    class="fixed bottom-20 right-5 z-30 bg-gray-900/90 text-white border border-gray-700 hover:bg-gray-800 shadow-2xl px-4 py-3 rounded-full text-xs font-bold flex items-center space-x-2 transition-all transform translate-y-20 opacity-0 pointer-events-none backdrop-blur-md cursor-pointer">
+    class="fixed bottom-24 right-5 z-30 bg-gray-900/90 text-white border border-gray-700 hover:bg-gray-800 shadow-2xl px-4 py-3 rounded-full text-xs font-bold flex items-center space-x-2 transition-all transform translate-y-20 opacity-0 pointer-events-none backdrop-blur-md cursor-pointer">
     <svg class="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 10l7-7m0 0l7 7m-7-7v18"></path></svg>
     <span>Back to Search</span>
   </button>
 
   <script>
-    // Supported Admin IDs
+    // ========================================================================
+    // CORE CONFIGURATION & TELEGRAM INITIALIZATION
+    // ========================================================================
     const ADMIN_TELEGRAM_IDS = [5527067319, 8830993806];
-    
-    const tg = window.Telegram?.WebApp;
-    if (tg) { tg.ready(); tg.expand(); }
-
+    const BOT_USERNAME = 'boldcinema_bot';
     const SHEET_ID = '1nxx-Mn7zQ9u02Bc8NhiEsBMyNrZ_Vx9_7QL-EgHH7Nc'; 
     const SHEET_NAME = 'Clean Catalog';
     const CHANNEL_INVITE_LINK = 'https://t.me/+-HxYFImrFsU3OGZl';
     const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxSs5go8IFz0P8ZktngLTtMdKuhky_BgAJS96nDITjAzkFjQCrTCRP5KveRVl-6npC98w/exec';
 
+    const tg = window.Telegram?.WebApp;
+    if (tg) { tg.ready(); tg.expand(); }
+
     let allMovies = [];
     let activeGenreFilter = 'All';
+    let currentTab = 'home';
+    let activeAdminPeriod = 'today';
+    let activeBroadcastTarget = 'both';
+    let activeReplyReqId = '';
+    let activeReplyMovieName = '';
+    let activeFullListType = 'wishlist';
+    let unlockModalQueue = [];
+    let currentPopupAvatarId = null;
 
+    // ========================================================================
+    // CURATED VECTOR SVG AVATARS & GAMIFICATION DEFINITIONS
+    // ========================================================================
+    const AVATAR_CATALOG = [
+      {
+        id: 'rookie',
+        name: 'Rookie Viewer',
+        icon: '🍿',
+        ruleText: 'Unlocked Free (Starter Avatar)',
+        bg: 'from-red-600 to-amber-600',
+        svg: `<svg viewBox="0 0 64 64" class="w-full h-full"><defs><linearGradient id="av_rookie" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#dc2626"/><stop offset="100%" stop-color="#d97706"/></linearGradient></defs><circle cx="32" cy="32" r="32" fill="url(#av_rookie)"/><circle cx="24" cy="22" r="6" fill="#fef3c7"/><circle cx="32" cy="19" r="7" fill="#fde68a"/><circle cx="40" cy="22" r="6" fill="#fef3c7"/><path d="M20 26h24l-3 24H23z" fill="#fff"/><path d="M25 26h4l-1.5 24h-3.5zm10 0h4l-1 24h-3.5z" fill="#dc2626"/></svg>`,
+        progress: () => ({ current: 1, target: 1 })
+      },
+      {
+        id: 'stroller',
+        name: 'Night Stroller',
+        icon: '🕶️',
+        ruleText: 'Watch 3 Movies',
+        bg: 'from-indigo-600 to-slate-900',
+        svg: `<svg viewBox="0 0 64 64" class="w-full h-full"><defs><linearGradient id="av_stroller" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#312e81"/><stop offset="100%" stop-color="#0f172a"/></linearGradient></defs><circle cx="32" cy="32" r="32" fill="url(#av_stroller)"/><circle cx="32" cy="32" r="18" fill="#1e293b" stroke="#6366f1" stroke-width="2"/><path d="M16 28h14l2 4h0l2-4h14v6c0 4-3 7-7 7h-4c-3 0-5-2-6-4-1 2-3 4-6 4h-4c-4 0-7-3-7-7v-6z" fill="#090d16" stroke="#38bdf8" stroke-width="2"/><path d="M24 44c3 3 13 3 16 0" stroke="#94a3b8" stroke-width="2.5" fill="none" stroke-linecap="round"/></svg>`,
+        progress: p => ({ current: Math.min(3, p.watchedCount || 0), target: 3 })
+      },
+      {
+        id: 'horror',
+        name: 'Cult of Horror',
+        icon: '👻',
+        ruleText: 'Watch 3 Horror/Thriller Films',
+        bg: 'from-purple-900 to-rose-900',
+        svg: `<svg viewBox="0 0 64 64" class="w-full h-full"><defs><linearGradient id="av_horror" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#581c87"/><stop offset="100%" stop-color="#881337"/></linearGradient></defs><circle cx="32" cy="32" r="32" fill="url(#av_horror)"/><path d="M20 30c0-8 5.4-14 12-14s12 6 12 14v18l-4-3-4 3-4-3-4 3-4-3-4 3V30z" fill="#f8fafc"/><circle cx="27" cy="29" r="3" fill="#0f172a"/><circle cx="37" cy="29" r="3" fill="#0f172a"/><ellipse cx="32" cy="36" rx="3" ry="4" fill="#e11d48"/></svg>`,
+        progress: p => ({ current: Math.min(3, p.horrorCount || 0), target: 3 })
+      },
+      {
+        id: 'detective',
+        name: 'Master Detective',
+        icon: '🕵️',
+        ruleText: 'Watch 3 Crime/Mystery Films',
+        bg: 'from-amber-700 to-stone-900',
+        svg: `<svg viewBox="0 0 64 64" class="w-full h-full"><defs><linearGradient id="av_det" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#b45309"/><stop offset="100%" stop-color="#1c1917"/></linearGradient></defs><circle cx="32" cy="32" r="32" fill="url(#av_det)"/><ellipse cx="32" cy="26" rx="20" ry="4" fill="#451a03"/><path d="M21 26l3-10h16l3 10z" fill="#78350f"/><circle cx="29" cy="37" r="7" fill="none" stroke="#fcd34d" stroke-width="2.5"/><line x1="34" y1="42" x2="43" y2="50" stroke="#fcd34d" stroke-width="3.5" stroke-linecap="round"/></svg>`,
+        progress: p => ({ current: Math.min(3, p.crimeCount || 0), target: 3 })
+      },
+      {
+        id: 'chaos',
+        name: 'Chaos Roller',
+        icon: '🎲',
+        ruleText: 'Use "Surprise Me" 10 Times',
+        bg: 'from-emerald-600 to-teal-900',
+        svg: `<svg viewBox="0 0 64 64" class="w-full h-full"><defs><linearGradient id="av_chaos" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#059669"/><stop offset="100%" stop-color="#134e4a"/></linearGradient></defs><circle cx="32" cy="32" r="32" fill="url(#av_chaos)"/><rect x="17" y="17" width="30" height="30" rx="7" fill="#ecfdf5" stroke="#10b981" stroke-width="2"/><circle cx="24" cy="24" r="2.8" fill="#065f46"/><circle cx="40" cy="24" r="2.8" fill="#065f46"/><circle cx="32" cy="32" r="3" fill="#e11d48"/><circle cx="24" cy="40" r="2.8" fill="#065f46"/><circle cx="40" cy="40" r="2.8" fill="#065f46"/></svg>`,
+        progress: p => ({ current: Math.min(10, p.surpriseCount || 0), target: 10 })
+      },
+      {
+        id: 'promoter',
+        name: 'Hype Promoter',
+        icon: '📣',
+        ruleText: 'Share 5 Movies or Refer 1 Friend',
+        bg: 'from-blue-600 to-cyan-900',
+        svg: `<svg viewBox="0 0 64 64" class="w-full h-full"><defs><linearGradient id="av_prom" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#2563eb"/><stop offset="100%" stop-color="#164e63"/></linearGradient></defs><circle cx="32" cy="32" r="32" fill="url(#av_prom)"/><path d="M18 28h8l14-8v24l-14-8h-8z" fill="#38bdf8"/><path d="M21 36l2 9h5l-2-9z" fill="#facc15"/><path d="M44 25c3 3 3 11 0 14m4-18c5 5 5 17 0 22" stroke="#fef08a" stroke-width="2.5" fill="none" stroke-linecap="round"/></svg>`,
+        progress: p => ({ current: (p.referralsCount >= 1) ? 5 : Math.min(5, p.shareCount || 0), target: 5 })
+      },
+      {
+        id: 'vip',
+        name: 'Gold VIP',
+        icon: '👑',
+        ruleText: 'Reach 500 Total BoldCoins',
+        bg: 'from-amber-400 to-yellow-700',
+        svg: `<svg viewBox="0 0 64 64" class="w-full h-full"><defs><linearGradient id="av_vip" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#f59e0b"/><stop offset="100%" stop-color="#78350f"/></linearGradient></defs><circle cx="32" cy="32" r="32" fill="url(#av_vip)"/><path d="M14 42l4-18 14 10 14-10 4 18z" fill="#fef08a" stroke="#fff" stroke-width="1.5"/><circle cx="18" cy="21" r="2.5" fill="#fff"/><circle cx="32" cy="18" r="3" fill="#ef4444"/><circle cx="46" cy="21" r="2.5" fill="#fff"/></svg>`,
+        progress: p => ({ current: Math.min(500, p.totalCoins || 0), target: 500 })
+      },
+      {
+        id: 'apex',
+        name: 'Apex Legend',
+        icon: '🔥',
+        ruleText: 'Finish Top 3 on Weekly Leaderboard',
+        bg: 'from-red-600 via-orange-500 to-yellow-500',
+        svg: `<svg viewBox="0 0 64 64" class="w-full h-full"><defs><linearGradient id="av_apex" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#dc2626"/><stop offset="100%" stop-color="#f59e0b"/></linearGradient></defs><circle cx="32" cy="32" r="32" fill="url(#av_apex)"/><path d="M33 12c4 8-2 12 3 18 4-3 6-7 6-7 5 7 3 19-6 24-9 4-19-2-19-13 0-8 6-13 16-22z" fill="#fef08a"/><path d="M32 28c2 4-1 6 2 9 2-2 3-4 3-4 2 4 1 10-4 12-5 2-9-1-9-6 0-4 3-7 8-11z" fill="#dc2626"/></svg>`,
+        progress: p => ({ current: (p.unlockedAvatars || []).includes('apex') ? 1 : 0, target: 1 })
+      }
+    ];
+
+    function boldCoinSvg(cls = 'w-4 h-4') {
+      return `<svg class="${cls}" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="url(#coinGrad)" stroke="#fef08a" stroke-width="1.5"/><path d="M9.5 8h4a2 2 0 010 4h-40 0h4.5a2 2 0 010 4H9.5V8z" stroke="#78350f" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M11 6.5v11M13 6.5v11" stroke="#78350f" stroke-width="1.4" stroke-linecap="round"/><defs><linearGradient id="coinGrad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse"><stop stop-color="#fde047"/><stop offset="0.5" stop-color="#f59e0b"/><stop offset="1" stop-color="#b45309"/></linearGradient></defs></svg>`;
+    }
+
+    function getAvatarObj(avatarId) {
+      return AVATAR_CATALOG.find(a => a.id === avatarId) || AVATAR_CATALOG[0];
+    }
+
+    // ========================================================================
+    // STORAGE, TIME KEYS & LOCAL GAMIFICATION STATE
+    // ========================================================================
     function readStore(key) {
       try {
         const v = JSON.parse(localStorage.getItem(key));
@@ -476,98 +1054,141 @@
       } catch (e) { return []; }
     }
 
+    function readObjStore(key, fallback = {}) {
+      try {
+        const v = JSON.parse(localStorage.getItem(key));
+        return (v && typeof v === 'object' && !Array.isArray(v)) ? v : fallback;
+      } catch (e) { return fallback; }
+    }
+
+    function writeStore(key, val) {
+      try { localStorage.setItem(key, JSON.stringify(val)); } catch (e) {}
+    }
+
+    function getTimeKeysClient() {
+      const now = new Date();
+      const istOffset = 5.5 * 60 * 60 * 1000;
+      const istDate = new Date(now.getTime() + istOffset);
+      const year = istDate.getUTCFullYear();
+      const month = String(istDate.getUTCMonth() + 1).padStart(2, '0');
+      const dayNum = String(istDate.getUTCDate()).padStart(2, '0');
+      const dayKey = `${year}-${month}-${dayNum}`;
+      const monthKey = `${year}-${month}`;
+
+      const dayOfWeek = istDate.getUTCDay();
+      const diffToMonday = (dayOfWeek === 0 ? -6 : 1 - dayOfWeek);
+      const monday = new Date(istDate.getTime() + diffToMonday * 24 * 60 * 60 * 1000);
+      const weekKey = `${monday.getUTCFullYear()}-${String(monday.getUTCMonth() + 1).padStart(2, '0')}-${String(monday.getUTCDate()).padStart(2, '0')}`;
+      return { dayKey, weekKey, monthKey };
+    }
+
+    function getCurrentUserObj() {
+      const tgUser = tg?.initDataUnsafe?.user;
+      if (tgUser && tgUser.id) return tgUser;
+      let localUser = readObjStore('bold_cinema_fallback_user', null);
+      if (!localUser || !localUser.id) {
+        localUser = {
+          id: 5527067319, // Allows full preview including Admin Panel in browser/Canvas when outside Telegram
+          first_name: 'Cinema',
+          last_name: 'Explorer',
+          username: 'bold_explorer'
+        };
+        writeStore('bold_cinema_fallback_user', localUser);
+      }
+      return localUser;
+    }
+
+    let userProfile = (() => {
+      const tk = getTimeKeysClient();
+      const u = getCurrentUserObj();
+      const saved = readObjStore('bold_cinema_profile', {
+        id: String(u.id),
+        name: ((u.first_name || '') + ' ' + (u.last_name || '')).trim() || 'Cinema Fan',
+        username: u.username || '',
+        avatar: 'rookie',
+        unlockedAvatars: ['rookie'],
+        totalCoins: 0,
+        monthlyCoins: 0,
+        weeklyCoins: 0,
+        weekKey: tk.weekKey,
+        monthKey: tk.monthKey,
+        watchedCount: 0,
+        horrorCount: 0,
+        crimeCount: 0,
+        surpriseCount: 0,
+        shareCount: 0,
+        referralsCount: 0
+      });
+      if (saved.weekKey !== tk.weekKey) {
+        saved.weeklyCoins = 0;
+        saved.weekKey = tk.weekKey;
+      }
+      if (saved.monthKey !== tk.monthKey) {
+        saved.monthlyCoins = 0;
+        saved.monthKey = tk.monthKey;
+      }
+      return saved;
+    })();
+
+    let userNotifications = readStore('bold_cinema_notifications');
+    let adminRequestsCache = [];
+
+    function saveUserProfile() {
+      writeStore('bold_cinema_profile', userProfile);
+      updateProfileUI();
+    }
+
     function jsq(str) {
       return JSON.stringify(String(str ?? ''))
         .replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
     }
 
-    function checkAdminAccess() {
-      const tgUser = tg?.initDataUnsafe?.user;
-      if (tgUser && ADMIN_TELEGRAM_IDS.includes(Number(tgUser.id))) {
-        const badge = document.getElementById('adminBadge');
-        const addBtn = document.getElementById('adminAddBtn');
-        if (badge) badge.classList.remove('hidden');
-        if (addBtn) addBtn.classList.remove('hidden');
-        return true;
-      }
-      return false;
+    function esc(s) {
+      return String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
     }
 
-    function renderCarousel() {
-      const carouselSection = document.getElementById('carouselSection');
-      const carouselContainer = document.getElementById('carouselContainer');
-      if (!carouselSection || !carouselContainer) return;
-
-      const featuredMovies = allMovies
-        .filter(m => m.featured)
-        .sort((a, b) => a.priority - b.priority);
-
-      if (featuredMovies.length === 0) {
-        carouselSection.classList.add('hidden');
-        return;
-      }
-
-      carouselSection.classList.remove('hidden');
-      carouselContainer.innerHTML = '';
-
-      featuredMovies.forEach(movie => {
-        const card = document.createElement('div');
-        card.className = 'carousel-card p-4 rounded-2xl flex-shrink-0 relative flex flex-col justify-between';
-
-        let qualityButtons = '';
-        if (movie.links['480p']) qualityButtons += `<button onclick="playClickSound(); openTelegramFile(${jsq(movie.links['480p'])}, ${jsq(movie.title)})" class="flex-1 bg-gray-800 hover:bg-gray-700 text-gray-200 font-bold py-2 rounded-xl text-xs border border-gray-700/60 cursor-pointer">480p</button>`;
-        if (movie.links['720p']) qualityButtons += `<button onclick="playClickSound(); openTelegramFile(${jsq(movie.links['720p'])}, ${jsq(movie.title)})" class="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-2 rounded-xl text-xs shadow-lg cursor-pointer">720p</button>`;
-        if (movie.links['1080p']) qualityButtons += `<button onclick="playClickSound(); openTelegramFile(${jsq(movie.links['1080p'])}, ${jsq(movie.title)})" class="flex-1 bg-amber-600 hover:bg-amber-700 text-white font-bold py-2 rounded-xl text-xs shadow-lg cursor-pointer">1080p</button>`;
-
-        card.innerHTML = `
-          <div class="flex gap-3 flex-1">
-            ${posterBoxHtml('w-24')}
-            <div class="flex-1 min-w-0 flex flex-col justify-between">
-              <div>
-                <div class="flex items-center justify-between gap-1.5 mb-1.5">
-                  <span class="bg-red-600 text-white font-black text-[9px] px-2 py-0.5 rounded-md uppercase tracking-wider">FEATURED</span>
-                  ${checkAdminAccess() ? `<button onclick="copySheetTitle(${jsq(movie.title)})" class="text-[10px] bg-amber-500/20 text-amber-400 border border-amber-500/40 px-2 py-0.5 rounded-md font-bold cursor-pointer" title="Copy admin title">📋 Copy</button>` : ''}
-                </div>
-                <div class="text-base font-extrabold text-white leading-tight font-impact tracking-wide line-clamp-3">
-                  ${movie.title} ${movie.year ? `<span class="text-gray-400 font-normal text-xs">(${movie.year})</span>` : ''}
-                </div>
-              </div>
-              <div class="flex space-x-2 mt-3">
-                ${qualityButtons}
-              </div>
-            </div>
-          </div>
-        `;
-        attachPoster(card.querySelector('.poster-box'), movie);
-        card.classList.add('cursor-pointer');
-        card.addEventListener('click', e => { if (!e.target.closest('button, a')) openDetails(movie); });
-        carouselContainer.appendChild(card);
-      });
-
-      startAutoScrollCarousel();
-    }
-
-    let carouselInterval;
-    function startAutoScrollCarousel() {
-      const container = document.getElementById('carouselContainer');
+    // ========================================================================
+    // TOAST & SOUND ENGINE (NO BLOCKED BROWSER ALERTS)
+    // ========================================================================
+    function showToast(message, tone = 'amber') {
+      const container = document.getElementById('toastContainer');
       if (!container) return;
-      clearInterval(carouselInterval);
-
-      carouselInterval = setInterval(() => {
-        if (container.scrollLeft + container.clientWidth >= container.scrollWidth - 10) {
-          container.scrollTo({ left: 0, behavior: 'smooth' });
-        } else {
-          container.scrollBy({ left: 280, behavior: 'smooth' });
-        }
-      }, 3500);
+      const toast = document.createElement('div');
+      const colors = {
+        amber: 'bg-[#16181d]/95 border-amber-500/50 text-amber-300',
+        emerald: 'bg-[#16181d]/95 border-emerald-500/50 text-emerald-300',
+        red: 'bg-[#16181d]/95 border-red-500/50 text-red-300',
+        blue: 'bg-[#16181d]/95 border-blue-500/50 text-blue-300'
+      };
+      toast.className = `${colors[tone] || colors.amber} border backdrop-blur-xl px-4 py-2.5 rounded-2xl shadow-2xl text-xs font-bold flex items-center justify-between space-x-2 animate-pop pointer-events-auto`;
+      toast.innerHTML = `<span>${message}</span>`;
+      container.appendChild(toast);
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transition = 'opacity 0.3s ease';
+        setTimeout(() => toast.remove(), 300);
+      }, 2800);
     }
 
-    function copySheetTitle(title) {
-      playClickSound();
-      navigator.clipboard.writeText(title);
-      alert(`Title "${title}" copied! Set Column H to your priority number in Google Sheets.`);
+    function copyToClipboardSafe(text) {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).catch(() => fallbackCopyText(text));
+      } else {
+        fallbackCopyText(text);
+      }
     }
-      
+
+    function fallbackCopyText(text) {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      try { document.execCommand('copy'); } catch (e) {}
+      ta.remove();
+    }
+
     function playClickSound() {
       try {
         const AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -620,27 +1241,1236 @@
       } catch (e) {}
     }
 
+    function playUnlockFanfare() {
+      try {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContext) return;
+        const ctx = new AudioContext();
+        if (ctx.state === 'suspended') ctx.resume();
+        const now = ctx.currentTime;
+        [523.25, 659.25, 783.99, 1046.5].forEach((freq, idx) => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(freq, now + idx * 0.08);
+          gain.gain.setValueAtTime(0.11, now + idx * 0.08);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.08 + 0.45);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(now + idx * 0.08);
+          osc.stop(now + idx * 0.08 + 0.45);
+        });
+      } catch (e) {}
+    }
+
+    // ========================================================================
+    // GAMIFICATION ANTI-CHEAT ENGINE & AVATAR UNLOCK CHECKER
+    // ========================================================================
+    function checkCooldownAndAward(actionType, uniqueKey = '') {
+      const tk = getTimeKeysClient();
+      const logStore = readObjStore('bold_cinema_daily_limits', { day: tk.dayKey });
+      if (logStore.day !== tk.dayKey) {
+        Object.keys(logStore).forEach(k => delete logStore[k]);
+        logStore.day = tk.dayKey;
+      }
+
+      if (actionType === 'watch') {
+        const watchedRewards = readStore('bold_cinema_rewarded_watches');
+        const dailyCount = Number(logStore.watchCount || 0);
+        if (watchedRewards.includes(uniqueKey) || dailyCount >= 4) return 0;
+        watchedRewards.push(uniqueKey);
+        writeStore('bold_cinema_rewarded_watches', watchedRewards);
+        logStore.watchCount = dailyCount + 1;
+        writeStore('bold_cinema_daily_limits', logStore);
+        return 25;
+      }
+
+      if (actionType === 'share') {
+        const c = Number(logStore.shareCount || 0);
+        if (c >= 3) return 0;
+        logStore.shareCount = c + 1;
+        writeStore('bold_cinema_daily_limits', logStore);
+        return 15;
+      }
+
+      if (actionType === 'request') {
+        const c = Number(logStore.requestCount || 0);
+        if (c >= 2) return 0;
+        logStore.requestCount = c + 1;
+        writeStore('bold_cinema_daily_limits', logStore);
+        return 10;
+      }
+
+      if (actionType === 'surprise') {
+        const c = Number(logStore.surpriseCount || 0);
+        if (c >= 3) return 0;
+        logStore.surpriseCount = c + 1;
+        writeStore('bold_cinema_daily_limits', logStore);
+        return 5;
+      }
+
+      if (actionType === 'search') {
+        const c = Number(logStore.searchCount || 0);
+        if (c >= 5) return 0;
+        logStore.searchCount = c + 1;
+        writeStore('bold_cinema_daily_limits', logStore);
+        return 2;
+      }
+
+      return 0;
+    }
+
+    function evaluateLocalAvatarUnlocks() {
+      const unlocked = new Set(userProfile.unlockedAvatars || ['rookie']);
+      const newly = [];
+      const tryUnlock = id => {
+        if (!unlocked.has(id)) {
+          unlocked.add(id);
+          newly.push(id);
+        }
+      };
+      tryUnlock('rookie');
+      if ((userProfile.watchedCount || 0) >= 3) tryUnlock('stroller');
+      if ((userProfile.horrorCount || 0) >= 3) tryUnlock('horror');
+      if ((userProfile.crimeCount || 0) >= 3) tryUnlock('detective');
+      if ((userProfile.surpriseCount || 0) >= 10) tryUnlock('chaos');
+      if ((userProfile.shareCount || 0) >= 5 || (userProfile.referralsCount || 0) >= 1) tryUnlock('promoter');
+      if ((userProfile.totalCoins || 0) >= 500) tryUnlock('vip');
+      userProfile.unlockedAvatars = Array.from(unlocked);
+      return newly;
+    }
+
+    function queueAvatarUnlockPopup(avatarIds) {
+      if (!Array.isArray(avatarIds) || avatarIds.length === 0) return;
+      avatarIds.forEach(id => {
+        if (!unlockModalQueue.includes(id)) unlockModalQueue.push(id);
+      });
+      if (document.getElementById('avatarUnlockModal').classList.contains('hidden')) {
+        showNextAvatarUnlockModal();
+      }
+    }
+
+    function showNextAvatarUnlockModal() {
+      if (unlockModalQueue.length === 0) return;
+      const nextId = unlockModalQueue.shift();
+      currentPopupAvatarId = nextId;
+      const av = getAvatarObj(nextId);
+      document.getElementById('unlockAvatarPreview').innerHTML = av.svg;
+      document.getElementById('unlockAvatarTitle').textContent = `${av.icon} ${av.name.toUpperCase()}`;
+      document.getElementById('unlockAvatarDesc').textContent = `Unlocked by completing: "${av.ruleText}". Would you like to equip this avatar badge now?`;
+      document.getElementById('avatarUnlockModal').classList.remove('hidden');
+      playUnlockFanfare();
+    }
+
+    function equipUnlockedAvatar() {
+      if (currentPopupAvatarId) {
+        selectAvatar(currentPopupAvatarId);
+      }
+      closeAvatarUnlockModal();
+    }
+
+    function closeAvatarUnlockModal() {
+      playClickSound();
+      document.getElementById('avatarUnlockModal').classList.add('hidden');
+      currentPopupAvatarId = null;
+      if (unlockModalQueue.length > 0) {
+        setTimeout(showNextAvatarUnlockModal, 250);
+      }
+    }
+
+    async function logGamificationEvent(eventType, meta = '', coins = 0, genres = '') {
+      const tk = getTimeKeysClient();
+      if (userProfile.weekKey !== tk.weekKey) {
+        userProfile.weeklyCoins = 0;
+        userProfile.weekKey = tk.weekKey;
+      }
+      if (userProfile.monthKey !== tk.monthKey) {
+        userProfile.monthlyCoins = 0;
+        userProfile.monthKey = tk.monthKey;
+      }
+
+      if (coins > 0) {
+        userProfile.totalCoins = (Number(userProfile.totalCoins) || 0) + coins;
+        userProfile.monthlyCoins = (Number(userProfile.monthlyCoins) || 0) + coins;
+        userProfile.weeklyCoins = (Number(userProfile.weeklyCoins) || 0) + coins;
+        showToast(`🪙 +${coins} BoldCoins Earned!`, 'amber');
+      }
+
+      const gLower = String(genres || '').toLowerCase();
+      if (eventType === 'watch') {
+        userProfile.watchedCount = (Number(userProfile.watchedCount) || 0) + 1;
+        if (gLower.includes('horror') || gLower.includes('thriller')) {
+          userProfile.horrorCount = (Number(userProfile.horrorCount) || 0) + 1;
+        }
+        if (gLower.includes('crime') || gLower.includes('mystery')) {
+          userProfile.crimeCount = (Number(userProfile.crimeCount) || 0) + 1;
+        }
+      } else if (eventType === 'surprise') {
+        userProfile.surpriseCount = (Number(userProfile.surpriseCount) || 0) + 1;
+      } else if (eventType === 'share') {
+        userProfile.shareCount = (Number(userProfile.shareCount) || 0) + 1;
+      }
+
+      const localUnlocks = evaluateLocalAvatarUnlocks();
+      saveUserProfile();
+      if (localUnlocks.length > 0) queueAvatarUnlockPopup(localUnlocks);
+
+      try {
+        const res = await fetch(APPS_SCRIPT_URL, {
+          method: 'POST',
+          redirect: 'follow',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({
+            action: 'log_event',
+            user: getCurrentUserObj(),
+            eventType,
+            meta,
+            coins,
+            genres
+          })
+        });
+        const data = await res.json();
+        if (data && data.success && data.profile) {
+          mergeServerProfile(data.profile);
+          if (Array.isArray(data.newlyUnlocked) && data.newlyUnlocked.length > 0) {
+            queueAvatarUnlockPopup(data.newlyUnlocked);
+          }
+        }
+      } catch (e) {}
+    }
+
+    function mergeServerProfile(srv) {
+      if (!srv) return;
+      const mergedUnlocks = Array.from(new Set([...(userProfile.unlockedAvatars || ['rookie']), ...(srv.unlockedAvatars || ['rookie'])]));
+      userProfile = {
+        ...userProfile,
+        ...srv,
+        totalCoins: Math.max(Number(userProfile.totalCoins) || 0, Number(srv.totalCoins) || 0),
+        monthlyCoins: Math.max(Number(userProfile.monthlyCoins) || 0, Number(srv.monthlyCoins) || 0),
+        weeklyCoins: Math.max(Number(userProfile.weeklyCoins) || 0, Number(srv.weeklyCoins) || 0),
+        watchedCount: Math.max(Number(userProfile.watchedCount) || 0, Number(srv.watchedCount) || 0),
+        horrorCount: Math.max(Number(userProfile.horrorCount) || 0, Number(srv.horrorCount) || 0),
+        crimeCount: Math.max(Number(userProfile.crimeCount) || 0, Number(srv.crimeCount) || 0),
+        surpriseCount: Math.max(Number(userProfile.surpriseCount) || 0, Number(srv.surpriseCount) || 0),
+        shareCount: Math.max(Number(userProfile.shareCount) || 0, Number(srv.shareCount) || 0),
+        referralsCount: Math.max(Number(userProfile.referralsCount) || 0, Number(srv.referralsCount) || 0),
+        unlockedAvatars: mergedUnlocks
+      };
+      saveUserProfile();
+    }
+
+    function updateProfileUI() {
+      const av = getAvatarObj(userProfile.avatar);
+
+      // Update Bottom Nav "You" Avatar Icon
+      const navAvatar = document.getElementById('navYouAvatarIcon');
+      if (navAvatar) navAvatar.innerHTML = av.svg;
+
+      // Update Header Coin Balance & Icon
+      const hIcon = document.getElementById('headerCoinIcon');
+      if (hIcon) hIcon.innerHTML = boldCoinSvg('w-4 h-4');
+      const hBal = document.getElementById('headerCoinBalance');
+      if (hBal) hBal.textContent = Number(userProfile.totalCoins || 0).toLocaleString();
+
+      // Update Coin SVG Slots
+      document.querySelectorAll('.coin-svg-slot').forEach(el => {
+        el.innerHTML = boldCoinSvg('w-4 h-4');
+      });
+
+      // Update You Page Header & Balances
+      const youAv = document.getElementById('youProfileAvatar');
+      if (youAv) youAv.innerHTML = av.svg;
+      const youBadge = document.getElementById('youBadgeTitle');
+      if (youBadge) youBadge.textContent = `${av.icon} ${av.name}`;
+      const youName = document.getElementById('youUserName');
+      if (youName) youName.textContent = (userProfile.name || 'Cinema Fan').toUpperCase();
+      const youHandle = document.getElementById('youUserHandle');
+      if (youHandle) youHandle.textContent = userProfile.username ? `@${userProfile.username}` : `ID: ${userProfile.id}`;
+
+      const wEl = document.getElementById('youWeeklyCoins');
+      const mEl = document.getElementById('youMonthlyCoins');
+      const tEl = document.getElementById('youTotalCoins');
+      if (wEl) wEl.textContent = Number(userProfile.weeklyCoins || 0).toLocaleString();
+      if (mEl) mEl.textContent = Number(userProfile.monthlyCoins || 0).toLocaleString();
+      if (tEl) tEl.textContent = Number(userProfile.totalCoins || 0).toLocaleString();
+
+      // Update Refer Modal Stats
+      const rCount = document.getElementById('referCountStat');
+      const rCoins = document.getElementById('referCoinsStat');
+      const rInput = document.getElementById('referLinkInput');
+      if (rCount) rCount.textContent = Number(userProfile.referralsCount || 0);
+      if (rCoins) rCoins.textContent = Number((userProfile.referralsCount || 0) * 100);
+      if (rInput) rInput.value = `https://t.me/${BOT_USERNAME}?startapp=ref_${userProfile.id}`;
+
+      renderAvatarGrid();
+    }
+
+    function renderAvatarGrid() {
+      const grid = document.getElementById('avatarGridContainer');
+      const countBadge = document.getElementById('avatarUnlockedCount');
+      if (!grid) return;
+
+      const unlockedList = userProfile.unlockedAvatars || ['rookie'];
+      if (countBadge) countBadge.textContent = `${unlockedList.length}/${AVATAR_CATALOG.length} Unlocked`;
+
+      grid.innerHTML = '';
+      AVATAR_CATALOG.forEach(av => {
+        const isUnlocked = unlockedList.includes(av.id);
+        const isEquipped = userProfile.avatar === av.id;
+        const prog = av.progress(userProfile);
+        const pct = Math.min(100, Math.round((prog.current / prog.target) * 100));
+
+        const card = document.createElement('div');
+        card.className = `glass-card p-3 rounded-2xl border transition-all flex items-center space-x-3 ${
+          isEquipped
+            ? 'border-amber-400 bg-amber-500/10 gold-glow cursor-pointer'
+            : isUnlocked
+              ? 'border-white/15 hover:border-amber-500/50 cursor-pointer'
+              : 'border-gray-800/70 opacity-65'
+        }`;
+
+        card.innerHTML = `
+          <div class="relative w-12 h-12 rounded-full shrink-0 p-0.5 bg-gradient-to-tr ${av.bg}">
+            ${av.svg}
+            ${!isUnlocked ? `<div class="absolute inset-0 rounded-full bg-black/65 flex items-center justify-center text-xs">🔒</div>` : ''}
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-extrabold text-white truncate">${av.icon} ${esc(av.name)}</span>
+            </div>
+            <div class="text-[10px] text-gray-400 leading-tight mt-0.5 line-clamp-1">${esc(av.ruleText)}</div>
+            ${
+              isEquipped
+                ? `<span class="inline-block mt-1.5 text-[9px] font-black uppercase px-2 py-0.5 rounded bg-amber-400 text-black">✓ Equipped</span>`
+                : isUnlocked
+                  ? `<span class="inline-block mt-1.5 text-[9px] font-bold uppercase px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">Tap to Use</span>`
+                  : `<div class="mt-1.5 w-full bg-gray-800 h-1.5 rounded-full overflow-hidden"><div class="bg-amber-500 h-full" style="width:${pct}%"></div></div><div class="text-[9px] text-gray-500 mt-0.5">${prog.current}/${prog.target}</div>`
+            }
+          </div>
+        `;
+
+        card.addEventListener('click', () => {
+          if (isUnlocked) {
+            selectAvatar(av.id);
+          } else {
+            playClickSound();
+            showToast(`🔒 Locked: ${av.ruleText} (${prog.current}/${prog.target})`, 'red');
+          }
+        });
+
+        grid.appendChild(card);
+      });
+    }
+
+    async function selectAvatar(avatarId) {
+      playChimeSound();
+      if (!(userProfile.unlockedAvatars || ['rookie']).includes(avatarId)) return;
+      userProfile.avatar = avatarId;
+      saveUserProfile();
+      const av = getAvatarObj(avatarId);
+      showToast(`${av.icon} ${av.name} equipped as your profile avatar!`, 'emerald');
+
+      try {
+        await fetch(APPS_SCRIPT_URL, {
+          method: 'POST',
+          redirect: 'follow',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({
+            action: 'select_avatar',
+            user: getCurrentUserObj(),
+            avatarId
+          })
+        });
+      } catch (e) {}
+    }
+
+    function togglePointsGuide() {
+      playClickSound();
+      const box = document.getElementById('pointsGuideBox');
+      if (box) box.classList.toggle('hidden');
+    }
+
+    // ========================================================================
+    // DEEP-LINK AUTO-ROUTER & USER SYNC ON BOOT
+    // ========================================================================
+    function getStartParam() {
+      const tgParam = tg?.initDataUnsafe?.start_param;
+      if (tgParam) return String(tgParam);
+      const urlParams = new URLSearchParams(window.location.search);
+      return urlParams.get('startapp') || urlParams.get('tgWebAppStartParam') || '';
+    }
+
+    function parseStartParam(raw) {
+      if (!raw) return { refBy: '', movieQuery: '' };
+      let refBy = '';
+      let movieQuery = '';
+      const parts = String(raw).split('__');
+      parts.forEach(part => {
+        if (part.startsWith('ref_')) {
+          refBy = part.slice(4).trim();
+        } else if (part.startsWith('movie_')) {
+          movieQuery = decodeURIComponent(part.slice(6).replace(/_/g, ' ')).trim();
+        }
+      });
+      return { refBy, movieQuery };
+    }
+
+    async function syncUserWithBackend() {
+      const { refBy } = parseStartParam(getStartParam());
+      try {
+        const res = await fetch(APPS_SCRIPT_URL, {
+          method: 'POST',
+          redirect: 'follow',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({
+            action: 'sync_user',
+            user: getCurrentUserObj(),
+            refBy
+          })
+        });
+        const data = await res.json();
+        if (data && data.success) {
+          if (data.profile) mergeServerProfile(data.profile);
+          if (Array.isArray(data.notifications)) {
+            handleIncomingNotifications(data.notifications);
+          }
+          if (typeof data.unreadRequestsCount === 'number') {
+            updateAdminBadges(data.unreadRequestsCount);
+          }
+        }
+      } catch (e) {}
+    }
+
+    function handleDeepLinkMovieOpen() {
+      const { movieQuery } = parseStartParam(getStartParam());
+      if (!movieQuery || allMovies.length === 0) return;
+      const q = movieQuery.toLowerCase();
+      const matched = allMovies.find(m =>
+        String(m.id) === movieQuery ||
+        m.title.toLowerCase() === q ||
+        m.title.toLowerCase().includes(q)
+      );
+      if (matched) {
+        setTimeout(() => openDetails(matched), 350);
+      }
+    }
+
+    // ========================================================================
+    // NOTIFICATIONS INBOX & PHONE PUSH NOTIFICATION ENGINE
+    // ========================================================================
+    function handleIncomingNotifications(serverNotifs) {
+      const prevIds = new Set(userNotifications.map(n => n.id));
+      userNotifications = serverNotifs;
+      writeStore('bold_cinema_notifications', userNotifications);
+
+      const unread = userNotifications.filter(n => !n.read);
+      updateNotifBadge(unread.length);
+
+      const brandNewUnread = unread.filter(n => !prevIds.has(n.id));
+      if (brandNewUnread.length > 0) {
+        playChimeSound();
+        const latest = brandNewUnread[0];
+        showToast(`🔔 ${latest.title}`, 'amber');
+        triggerBrowserNotification(latest.title, latest.message);
+      }
+    }
+
+    function updateNotifBadge(count) {
+      const badge = document.getElementById('notifBadge');
+      if (!badge) return;
+      if (count > 0) {
+        badge.textContent = count > 99 ? '99+' : String(count);
+        badge.classList.remove('hidden');
+      } else {
+        badge.classList.add('hidden');
+      }
+    }
+
+    function enablePushAlerts() {
+      playClickSound();
+      if (!('Notification' in window)) {
+        showToast('🔔 In-app sound & Telegram Bot push alerts are active!', 'emerald');
+        return;
+      }
+      Notification.requestPermission().then(perm => {
+        if (perm === 'granted') {
+          showToast('✅ Phone browser notifications enabled!', 'emerald');
+          const btn = document.getElementById('pushPermBtn');
+          if (btn) btn.textContent = '✓ Alerts Active';
+        } else {
+          showToast('ℹ️ Telegram Bot push notifications are active!', 'amber');
+        }
+      });
+    }
+
+    function triggerBrowserNotification(title, body) {
+      try {
+        if ('Notification' in window && Notification.permission === 'granted') {
+          new Notification(title, { body });
+        }
+      } catch (e) {}
+    }
+
+    async function toggleNotifModal(show) {
+      playClickSound();
+      const modal = document.getElementById('notifModal');
+      if (!modal) return;
+      if (!show) {
+        modal.classList.add('hidden');
+        return;
+      }
+      renderNotificationsList();
+      modal.classList.remove('hidden');
+
+      const hasUnread = userNotifications.some(n => !n.read);
+      if (hasUnread) {
+        userNotifications.forEach(n => { n.read = true; });
+        writeStore('bold_cinema_notifications', userNotifications);
+        updateNotifBadge(0);
+        try {
+          await fetch(APPS_SCRIPT_URL, {
+            method: 'POST',
+            redirect: 'follow',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify({
+              action: 'mark_notifs_read',
+              user: getCurrentUserObj()
+            })
+          });
+        } catch (e) {}
+      }
+    }
+
+    function renderNotificationsList() {
+      const container = document.getElementById('notifListContainer');
+      if (!container) return;
+
+      if (!userNotifications || userNotifications.length === 0) {
+        container.innerHTML = `
+          <div class="text-center py-12 px-4">
+            <div class="text-3xl mb-2">🔔</div>
+            <div class="text-xs font-bold text-gray-300">No notifications yet</div>
+            <div class="text-[11px] text-gray-500 mt-1">When admins reply to your movie requests or announce new drops, they will appear right here with a chime.</div>
+          </div>`;
+        return;
+      }
+
+      container.innerHTML = '';
+      userNotifications.forEach(n => {
+        const dateStr = n.timestamp ? new Date(n.timestamp).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Just now';
+        const isReply = n.type === 'admin_reply';
+        const isReward = n.type === 'reward';
+        const borderCls = isReply ? 'border-amber-500/40' : isReward ? 'border-emerald-500/40' : 'border-white/10';
+        const item = document.createElement('div');
+        item.className = `glass-card p-3.5 rounded-2xl border ${borderCls}`;
+        item.innerHTML = `
+          <div class="flex items-start justify-between gap-2">
+            <div class="text-xs font-extrabold text-white">${esc(n.title || 'Notification')}</div>
+            <span class="text-[9px] text-gray-500 shrink-0">${esc(dateStr)}</span>
+          </div>
+          <p class="text-[11px] text-gray-300 mt-1.5 leading-relaxed whitespace-pre-line">${esc(n.message || '')}</p>
+        `;
+        container.appendChild(item);
+      });
+    }
+
+    // ========================================================================
+    // REFER & EARN + SHARE MOVIE TO TELEGRAM
+    // ========================================================================
+    function toggleReferModal(show) {
+      playClickSound();
+      const modal = document.getElementById('referModal');
+      if (!modal) return;
+      if (show) {
+        updateProfileUI();
+        modal.classList.remove('hidden');
+      } else {
+        modal.classList.add('hidden');
+      }
+    }
+
+    function copyReferralLink() {
+      playClickSound();
+      const link = `https://t.me/${BOT_USERNAME}?startapp=ref_${userProfile.id}`;
+      copyToClipboardSafe(link);
+      showToast('📋 Referral invite link copied!', 'emerald');
+    }
+
+    function shareReferralTelegram() {
+      playClickSound();
+      const link = `https://t.me/${BOT_USERNAME}?startapp=ref_${userProfile.id}`;
+      const text = `🍿 Join me on Bold Cinema Hub! Stream & download HD movies (480p, 720p, 1080p) directly on Telegram and earn BoldCoins! 🔥`;
+      const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(text)}`;
+      if (tg && tg.openTelegramLink) {
+        tg.openTelegramLink(shareUrl);
+      } else {
+        window.open(shareUrl, '_blank');
+      }
+    }
+
+    function shareMovieToTelegram(title, year = '', genres = '') {
+      playClickSound();
+      const slug = encodeURIComponent(String(title || '').trim().replace(/\s+/g, '_'));
+      const deepLink = `https://t.me/${BOT_USERNAME}?startapp=ref_${userProfile.id}__movie_${slug}`;
+      const movieObj = allMovies.find(m => m.title === title) || { title, year, genres };
+      const cached = getMetaCached(movieObj);
+      const ratingTxt = (cached && cached.r) ? ` ⭐ IMDb ${cached.r}/10` : '';
+      const genreTxt = (movieObj.genres || genres) ? `\n🎭 Genre: ${movieObj.genres || genres}` : '';
+      const shareText = `🎬 ${title}${year ? ` (${year})` : ''}${ratingTxt}${genreTxt}\n\n🍿 Watch or download in 480p / 720p / 1080p HD on Bold Cinema Hub:`;
+
+      const coins = checkCooldownAndAward('share', title);
+      logGamificationEvent('share', title, coins, movieObj.genres || genres);
+
+      const tgShareUrl = `https://t.me/share/url?url=${encodeURIComponent(deepLink)}&text=${encodeURIComponent(shareText)}`;
+      if (tg && tg.openTelegramLink) {
+        tg.openTelegramLink(tgShareUrl);
+      } else {
+        copyToClipboardSafe(`${shareText}\n${deepLink}`);
+        showToast('📤 Share link copied! Opening Telegram share...', 'blue');
+        window.open(tgShareUrl, '_blank');
+      }
+    }
+
+    function shareDetailsMovie() {
+      if (!detailsMovie) return;
+      shareMovieToTelegram(detailsMovie.title, detailsMovie.year, detailsMovie.genres);
+    }
+
+    // ========================================================================
+    // ADMIN ACCESS & DYNAMIC BOTTOM NAVIGATION
+    // ========================================================================
+    function checkAdminAccess() {
+      const u = getCurrentUserObj();
+      if (u && ADMIN_TELEGRAM_IDS.includes(Number(u.id))) {
+        const badge = document.getElementById('adminBadge');
+        const addBtn = document.getElementById('adminAddBtn');
+        const navAdminBtn = document.getElementById('navAdminBtn');
+        if (badge) badge.classList.remove('hidden');
+        if (addBtn) addBtn.classList.remove('hidden');
+        if (navAdminBtn) navAdminBtn.classList.remove('hidden');
+        return true;
+      }
+      return false;
+    }
+
+    function updateAdminBadges(unreadCount) {
+      const navBadge = document.getElementById('adminNavBadge');
+      const inboxBadge = document.getElementById('adminInboxBadge');
+      if (navBadge) {
+        if (unreadCount > 0) {
+          navBadge.textContent = String(unreadCount);
+          navBadge.classList.remove('hidden');
+        } else {
+          navBadge.classList.add('hidden');
+        }
+      }
+      if (inboxBadge) {
+        inboxBadge.textContent = `${unreadCount} Unread`;
+        inboxBadge.className = unreadCount > 0
+          ? 'bg-red-600 text-white text-[10px] font-extrabold px-2.5 py-0.5 rounded-full animate-pulse'
+          : 'bg-gray-800 text-gray-400 text-[10px] font-bold px-2.5 py-0.5 rounded-full';
+      }
+    }
+
     function switchTab(tab) {
       playClickSound();
-      const homeView = document.getElementById('homeView');
-      const libraryView = document.getElementById('libraryView');
-      const navHomeBtn = document.getElementById('navHomeBtn');
-      const navLibraryBtn = document.getElementById('navLibraryBtn');
+      if (tab === 'you') tab = 'library';
+      currentTab = tab;
 
-      if (tab === 'home') {
-        homeView.classList.remove('hidden');
-        libraryView.classList.add('hidden');
-        navHomeBtn.className = "flex flex-col items-center space-y-1 text-red-500 transition-all cursor-pointer";
-        navLibraryBtn.className = "flex flex-col items-center space-y-1 text-gray-400 hover:text-gray-200 transition-all cursor-pointer";
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      } else {
-        homeView.classList.add('hidden');
-        libraryView.classList.remove('hidden');
-        navLibraryBtn.className = "flex flex-col items-center space-y-1 text-red-500 transition-all cursor-pointer";
-        navHomeBtn.className = "flex flex-col items-center space-y-1 text-gray-400 hover:text-gray-200 transition-all cursor-pointer";
-        renderLibrary();
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+      const views = {
+        home: document.getElementById('homeView'),
+        leaderboard: document.getElementById('leaderboardView'),
+        library: document.getElementById('libraryView'),
+        admin: document.getElementById('adminView')
+      };
+
+      Object.keys(views).forEach(k => {
+        if (views[k]) {
+          if (k === tab) views[k].classList.remove('hidden');
+          else views[k].classList.add('hidden');
+        }
+      });
+
+      const navLeaderboardBtn = document.getElementById('navLeaderboardBtn');
+      const navHomeLabel = document.getElementById('navHomeLabel');
+      const navLibraryBtn = document.getElementById('navLibraryBtn');
+      const navAdminBtn = document.getElementById('navAdminBtn');
+
+      const inactiveCls = 'flex flex-col items-center justify-center py-1 px-2 text-gray-400 hover:text-gray-200 transition-all cursor-pointer';
+      const activeCls = 'flex flex-col items-center justify-center py-1 px-2 text-red-500 transition-all cursor-pointer';
+
+      if (navLeaderboardBtn) navLeaderboardBtn.className = (tab === 'leaderboard') ? activeCls : inactiveCls;
+      if (navLibraryBtn) navLibraryBtn.className = (tab === 'library') ? activeCls : inactiveCls;
+      if (navAdminBtn) {
+        const isAdmin = checkAdminAccess();
+        navAdminBtn.className = `${isAdmin ? '' : 'hidden '}relative flex flex-col items-center justify-center py-1 px-2 ${tab === 'admin' ? 'text-amber-400' : 'text-gray-400 hover:text-amber-400'} transition-all cursor-pointer`;
       }
+      if (navHomeLabel) {
+        navHomeLabel.className = `text-[10px] font-extrabold tracking-wider uppercase mt-1 ${tab === 'home' ? 'text-red-500' : 'text-gray-400'}`;
+      }
+
+      if (tab === 'library') {
+        updateProfileUI();
+        renderLibrary();
+      } else if (tab === 'leaderboard') {
+        fetchLeaderboard();
+      } else if (tab === 'admin') {
+        fetchAdminDashboard(activeAdminPeriod);
+      }
+
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // ========================================================================
+    // LEADERBOARD ENGINE (MONDAY 00:00 IST RESET)
+    // ========================================================================
+    async function fetchLeaderboard(showFeedback = false) {
+      const listEl = document.getElementById('leaderboardList');
+      const myAvEl = document.getElementById('myRankAvatar');
+      const myNameEl = document.getElementById('myRankName');
+      const myCoinsEl = document.getElementById('myRankCoins');
+      const myRankEl = document.getElementById('myRankNumber');
+      const myCoinIcon = document.getElementById('myRankCoinIcon');
+
+      if (myAvEl) myAvEl.innerHTML = getAvatarObj(userProfile.avatar).svg;
+      if (myNameEl) myNameEl.textContent = userProfile.name || 'Cinema Fan';
+      if (myCoinsEl) myCoinsEl.textContent = Number(userProfile.weeklyCoins || 0).toLocaleString();
+      if (myCoinIcon) myCoinIcon.innerHTML = boldCoinSvg('w-4 h-4');
+
+      if (listEl && listEl.children.length === 0) {
+        listEl.innerHTML = skeletonHtml();
+      }
+
+      try {
+        const res = await fetch(APPS_SCRIPT_URL, {
+          method: 'POST',
+          redirect: 'follow',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({
+            action: 'get_leaderboard',
+            user: getCurrentUserObj()
+          })
+        });
+        const data = await res.json();
+        if (data && data.success && Array.isArray(data.top20)) {
+          if (data.myRank && data.myRank > 0) {
+            myRankEl.textContent = `#${data.myRank}`;
+            if (data.myRank <= 3 && (userProfile.weeklyCoins || 0) > 0 && !(userProfile.unlockedAvatars || []).includes('apex')) {
+              userProfile.unlockedAvatars.push('apex');
+              saveUserProfile();
+              queueAvatarUnlockPopup(['apex']);
+            }
+          }
+          if (data.weekKey) {
+            const lbl = document.getElementById('leaderboardWeekLabel');
+            if (lbl) lbl.textContent = `Week of ${data.weekKey}`;
+          }
+          renderLeaderboardRows(data.top20);
+          if (showFeedback) showToast('🏆 Leaderboard updated!', 'emerald');
+          return;
+        }
+      } catch (e) {}
+
+      // Fallback local leaderboard display if offline
+      myRankEl.textContent = '#1';
+      renderLeaderboardRows([
+        {
+          rank: 1,
+          id: userProfile.id,
+          name: userProfile.name || 'You',
+          avatar: userProfile.avatar || 'rookie',
+          weeklyCoins: userProfile.weeklyCoins || 0
+        }
+      ]);
+    }
+
+    function renderLeaderboardRows(rows) {
+      const listEl = document.getElementById('leaderboardList');
+      if (!listEl) return;
+
+      if (!rows || rows.length === 0) {
+        listEl.innerHTML = `<div class="text-center text-gray-500 py-10 text-xs">No weekly points logged yet this week. Watch or share a movie to claim #1!</div>`;
+        return;
+      }
+
+      listEl.innerHTML = '';
+      rows.forEach((u, idx) => {
+        const rank = u.rank || (idx + 1);
+        const av = getAvatarObj(u.avatar);
+        const isMe = String(u.id) === String(userProfile.id);
+        const medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : `#${rank}`;
+        const borderCls = rank === 1
+          ? 'border-amber-400/60 bg-amber-500/10'
+          : rank === 2
+            ? 'border-slate-300/40 bg-slate-400/5'
+            : rank === 3
+              ? 'border-amber-700/50 bg-amber-700/10'
+              : isMe
+                ? 'border-red-500/50'
+                : 'border-white/10';
+
+        const row = document.createElement('div');
+        row.className = `glass-card p-3 rounded-2xl border ${borderCls} flex items-center justify-between`;
+        row.innerHTML = `
+          <div class="flex items-center space-x-3 min-w-0">
+            <div class="w-8 text-center font-impact font-black ${rank <= 3 ? 'text-lg' : 'text-xs text-gray-400'}">${medal}</div>
+            <div class="w-10 h-10 rounded-full overflow-hidden shrink-0 ring-1 ring-white/20">${av.svg}</div>
+            <div class="min-w-0">
+              <div class="text-xs font-extrabold text-white truncate flex items-center space-x-1.5">
+                <span class="truncate">${esc(u.name || 'Cinema Fan')}</span>
+                ${isMe ? `<span class="text-[9px] bg-red-600 text-white px-1.5 py-0.5 rounded uppercase font-black">You</span>` : ''}
+              </div>
+              <div class="text-[10px] text-gray-400">${av.icon} ${esc(av.name)}</div>
+            </div>
+          </div>
+          <div class="flex items-center space-x-1 shrink-0 pl-2">
+            ${boldCoinSvg('w-4 h-4')}
+            <span class="text-sm font-black text-amber-400 font-impact">${Number(u.weeklyCoins || 0).toLocaleString()}</span>
+          </div>
+        `;
+        listEl.appendChild(row);
+      });
+    }
+
+    // ========================================================================
+    // YOU PAGE: COMPACT HORIZONTAL CAROUSELS + FULL LIST POPUP MODAL
+    // ========================================================================
+    function createCompactHorizontalCard(item) {
+      const movieObj = allMovies.find(m => m.title === item.title) || item;
+      const isWatched = readStore('bold_cinema_history').some(h => h.title === movieObj.title);
+      const card = document.createElement('div');
+      card.className = 'w-28 shrink-0 glass-card p-2.5 rounded-2xl cursor-pointer flex flex-col justify-between hover:border-amber-500/40 transition-all';
+      card.innerHTML = `
+        <div>
+          ${posterBoxHtml('w-full', isWatched)}
+          <div class="text-[11px] font-bold text-white leading-snug line-clamp-2 mt-2">
+            ${esc(movieObj.title)} ${movieObj.year ? `<span class="text-gray-400 font-normal text-[9px]">(${esc(movieObj.year)})</span>` : ''}
+          </div>
+        </div>
+      `;
+      attachPoster(card.querySelector('.poster-box'), movieObj);
+      card.addEventListener('click', () => openDetails(movieObj));
+      return card;
+    }
+
+    function renderLibrary() {
+      const watchlistContainer = document.getElementById('watchlistContainer');
+      const historyContainer = document.getElementById('historyContainer');
+      const seeAllWishlistBtn = document.getElementById('seeAllWishlistBtn');
+      const seeAllHistoryBtn = document.getElementById('seeAllHistoryBtn');
+      
+      const watchlist = readStore('bold_cinema_watchlist');
+      const history = readStore('bold_cinema_history');
+
+      if (seeAllWishlistBtn) {
+        if (watchlist.length > 0) {
+          seeAllWishlistBtn.textContent = `See All (${watchlist.length}) →`;
+          seeAllWishlistBtn.classList.remove('hidden');
+        } else {
+          seeAllWishlistBtn.classList.add('hidden');
+        }
+      }
+
+      if (watchlist.length === 0) {
+        watchlistContainer.innerHTML = `
+          <div class="w-full text-center text-gray-500 py-5 px-4 text-xs bg-[#16181d]/50 rounded-2xl border border-gray-800/60">
+            No saved movies in your wishlist yet. Tap the bookmark icon on any film!
+          </div>`;
+      } else {
+        watchlistContainer.innerHTML = '';
+        watchlist.slice(0, 6).forEach(item => {
+          watchlistContainer.appendChild(createCompactHorizontalCard(item));
+        });
+      }
+
+      if (seeAllHistoryBtn) {
+        if (history.length > 0) {
+          seeAllHistoryBtn.textContent = `See All (${history.length}) →`;
+          seeAllHistoryBtn.classList.remove('hidden');
+        } else {
+          seeAllHistoryBtn.classList.add('hidden');
+        }
+      }
+
+      if (history.length === 0) {
+        historyContainer.innerHTML = `
+          <div class="w-full text-center text-gray-500 py-5 px-4 text-xs bg-[#16181d]/50 rounded-2xl border border-gray-800/60">
+            No watch history yet. Movies you watch will appear here!
+          </div>`;
+      } else {
+        historyContainer.innerHTML = '';
+        history.slice(0, 6).forEach(item => {
+          historyContainer.appendChild(createCompactHorizontalCard(item));
+        });
+      }
+    }
+
+    function openFullListModal(type) {
+      playClickSound();
+      activeFullListType = type;
+      const modal = document.getElementById('fullListModal');
+      const sub = document.getElementById('fullListSubtitle');
+      const title = document.getElementById('fullListTitle');
+      const searchInp = document.getElementById('fullListSearchInput');
+      if (searchInp) searchInp.value = '';
+
+      if (type === 'wishlist') {
+        sub.textContent = 'Bookmarked Collection';
+        title.textContent = 'MY FULL WISHLIST';
+      } else {
+        sub.textContent = 'Complete Activity Log';
+        title.textContent = 'FULL WATCH HISTORY';
+      }
+      renderFullListItems();
+      modal.classList.remove('hidden');
+    }
+
+    function closeFullListModal() {
+      playClickSound();
+      document.getElementById('fullListModal').classList.add('hidden');
+    }
+
+    function renderFullListItems() {
+      const container = document.getElementById('fullListContainer');
+      const query = (document.getElementById('fullListSearchInput')?.value || '').toLowerCase().trim();
+      const rawList = readStore(activeFullListType === 'wishlist' ? 'bold_cinema_watchlist' : 'bold_cinema_history');
+      const filtered = rawList.filter(item => !query || String(item.title || '').toLowerCase().includes(query));
+
+      container.innerHTML = '';
+      if (filtered.length === 0) {
+        container.innerHTML = `<div class="text-center text-gray-500 py-10 text-xs">No matching movies in this list.</div>`;
+        return;
+      }
+      filtered.forEach(item => {
+        const movieObj = allMovies.find(m => m.title === item.title) || item;
+        container.appendChild(createMovieCard(movieObj));
+      });
+    }
+
+    // ========================================================================
+    // ADMIN PANEL: ANALYTICS, REQUEST INBOX & BROADCAST STUDIO
+    // ========================================================================
+    async function fetchAdminDashboard(period = 'today', showSyncToast = false) {
+      activeAdminPeriod = period;
+      document.querySelectorAll('.adm-period-pill').forEach(btn => {
+        if (btn.dataset.period === period) {
+          btn.className = 'adm-period-pill bg-amber-500 text-black font-extrabold px-3 py-1 rounded-full text-[10px] whitespace-nowrap cursor-pointer';
+        } else {
+          btn.className = 'adm-period-pill bg-[#14161b] text-gray-300 border border-gray-800 font-semibold px-3 py-1 rounded-full text-[10px] whitespace-nowrap cursor-pointer';
+        }
+      });
+
+      try {
+        const res = await fetch(APPS_SCRIPT_URL, {
+          method: 'POST',
+          redirect: 'follow',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({
+            action: 'admin_dashboard',
+            user: getCurrentUserObj(),
+            period
+          })
+        });
+        const data = await res.json();
+        if (data && data.success) {
+          const s = data.stats || {};
+          document.getElementById('statViews').textContent = Number(s.views || 0).toLocaleString();
+          document.getElementById('statWatch').textContent = Number(s.watch || 0).toLocaleString();
+          document.getElementById('statSearch').textContent = Number(s.search || 0).toLocaleString();
+          document.getElementById('statSurprise').textContent = Number(s.surprise || 0).toLocaleString();
+          document.getElementById('statShare').textContent = Number(s.share || 0).toLocaleString();
+          document.getElementById('statReferrals').textContent = Number(s.referrals || 0).toLocaleString();
+          document.getElementById('statTotalUsers').textContent = Number(s.totalUsers || 0).toLocaleString();
+          document.getElementById('statNewUsersSub').textContent = `New users in selected period: ${Number(s.newUsers || 0)}`;
+
+          adminRequestsCache = Array.isArray(data.requests) ? data.requests : [];
+          updateAdminBadges(Number(data.unreadRequestsCount || 0));
+          renderAdminRequestsInbox();
+          if (showSyncToast) showToast('📊 Admin telemetry synced!', 'emerald');
+          return;
+        }
+      } catch (e) {}
+
+      renderAdminRequestsInbox();
+    }
+
+    function renderAdminRequestsInbox() {
+      const container = document.getElementById('adminRequestsContainer');
+      if (!container) return;
+
+      if (!adminRequestsCache || adminRequestsCache.length === 0) {
+        container.innerHTML = `<div class="text-center text-gray-500 py-8 text-xs bg-[#14161b] rounded-xl border border-gray-800">No movie requests in the inbox yet.</div>`;
+        return;
+      }
+
+      container.innerHTML = '';
+      adminRequestsCache.forEach(req => {
+        const timeStr = req.timestamp ? new Date(req.timestamp).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
+        const statusColors = {
+          Uploaded: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30',
+          Replied: 'bg-blue-500/20 text-blue-300 border-blue-500/30',
+          Pending: 'bg-amber-500/20 text-amber-300 border-amber-500/30'
+        };
+        const stCls = statusColors[req.status] || statusColors.Pending;
+
+        const item = document.createElement('div');
+        item.className = `p-3 rounded-xl bg-[#14161b] border ${req.unread ? 'border-red-500/60' : 'border-gray-800'} space-y-2`;
+        item.innerHTML = `
+          <div class="flex items-start justify-between gap-2">
+            <div>
+              <div class="flex items-center space-x-1.5">
+                ${req.unread ? `<span class="w-2 h-2 rounded-full bg-red-500 inline-block"></span>` : ''}
+                <span class="text-xs font-extrabold text-white">${esc(req.movieName)}</span>
+              </div>
+              <div class="text-[10px] text-gray-400 mt-0.5">By ${esc(req.userName || 'User')} (${esc(req.userId)}) · ${esc(timeStr)}</div>
+            </div>
+            <span class="text-[9px] font-bold uppercase px-2 py-0.5 rounded border ${stCls}">${esc(req.status || 'Pending')}</span>
+          </div>
+          ${req.adminReply ? `<div class="text-[10px] text-gray-300 bg-black/40 p-2 rounded-lg border border-white/5">💬 <b>Admin Reply:</b> ${esc(req.adminReply)}</div>` : ''}
+          <div class="flex items-center space-x-2 pt-1">
+            <button onclick="openAdminReplyModal(${jsq(req.reqId)}, ${jsq(req.movieName)}, ${jsq(req.userName)}, 'Replied')" class="flex-1 bg-gray-800 hover:bg-gray-700 text-amber-300 font-bold py-1.5 px-2.5 rounded-lg text-[10px] border border-gray-700 cursor-pointer">
+              💬 Reply / Ask Info
+            </button>
+            <button onclick="openAdminReplyModal(${jsq(req.reqId)}, ${jsq(req.movieName)}, ${jsq(req.userName)}, 'Uploaded')" class="flex-1 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 font-bold py-1.5 px-2.5 rounded-lg text-[10px] border border-emerald-500/30 cursor-pointer">
+              ✅ Mark Uploaded (+50)
+            </button>
+          </div>
+        `;
+        container.appendChild(item);
+      });
+    }
+
+    function openAdminReplyModal(reqId, movieName, userName, defaultStatus = 'Replied') {
+      playClickSound();
+      activeReplyReqId = reqId;
+      activeReplyMovieName = movieName;
+      document.getElementById('replyModalMeta').textContent = `Request: "${movieName}" by ${userName}`;
+      const statusSel = document.getElementById('adminReplyStatus');
+      statusSel.value = defaultStatus;
+      prefillReplyTemplate();
+      document.getElementById('adminReplyModal').classList.remove('hidden');
+    }
+
+    function prefillReplyTemplate() {
+      const status = document.getElementById('adminReplyStatus').value;
+      const txt = document.getElementById('adminReplyText');
+      if (status === 'Uploaded') {
+        txt.value = `Good news! "${activeReplyMovieName}" has been uploaded to Bold Cinema Hub. Search for it now in the app! (+50 BoldCoins credited)`;
+      } else if (status === 'Replied') {
+        txt.value = `Hi! Regarding your request for "${activeReplyMovieName}", could you confirm the release year or preferred audio language?`;
+      }
+    }
+
+    function closeAdminReplyModal() {
+      playClickSound();
+      document.getElementById('adminReplyModal').classList.add('hidden');
+    }
+
+    async function sendAdminRequestReply() {
+      playClickSound();
+      const status = document.getElementById('adminReplyStatus').value;
+      const replyText = document.getElementById('adminReplyText').value.trim();
+      if (!replyText) {
+        showToast('Please enter a reply message.', 'red');
+        return;
+      }
+
+      const btn = document.getElementById('sendReplyBtn');
+      btn.textContent = 'Sending...';
+
+      try {
+        const res = await fetch(APPS_SCRIPT_URL, {
+          method: 'POST',
+          redirect: 'follow',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({
+            action: 'admin_reply_request',
+            user: getCurrentUserObj(),
+            reqId: activeReplyReqId,
+            status,
+            replyText
+          })
+        });
+        const data = await res.json();
+        if (data && data.success) {
+          showToast('✅ Reply sent to user (In-App + Telegram Bot)!', 'emerald');
+          closeAdminReplyModal();
+          fetchAdminDashboard(activeAdminPeriod);
+        } else {
+          throw new Error(data?.error || 'Failed');
+        }
+      } catch (e) {
+        showToast('⚠️ Could not reach server. Check deployment.', 'red');
+      } finally {
+        btn.textContent = 'Send Reply & Notify';
+      }
+    }
+
+    function switchBroadcastInputMode(mode) {
+      playClickSound();
+      const appForm = document.getElementById('bcastAppForm');
+      const tgGuide = document.getElementById('bcastTelegramGuide');
+      const tabApp = document.getElementById('bcastTabApp');
+      const tabBot = document.getElementById('bcastTabBot');
+
+      if (mode === 'app') {
+        appForm.classList.remove('hidden');
+        tgGuide.classList.add('hidden');
+        tabApp.className = 'bg-red-600 text-white font-bold py-2 rounded-lg text-[11px] transition-all cursor-pointer';
+        tabBot.className = 'text-gray-400 hover:text-white font-semibold py-2 rounded-lg text-[11px] transition-all cursor-pointer';
+      } else {
+        appForm.classList.add('hidden');
+        tgGuide.classList.remove('hidden');
+        tabBot.className = 'bg-red-600 text-white font-bold py-2 rounded-lg text-[11px] transition-all cursor-pointer';
+        tabApp.className = 'text-gray-400 hover:text-white font-semibold py-2 rounded-lg text-[11px] transition-all cursor-pointer';
+      }
+    }
+
+    function selectBroadcastTarget(target) {
+      playClickSound();
+      activeBroadcastTarget = target;
+      document.querySelectorAll('.bcast-target-btn').forEach(btn => {
+        if (btn.dataset.btarget === target) {
+          btn.className = 'bcast-target-btn bg-amber-500/20 text-amber-300 border border-amber-500 py-2 rounded-xl text-[10px] font-extrabold cursor-pointer';
+        } else {
+          btn.className = 'bcast-target-btn bg-[#14161b] text-gray-300 border border-gray-800 py-2 rounded-xl text-[10px] font-bold cursor-pointer';
+        }
+      });
+    }
+
+    function copyTextCommand(cmd) {
+      playClickSound();
+      copyToClipboardSafe(cmd);
+      showToast(`📋 Copied "${cmd}"! Reply to any post in @${BOT_USERNAME}.`, 'emerald');
+    }
+
+    async function sendAdminBroadcast() {
+      playClickSound();
+      const title = document.getElementById('bcastTitle').value.trim() || '📢 Official Announcement';
+      const message = document.getElementById('bcastMessage').value.trim();
+      const buttonText = document.getElementById('bcastBtnText').value.trim();
+      const buttonUrl = document.getElementById('bcastBtnUrl').value.trim();
+
+      if (!message) {
+        showToast('Please enter a broadcast message.', 'red');
+        return;
+      }
+
+      const btn = document.getElementById('sendBroadcastBtn');
+      btn.textContent = 'Broadcasting...';
+
+      try {
+        const res = await fetch(APPS_SCRIPT_URL, {
+          method: 'POST',
+          redirect: 'follow',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({
+            action: 'admin_broadcast',
+            user: getCurrentUserObj(),
+            title,
+            message,
+            buttonText,
+            buttonUrl,
+            targetMode: activeBroadcastTarget
+          })
+        });
+        const data = await res.json();
+        if (data && data.success) {
+          showToast(`✅ Broadcast sent! (${activeBroadcastTarget.toUpperCase()})`, 'emerald');
+          document.getElementById('bcastMessage').value = '';
+          syncUserWithBackend();
+        } else {
+          throw new Error(data?.error || 'Broadcast error');
+        }
+      } catch (e) {
+        showToast('⚠️ Broadcast request failed. Check connection.', 'red');
+      } finally {
+        btn.textContent = '📢 Launch Broadcast Now';
+      }
+    }
+
+    // ========================================================================
+    // CATALOG CAROUSEL, SEARCH, GENRES & MOVIE CARDS
+    // ========================================================================
+    function renderCarousel() {
+      const carouselSection = document.getElementById('carouselSection');
+      const carouselContainer = document.getElementById('carouselContainer');
+      if (!carouselSection || !carouselContainer) return;
+
+      const featuredMovies = allMovies
+        .filter(m => m.featured)
+        .sort((a, b) => a.priority - b.priority);
+
+      if (featuredMovies.length === 0) {
+        carouselSection.classList.add('hidden');
+        return;
+      }
+
+      carouselSection.classList.remove('hidden');
+      carouselContainer.innerHTML = '';
+
+      const history = readStore('bold_cinema_history');
+
+      featuredMovies.forEach(movie => {
+        const card = document.createElement('div');
+        card.className = 'carousel-card p-4 rounded-2xl flex-shrink-0 relative flex flex-col justify-between';
+        const isWatched = history.some(h => h.title === movie.title);
+
+        let qualityButtons = '';
+        if (movie.links['480p']) qualityButtons += `<button onclick="playClickSound(); openTelegramFile(${jsq(movie.links['480p'])}, ${jsq(movie.title)})" class="flex-1 bg-gray-800 hover:bg-gray-700 text-gray-200 font-bold py-2 rounded-xl text-xs border border-gray-700/60 cursor-pointer">480p</button>`;
+        if (movie.links['720p']) qualityButtons += `<button onclick="playClickSound(); openTelegramFile(${jsq(movie.links['720p'])}, ${jsq(movie.title)})" class="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-2 rounded-xl text-xs shadow-lg cursor-pointer">720p</button>`;
+        if (movie.links['1080p']) qualityButtons += `<button onclick="playClickSound(); openTelegramFile(${jsq(movie.links['1080p'])}, ${jsq(movie.title)})" class="flex-1 bg-amber-600 hover:bg-amber-700 text-white font-bold py-2 rounded-xl text-xs shadow-lg cursor-pointer">1080p</button>`;
+
+        card.innerHTML = `
+          <div class="flex gap-3 flex-1">
+            ${posterBoxHtml('w-24', isWatched)}
+            <div class="flex-1 min-w-0 flex flex-col justify-between">
+              <div>
+                <div class="flex items-center justify-between gap-1.5 mb-1.5">
+                  <span class="bg-red-600 text-white font-black text-[9px] px-2 py-0.5 rounded-md uppercase tracking-wider">FEATURED</span>
+                  <div class="flex items-center space-x-1">
+                    <button onclick="shareMovieToTelegram(${jsq(movie.title)}, ${jsq(movie.year || '')}, ${jsq(movie.genres || '')})" class="text-[10px] bg-blue-500/20 text-blue-300 border border-blue-500/40 px-2 py-0.5 rounded-md font-bold cursor-pointer" title="Share to Telegram">📤 Share</button>
+                    ${checkAdminAccess() ? `<button onclick="copySheetTitle(${jsq(movie.title)})" class="text-[10px] bg-amber-500/20 text-amber-400 border border-amber-500/40 px-2 py-0.5 rounded-md font-bold cursor-pointer" title="Copy admin title">📋 Copy</button>` : ''}
+                  </div>
+                </div>
+                <div class="text-base font-extrabold text-white leading-tight font-impact tracking-wide line-clamp-3">
+                  ${esc(movie.title)} ${movie.year ? `<span class="text-gray-400 font-normal text-xs">(${esc(movie.year)})</span>` : ''}
+                </div>
+              </div>
+              <div class="flex space-x-2 mt-3">
+                ${qualityButtons}
+              </div>
+            </div>
+          </div>
+        `;
+        attachPoster(card.querySelector('.poster-box'), movie);
+        card.classList.add('cursor-pointer');
+        card.addEventListener('click', e => { if (!e.target.closest('button, a')) openDetails(movie); });
+        carouselContainer.appendChild(card);
+      });
+
+      startAutoScrollCarousel();
+    }
+
+    let carouselInterval;
+    function startAutoScrollCarousel() {
+      const container = document.getElementById('carouselContainer');
+      if (!container) return;
+      clearInterval(carouselInterval);
+
+      carouselInterval = setInterval(() => {
+        if (container.scrollLeft + container.clientWidth >= container.scrollWidth - 10) {
+          container.scrollTo({ left: 0, behavior: 'smooth' });
+        } else {
+          container.scrollBy({ left: 280, behavior: 'smooth' });
+        }
+      }, 3500);
+    }
+
+    function copySheetTitle(title) {
+      playClickSound();
+      copyToClipboardSafe(title);
+      showToast(`📋 Title "${title}" copied for Google Sheets!`, 'amber');
     }
 
     function resetToHome() {
@@ -686,7 +2516,7 @@
       searchContainer.innerHTML = "";
 
       if (filtered.length === 0) {
-        searchContainer.innerHTML = `<div class="text-center text-gray-500 py-12 text-xs">No movies found in ${genre} genre</div>`;
+        searchContainer.innerHTML = `<div class="text-center text-gray-500 py-12 text-xs">No movies found in ${esc(genre)} genre</div>`;
         return;
       }
 
@@ -697,8 +2527,7 @@
 
     function filterByGenreFromCard(genre) {
       closeDetails();
-      const libraryView = document.getElementById('libraryView');
-      if (libraryView && !libraryView.classList.contains('hidden')) {
+      if (currentTab !== 'home') {
         switchTab('home');
       }
       const spotlight = document.getElementById('surpriseSpotlight');
@@ -731,13 +2560,15 @@
 
       if (index > -1) {
         watchlist.splice(index, 1);
+        showToast('Removed from your Wishlist', 'amber');
       } else {
         const movieObj = allMovies.find(m => m.title === title);
         const links = movieObj ? movieObj.links : {};
         watchlist.unshift({ title, year, links });
+        showToast('🔖 Saved to your Wishlist!', 'emerald');
       }
 
-      localStorage.setItem('bold_cinema_watchlist', JSON.stringify(watchlist));
+      writeStore('bold_cinema_watchlist', watchlist);
       renderHomeFeed();
       if (!document.getElementById('searchResultsFeed').classList.contains('hidden')) {
         refreshResultsView();
@@ -745,37 +2576,8 @@
       if (!document.getElementById('libraryView').classList.contains('hidden')) {
         renderLibrary();
       }
-    }
-
-    function renderLibrary() {
-      const watchlistContainer = document.getElementById('watchlistContainer');
-      const historyContainer = document.getElementById('historyContainer');
-      
-      const watchlist = readStore('bold_cinema_watchlist');
-      const history = readStore('bold_cinema_history');
-
-      if (watchlist.length === 0) {
-        watchlistContainer.innerHTML = `
-          <div class="text-center text-gray-500 py-6 text-xs bg-[#16181d]/50 rounded-2xl border border-gray-800/60">
-            No saved movies in your watchlist yet. Tap the bookmark icon on any film!
-          </div>`;
-      } else {
-        watchlistContainer.innerHTML = "";
-        watchlist.forEach(item => {
-          watchlistContainer.appendChild(createMovieCard(item));
-        });
-      }
-
-      if (history.length === 0) {
-        historyContainer.innerHTML = `
-          <div class="text-center text-gray-500 py-6 text-xs bg-[#16181d]/50 rounded-2xl border border-gray-800/60">
-            No watch history yet. Movies you open will appear here!
-          </div>`;
-      } else {
-        historyContainer.innerHTML = "";
-        history.forEach(item => {
-          historyContainer.appendChild(createMovieCard(item));
-        });
+      if (!document.getElementById('fullListModal').classList.contains('hidden')) {
+        renderFullListItems();
       }
     }
 
@@ -870,6 +2672,7 @@
 
       try {
         renderHomeFeed();
+        handleDeepLinkMovieOpen();
       } catch (error) {
         console.error('Render error:', error);
         showLoadError('Display error: ' + error.message);
@@ -885,7 +2688,7 @@
         .replace(/\bpart\s*\d+/gi, '')
         .replace(/\bchapter\s*\d+/gi, '')
         .replace(/\bvol(ume)?\.?\s*\d+/gi, '')
-        .replace(/[:\-–—].*$/, '') // strips subtitles like ': First Kill', '- The Final Chapter'
+        .replace(/[:\-–—].*$/, '')
         .replace(/\s*[\[(][^\])]*[\])]\s*$/g, '')
         .replace(/[^a-z0-9\s]/gi, '')
         .trim();
@@ -921,10 +2724,6 @@
           } catch (e2) {}
         }
       }, 400);
-    }
-
-    function esc(s) {
-      return String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
     }
 
     function cleanTitleForOmdb(title) {
@@ -1113,7 +2912,7 @@
       if (posterObserver) posterObserver.observe(el); else loadPoster(el, movie);
     }
 
-    function posterBoxHtml(widthClass) {
+    function posterBoxHtml(widthClass, isWatched = false) {
       return `
         <div class="poster-box relative ${widthClass} shrink-0 aspect-[2/3] rounded-xl overflow-hidden self-start ring-1 ring-white/10 shadow-lg shadow-black/50 bg-[#14161b]">
           <div class="poster-fallback absolute inset-0 flex items-center justify-center bg-gradient-to-br from-red-900/40 via-[#16181d] to-amber-900/30 transition-opacity duration-500">
@@ -1122,6 +2921,7 @@
             </svg>
           </div>
           <span class="rating-badge hidden absolute top-1 left-1 z-10 text-[10px] font-extrabold text-amber-300 bg-black/70 backdrop-blur-sm border border-amber-400/30 px-1.5 py-0.5 rounded-md"></span>
+          ${isWatched ? `<span class="watched-badge absolute bottom-1 right-1 z-10 text-[8px] font-black uppercase tracking-wider bg-emerald-600/95 text-white px-1.5 py-0.5 rounded shadow">✓ Watched</span>` : ''}
         </div>`;
     }
 
@@ -1134,7 +2934,6 @@
       const currentCore = getCoreFranchiseName(currentMovie.title);
       const otherMovies = allMovies.filter(m => m.title.toLowerCase().trim() !== currentMovie.title.toLowerCase().trim());
 
-      // 1. Precise Franchise Matching (e.g. Orphan -> Orphan: First Kill)
       let franchiseMatches = [];
       if (currentCore.length >= 3) {
         franchiseMatches = otherMovies.filter(m => {
@@ -1143,7 +2942,6 @@
         });
       }
 
-      // 2. High-Relevance Genre Matching with Weighted Scoring
       const currGenres = String(currentMovie.genres || '')
         .toLowerCase()
         .split(',')
@@ -1156,28 +2954,20 @@
       const seenFranchises = new Set();
       if (currentCore.length >= 3) seenFranchises.add(currentCore);
 
-      // Add franchise matches to the seen list so they don't get duplicated
       franchiseMatches.forEach(f => {
         seenFranchises.add(getCoreFranchiseName(f.title));
       });
 
       otherMovies.forEach(m => {
         if (franchiseMatches.some(f => f.title === m.title)) return;
-        
         const mCore = getCoreFranchiseName(m.title);
-        // Deduplicate series/seasons (e.g., prevent 3 cards of The Mentalist)
         if (seenFranchises.has(mCore)) return;
 
         const mGenres = String(m.genres || '').toLowerCase().split(',').map(g => g.trim()).filter(Boolean);
         if (mGenres.length === 0) return;
 
         let score = 0;
-        // Heavy boost if primary genre matches (e.g. Horror with Horror)
-        if (primaryGenre && mGenres.includes(primaryGenre)) {
-          score += 5;
-        }
-
-        // Add points for each overlapping genre
+        if (primaryGenre && mGenres.includes(primaryGenre)) score += 5;
         currGenres.forEach(cg => {
           if (mGenres.includes(cg)) score += 2;
         });
@@ -1187,10 +2977,8 @@
         }
       });
 
-      // Sort by highest match score, then year
       scoredMatches.sort((a, b) => b.score - a.score || (parseInt(b.movie.year) || 0) - (parseInt(a.movie.year) || 0));
 
-      // Extract unique franchise recommendations
       const uniqueGenreMatches = [];
       for (const item of scoredMatches) {
         if (!seenFranchises.has(item.core)) {
@@ -1210,14 +2998,17 @@
       section.classList.remove('hidden');
       container.innerHTML = '';
 
+      const history = readStore('bold_cinema_history');
+
       related.forEach(movie => {
+        const isWatched = history.some(h => h.title === movie.title);
         const card = document.createElement('div');
         card.className = 'w-28 shrink-0 glass-card p-2.5 rounded-xl cursor-pointer flex flex-col justify-between hover:border-red-600/50 transition-all';
         card.innerHTML = `
           <div>
-            ${posterBoxHtml('w-full')}
+            ${posterBoxHtml('w-full', isWatched)}
             <div class="text-[11px] font-bold text-white leading-snug line-clamp-2 mt-2">
-              ${movie.title} ${movie.year ? `<span class="text-gray-400 font-normal text-[9px]">(${movie.year})</span>` : ''}
+              ${esc(movie.title)} ${movie.year ? `<span class="text-gray-400 font-normal text-[9px]">(${esc(movie.year)})</span>` : ''}
             </div>
           </div>
         `;
@@ -1274,6 +3065,8 @@
       }
       const chip = (txt, cls) => `<span class="${cls} text-[11px] font-bold px-2 py-0.5 rounded-md border">${esc(txt)}</span>`;
       const chips = [];
+      const isWatched = readStore('bold_cinema_history').some(h => h.title === m.title);
+      if (isWatched) chips.push(chip('✓ Watched', 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'));
       if (entry.r) chips.push(chip('⭐ ' + entry.r + '/10', 'bg-amber-500/15 text-amber-300 border-amber-400/40'));
       if (entry.rt) chips.push(chip(entry.rt, 'bg-white/5 text-gray-200 border-white/15'));
       if (entry.ag) chips.push(chip(entry.ag, 'bg-white/5 text-gray-200 border-white/15'));
@@ -1288,9 +3081,13 @@
       detailsMovie = m;
       playClickSound();
 
+      const isWatched = readStore('bold_cinema_history').some(h => h.title === m.title);
+
       document.getElementById('detTitle').textContent = m.title;
       document.getElementById('detYear').textContent = m.year || '';
-      document.getElementById('detChips').innerHTML = '';
+      document.getElementById('detChips').innerHTML = isWatched
+        ? `<span class="bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[11px] font-bold px-2 py-0.5 rounded-md">✓ Watched</span>`
+        : '';
       const plot = document.getElementById('detPlot');
       plot.textContent = 'Loading details…';
       plot.classList.add('animate-pulse');
@@ -1300,7 +3097,7 @@
       document.getElementById('detGenres').innerHTML = genrePillsHtml(m.genres, 'red', 6);
       document.getElementById('detActions').innerHTML = qualityButtonsHtml(m);
       const posterWrap = document.getElementById('detPoster');
-      posterWrap.innerHTML = posterBoxHtml('w-32');
+      posterWrap.innerHTML = posterBoxHtml('w-32', isWatched);
       renderDetailsBookmark();
 
       renderRelatedMovies(m);
@@ -1387,7 +3184,7 @@
       else if (activeGenreFilter !== 'All') filterByGenre(activeGenreFilter);
     }
 
-    // ===================== MOVIE CARD =====================
+    // ===================== MOVIE CARD (WITH WATCHED ICON & DIRECT TELEGRAM SHARE) =====================
     function createMovieCard(movie) {
       const card = document.createElement("div");
       card.className = "glass-card p-3.5 rounded-2xl flex gap-3 cursor-pointer";
@@ -1397,27 +3194,32 @@
 
       const watchlist = readStore('bold_cinema_watchlist');
       const isBookmarked = watchlist.some(item => item.title === movie.title);
+      const history = readStore('bold_cinema_history');
+      const isWatched = history.some(item => item.title === movie.title);
       const t = jsq(movie.title);
 
       let qualityButtons = '';
-      if (movie.links['480p']) {
+      if (movie.links && movie.links['480p']) {
         qualityButtons += `<button onclick="playClickSound(); openTelegramFile(${jsq(movie.links['480p'])}, ${t})" class="flex-1 bg-gray-800 hover:bg-gray-700 text-gray-200 font-bold py-2.5 rounded-xl text-xs border border-gray-700/60 transition-all cursor-pointer">480p</button>`;
       }
-      if (movie.links['720p']) {
+      if (movie.links && movie.links['720p']) {
         qualityButtons += `<button onclick="playClickSound(); openTelegramFile(${jsq(movie.links['720p'])}, ${t})" class="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-2.5 rounded-xl text-xs shadow-lg shadow-red-900/20 transition-all cursor-pointer">720p</button>`;
       }
-      if (movie.links['1080p']) {
+      if (movie.links && movie.links['1080p']) {
         qualityButtons += `<button onclick="playClickSound(); openTelegramFile(${jsq(movie.links['1080p'])}, ${t})" class="flex-1 bg-amber-600 hover:bg-amber-700 text-white font-bold py-2.5 rounded-xl text-xs shadow-lg shadow-amber-900/20 transition-all cursor-pointer">1080p</button>`;
       }
 
       card.innerHTML = `
-        ${posterBoxHtml('w-20')}
+        ${posterBoxHtml('w-20', isWatched)}
         <div class="flex-1 min-w-0 flex flex-col justify-between">
           <div>
             <div class="flex items-start justify-between gap-1 mb-1.5">
               ${genreHtml}
-              <div class="flex items-center space-x-1">
-                ${checkAdminAccess() ? `<button onclick="editAdminEntry(${jsq(movie.title)})" class="p-1 -mt-1 text-amber-400 hover:text-amber-300 transition-colors cursor-pointer shrink-0" title="Edit Catalog Entry">✏️</button>` : ''}
+              <div class="flex items-center space-x-1 shrink-0">
+                ${checkAdminAccess() ? `<button onclick="editAdminEntry(${t})" class="p-1 -mt-1 text-amber-400 hover:text-amber-300 transition-colors cursor-pointer shrink-0" title="Edit Catalog Entry">✏️</button>` : ''}
+                <button onclick="shareMovieToTelegram(${t}, ${jsq(movie.year || '')}, ${jsq(genresStr)})" class="p-1 -mt-1 text-gray-400 hover:text-blue-400 transition-colors cursor-pointer shrink-0" title="Share to Telegram (+15 BoldCoins)">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path></svg>
+                </button>
                 <button onclick="toggleWatchlist(${t}, ${jsq(movie.year || '')})" class="p-1 -mt-1 -mr-1 text-gray-400 hover:text-amber-400 transition-colors cursor-pointer shrink-0" title="Bookmark">
                   <svg class="w-5 h-5 ${isBookmarked ? 'text-amber-400 fill-amber-400' : ''}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"></path>
@@ -1426,7 +3228,7 @@
               </div>
             </div>
             <div class="text-sm font-bold text-white leading-snug tracking-tight line-clamp-2">
-              ${movie.title} ${movie.year ? `<span class="text-gray-400 font-normal">(${movie.year})</span>` : ''}
+              ${esc(movie.title)} ${movie.year ? `<span class="text-gray-400 font-normal">(${esc(movie.year)})</span>` : ''}
             </div>
           </div>
           <div class="flex space-x-2 mt-3">
@@ -1447,6 +3249,9 @@
       const randomIndex = Math.floor(Math.random() * allMovies.length);
       const selectedMovie = allMovies[randomIndex];
 
+      const coins = checkCooldownAndAward('surprise', selectedMovie.title);
+      logGamificationEvent('surprise', selectedMovie.title, coins, selectedMovie.genres);
+
       const spotlightEl = document.getElementById("surpriseSpotlight");
       spotlightEl.classList.remove("hidden");
 
@@ -1454,6 +3259,7 @@
 
       const watchlist = readStore('bold_cinema_watchlist');
       const isBookmarked = watchlist.some(item => item.title === selectedMovie.title);
+      const isWatched = readStore('bold_cinema_history').some(item => item.title === selectedMovie.title);
 
       let qualityButtons = '';
       if (selectedMovie.links['480p']) qualityButtons += `<button onclick="playClickSound(); openTelegramFile(${jsq(selectedMovie.links['480p'])}, ${jsq(selectedMovie.title)})" class="flex-1 bg-gray-800 hover:bg-gray-700 text-gray-200 font-bold py-2.5 rounded-xl text-xs border border-gray-700/60 transition-all cursor-pointer">480p</button>`;
@@ -1467,6 +3273,9 @@
               <span>✨ YOUR MYSTERY SPOTLIGHT</span>
             </span>
             <div class="flex items-center space-x-1">
+              <button onclick="shareMovieToTelegram(${jsq(selectedMovie.title)}, ${jsq(selectedMovie.year || '')}, ${jsq(selectedMovie.genres || '')})" class="p-1 text-gray-400 hover:text-blue-400 transition-colors cursor-pointer" title="Share to Telegram">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path></svg>
+              </button>
               <button onclick="toggleWatchlist(${jsq(selectedMovie.title)}, ${jsq(selectedMovie.year || '')})" class="p-1 text-gray-400 hover:text-amber-400 transition-colors cursor-pointer" title="Bookmark">
                 <svg class="w-5 h-5 ${isBookmarked ? 'text-amber-400 fill-amber-400' : ''}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"></path>
@@ -1476,12 +3285,12 @@
             </div>
           </div>
           <div class="flex gap-3">
-            ${posterBoxHtml('w-24')}
+            ${posterBoxHtml('w-24', isWatched)}
             <div class="flex-1 min-w-0 flex flex-col justify-between">
               <div>
                 ${genreHtml}
-                <div class="text-sm font-bold text-white leading-snug tracking-tight line-clamp-3">
-                  ${selectedMovie.title} ${selectedMovie.year ? `<span class="text-gray-400 font-normal">(${selectedMovie.year})</span>` : ''}
+                <div class="text-sm font-bold text-white leading-snug tracking-tight line-clamp-3 mt-1">
+                  ${esc(selectedMovie.title)} ${selectedMovie.year ? `<span class="text-gray-400 font-normal">(${esc(selectedMovie.year)})</span>` : ''}
                 </div>
               </div>
               <div class="flex space-x-2 mt-3">
@@ -1507,6 +3316,7 @@
       document.getElementById("surpriseSpotlight").classList.add("hidden");
     }
 
+    let searchRewardDebounce = null;
     function handleSearchInput() {
       const query = document.getElementById("searchInput").value.toLowerCase().trim();
       const defaultFeed = document.getElementById("defaultHomeFeed");
@@ -1523,6 +3333,14 @@
         searchFeed.classList.add("hidden");
         defaultFeed.classList.remove("hidden");
         return;
+      }
+
+      if (query.length >= 3) {
+        clearTimeout(searchRewardDebounce);
+        searchRewardDebounce = setTimeout(() => {
+          const coins = checkCooldownAndAward('search', query);
+          logGamificationEvent('search', query, coins, '');
+        }, 1200);
       }
 
       defaultFeed.classList.add("hidden");
@@ -1565,7 +3383,8 @@
     });
 
     function checkChannelJoinStatus() {
-      const isJoined = localStorage.getItem('bold_cinema_joined');
+      let isJoined = null;
+      try { isJoined = localStorage.getItem('bold_cinema_joined'); } catch (e) {}
       const modal = document.getElementById('joinModal');
       if (isJoined === 'true') {
         modal.classList.add('hidden');
@@ -1585,7 +3404,7 @@
 
     function confirmJoined() {
       playClickSound();
-      localStorage.setItem('bold_cinema_joined', 'true');
+      try { localStorage.setItem('bold_cinema_joined', 'true'); } catch (e) {}
       document.getElementById('joinModal').classList.add('hidden');
     }
 
@@ -1618,29 +3437,41 @@
       feedbackEl.classList.remove('hidden', 'text-red-400', 'text-emerald-400');
       feedbackEl.classList.add('text-amber-400');
 
-      const tgUser = tg?.initDataUnsafe?.user || null;
+      const coinsAwarded = checkCooldownAndAward('request', movieName);
 
       try {
-        const res = await fetch('/api/request-movie', {
+        const res = await fetch(APPS_SCRIPT_URL, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
+          redirect: 'follow',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({
+            action: 'submit_request',
             movie: movieName,
-            user: tgUser 
+            coins: coinsAwarded,
+            user: getCurrentUserObj()
           })
         });
 
         const data = await res.json();
 
-        if (res.ok && data.success) {
-          feedbackEl.innerText = '✅ Request sent successfully!';
+        if (data && data.success !== false) {
+          if (coinsAwarded > 0) {
+            userProfile.totalCoins = (Number(userProfile.totalCoins) || 0) + coinsAwarded;
+            userProfile.monthlyCoins = (Number(userProfile.monthlyCoins) || 0) + coinsAwarded;
+            userProfile.weeklyCoins = (Number(userProfile.weeklyCoins) || 0) + coinsAwarded;
+            saveUserProfile();
+            showToast(`🪙 +${coinsAwarded} BoldCoins for Movie Request!`, 'amber');
+          }
+          if (data.profile) mergeServerProfile(data.profile);
+
+          feedbackEl.innerText = '✅ Request sent to Admin Inbox!';
           feedbackEl.classList.remove('text-amber-400');
           feedbackEl.classList.add('text-emerald-400');
 
           setTimeout(() => {
             toggleRequestModal(false);
             inputEl.value = '';
-          }, 1500);
+          }, 1400);
         } else {
           throw new Error(data.error || 'Failed to send request');
         }
@@ -1709,10 +3540,15 @@
     function copyAdminTSV() {
       playClickSound();
       const p = getAdminFormPayload();
-      if (!p.title) { alert('Title is required!'); return; }
-      const tsvRow = `${p.title}\t${p.year}\t${p.genres}\t${p.link480p}\t${p.link720p}\t${p.link1080p}\t${p.tags}\t${p.priority}\t${p.customPoster}\t${p.imdbId}`;
-      navigator.clipboard.writeText(tsvRow);
       const feedback = document.getElementById('adminFeedback');
+      if (!p.title) {
+        feedback.innerText = '⚠️ Movie Title is required!';
+        feedback.classList.remove('hidden', 'text-emerald-400');
+        feedback.classList.add('text-red-400');
+        return;
+      }
+      const tsvRow = `${p.title}\t${p.year}\t${p.genres}\t${p.link480p}\t${p.link720p}\t${p.link1080p}\t${p.tags}\t${p.priority}\t${p.customPoster}\t${p.imdbId}`;
+      copyToClipboardSafe(tsvRow);
       feedback.innerText = '📋 Formatted row copied to clipboard! Paste directly into Google Sheets.';
       feedback.classList.remove('hidden', 'text-red-400');
       feedback.classList.add('text-emerald-400');
@@ -1722,7 +3558,6 @@
       playClickSound();
       const feedback = document.getElementById('adminFeedback');
 
-      // Verify that the user has admin clearance before submitting
       if (!checkAdminAccess()) {
         feedback.innerText = '⛔ Access Denied: Admin privileges required.';
         feedback.classList.remove('hidden', 'text-emerald-400', 'text-amber-400');
@@ -1742,22 +3577,23 @@
       feedback.classList.remove('hidden', 'text-red-400', 'text-emerald-400');
       feedback.classList.add('text-amber-400');
 
-      const tgUser = tg?.initDataUnsafe?.user || null;
-
       try {
-        // Send as text/plain without CORS preflight to satisfy Google Apps Script
         const res = await fetch(APPS_SCRIPT_URL, {
           method: 'POST',
           redirect: 'follow',
           headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-          body: JSON.stringify({ entry: p, user: tgUser })
+          body: JSON.stringify({
+            action: 'admin_save_movie',
+            entry: p,
+            user: getCurrentUserObj()
+          })
         });
 
         const textResponse = await res.text();
         let data = {};
         try {
           data = JSON.parse(textResponse);
-        } catch(e) {
+        } catch (e) {
           data = { success: true };
         }
 
@@ -1789,6 +3625,14 @@
       
       addToHistory(title, movieYear, movieLinks, movieGenres);
 
+      const coins = checkCooldownAndAward('watch', title);
+      logGamificationEvent('watch', title, coins, movieGenres);
+
+      renderHomeFeed();
+      if (!document.getElementById('searchResultsFeed').classList.contains('hidden')) {
+        refreshResultsView();
+      }
+
       if (tg && tg.openTelegramLink) {
         tg.openTelegramLink(url);
       } else {
@@ -1800,8 +3644,8 @@
       let history = readStore('bold_cinema_history');
       history = history.filter(item => item.title !== title);
       history.unshift({ title, year, links, genres, time: new Date().toLocaleDateString() });
-      if (history.length > 10) history.pop();
-      localStorage.setItem('bold_cinema_history', JSON.stringify(history));
+      if (history.length > 50) history.pop();
+      writeStore('bold_cinema_history', history);
     }
 
     function renderHomeFeed() {
@@ -1879,8 +3723,13 @@
       });
     }
 
+    // Boot Sequence
+    updateProfileUI();
+    checkAdminAccess();
     checkChannelJoinStatus();
     loadSheetData();
+    syncUserWithBackend();
   </script>
 </body>
 </html>
+```
