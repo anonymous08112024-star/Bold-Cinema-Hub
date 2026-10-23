@@ -316,6 +316,10 @@
           </div>
         </div>
         <div id="detGenres" class="mt-4"></div>
+        <div class="mt-4">
+          <div class="text-[10px] font-bold text-amber-400 tracking-widest uppercase mb-0.5">🌐 Languages & Audio</div>
+          <div id="detLanguages" class="text-[12px] font-semibold text-gray-200">—</div>
+        </div>
         <div class="mt-5">
           <div class="text-[10px] font-bold text-amber-400 tracking-widest uppercase mb-1.5">Plot Synopsis</div>
           <p id="detPlot" class="text-[13px] text-gray-300 leading-relaxed"></p>
@@ -690,7 +694,7 @@
           <span class="text-[10px] font-bold text-red-500 tracking-widest uppercase block">Unlockable Profile Logos</span>
           <h3 class="text-xl font-black text-white font-impact tracking-wide">SELECT AVATAR BADGE</h3>
         </div>
-        <span id="avatarUnlockedCount" class="text-[10px] bg-gray-800 text-gray-300 px-2.5 py-1 rounded-full font-bold border border-gray-700">1/8 Unlocked</span>
+        <span id="avatarUnlockedCount" class="text-[10px] bg-gray-800 text-gray-300 px-2.5 py-1 rounded-full font-bold border border-gray-700">1/9 Unlocked</span>
       </div>
       <div id="avatarGridContainer" class="grid grid-cols-2 gap-2.5"></div>
     </div>
@@ -942,9 +946,8 @@
     const SHEET_ID = '1nxx-Mn7zQ9u02Bc8NhiEsBMyNrZ_Vx9_7QL-EgHH7Nc'; 
     const SHEET_NAME = 'Clean Catalog';
     const CHANNEL_INVITE_LINK = 'https://t.me/+-HxYFImrFsU3OGZl';
-    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyREiDi6JXdcNalaFwouhdoSoEw3jIl2DXVhNPC-TNhMHMNsgVFJP43zGx4sRgvNxbaew/exec';
-    
-    
+    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxvhOjEkTtiPUzSB6qRbj3w7Axi_AYZkaxZYpj6z84bWWNYFYjACiH7CzOEAZlYmoRIvg/exec';
+
     const tg = window.Telegram?.WebApp;
     if (tg) { tg.ready(); tg.expand(); }
 
@@ -1034,6 +1037,15 @@
         bg: 'from-red-600 via-orange-500 to-yellow-500',
         svg: `<svg viewBox="0 0 64 64" class="w-full h-full"><defs><linearGradient id="av_apex" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#dc2626"/><stop offset="100%" stop-color="#f59e0b"/></linearGradient></defs><circle cx="32" cy="32" r="32" fill="url(#av_apex)"/><path d="M33 12c4 8-2 12 3 18 4-3 6-7 6-7 5 7 3 19-6 24-9 4-19-2-19-13 0-8 6-13 16-22z" fill="#fef08a"/><path d="M32 28c2 4-1 6 2 9 2-2 3-4 3-4 2 4 1 10-4 12-5 2-9-1-9-6 0-4 3-7 8-11z" fill="#dc2626"/></svg>`,
         progress: p => ({ current: (p.unlockedAvatars || []).includes('apex') ? 1 : 0, target: 1 })
+      },
+      {
+        id: 'sovereign',
+        name: 'Supreme Overlord',
+        icon: '⚡',
+        ruleText: 'Exclusive to Bold Cinema Emperors (Admins Only)',
+        bg: 'from-amber-500 via-red-600 to-yellow-300',
+        svg: `<svg viewBox="0 0 64 64" class="w-full h-full"><defs><linearGradient id="av_sov" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#f59e0b"/><stop offset="50%" stop-color="#dc2626"/><stop offset="100%" stop-color="#fef08a"/></linearGradient></defs><circle cx="32" cy="32" r="32" fill="url(#av_sov)"/><path d="M16 40l4-18 12 10 12-10 4 18z" fill="#fef08a" stroke="#78350f" stroke-width="1.5"/><circle cx="20" cy="19" r="2.5" fill="#fff"/><circle cx="32" cy="16" r="3" fill="#fff"/><circle cx="44" cy="19" r="2.5" fill="#fff"/><path d="M16 43h32v4H16z" fill="#78350f"/><path d="M34 24l-5 9h5l-2 8 7-10h-5z" fill="#dc2626"/></svg>`,
+        progress: () => ({ current: checkAdminAccess() ? 1 : 0, target: 1 })
       }
     ];
 
@@ -1337,6 +1349,7 @@
       if ((userProfile.surpriseCount || 0) >= 10) tryUnlock('chaos');
       if ((userProfile.shareCount || 0) >= 5 || (userProfile.referralsCount || 0) >= 1) tryUnlock('promoter');
       if ((userProfile.totalCoins || 0) >= 500) tryUnlock('vip');
+      if (checkAdminAccess()) tryUnlock('sovereign');
       userProfile.unlockedAvatars = Array.from(unlocked);
       return newly;
     }
@@ -1954,14 +1967,30 @@
         });
         const data = await res.json();
         if (data && data.success && Array.isArray(data.top20)) {
-          if (data.myRank && data.myRank > 0) {
-            myRankEl.textContent = `#${data.myRank}`;
-            if (data.myRank <= 3 && (userProfile.weeklyCoins || 0) > 0 && !(userProfile.unlockedAvatars || []).includes('apex')) {
+          const syncedWeeklyCoins = Math.max(Number(userProfile.weeklyCoins || 0), Number(data.myData?.weeklyCoins || 0));
+          userProfile.weeklyCoins = syncedWeeklyCoins;
+          if (myCoinsEl) myCoinsEl.textContent = syncedWeeklyCoins.toLocaleString();
+
+          const myEntry = data.top20.find(u => String(u.id) === String(userProfile.id));
+          if (myEntry) {
+            myEntry.weeklyCoins = Math.max(Number(myEntry.weeklyCoins || 0), syncedWeeklyCoins);
+            myEntry.avatar = userProfile.avatar || myEntry.avatar;
+          }
+          data.top20.sort((a, b) => (Number(b.weeklyCoins) || 0) - (Number(a.weeklyCoins) || 0) || (Number(b.totalCoins) || 0) - (Number(a.totalCoins) || 0));
+          data.top20.forEach((u, idx) => { u.rank = idx + 1; });
+
+          const updatedMe = data.top20.find(u => String(u.id) === String(userProfile.id));
+          const finalRank = updatedMe ? updatedMe.rank : data.myRank;
+
+          if (finalRank && finalRank > 0) {
+            myRankEl.textContent = `#${finalRank}`;
+            if (finalRank <= 3 && syncedWeeklyCoins > 0 && !(userProfile.unlockedAvatars || []).includes('apex')) {
               userProfile.unlockedAvatars.push('apex');
               saveUserProfile();
               queueAvatarUnlockPopup(['apex']);
             }
           }
+          saveUserProfile();
           if (data.weekKey) {
             const lbl = document.getElementById('leaderboardWeekLabel');
             if (lbl) lbl.textContent = `Week of ${data.weekKey}`;
@@ -2699,7 +2728,7 @@
     // ===================== OMDb METADATA + POSTERS =====================
     const OMDB_KEY = '9bce98fc';
     const POSTER_CACHE_KEY = 'bold_cinema_poster_cache';
-    const META_VERSION = 2;
+    const META_VERSION = 3;
     const MISS_TTL = 7 * 24 * 60 * 60 * 1000;
     const META_CONCURRENCY = 4;
     let omdbDisabled = false;
@@ -2781,7 +2810,8 @@
             return { entry: {
               v: META_VERSION, t: Date.now(),
               u: na(d.Poster), r: na(d.imdbRating), rt: na(d.Runtime), ag: na(d.Rated),
-              pl: na(d.Plot), ac: na(d.Actors), di: na(d.Director), g: na(d.Genre)
+              pl: na(d.Plot), ac: na(d.Actors), di: na(d.Director), g: na(d.Genre),
+              la: na(d.Language)
             } };
           }
           if (d && /limit/i.test(d.Error || '')) { omdbDisabled = true; return { error: true }; }
@@ -3052,9 +3082,42 @@
       renderDetailsBookmark();
     }
 
+    function getMovieLanguages(m, entry) {
+      const langs = [];
+      const tagStr = String(m?.tags || '').toLowerCase();
+      [
+        ['dual audio', 'Dual Audio'],
+        ['multi audio', 'Multi Audio'],
+        ['hindi', 'Hindi'],
+        ['english', 'English'],
+        ['tamil', 'Tamil'],
+        ['telugu', 'Telugu'],
+        ['malayalam', 'Malayalam'],
+        ['kannada', 'Kannada'],
+        ['korean', 'Korean'],
+        ['japanese', 'Japanese'],
+        ['spanish', 'Spanish'],
+        ['punjabi', 'Punjabi'],
+        ['bengali', 'Bengali'],
+        ['esub', 'ESub']
+      ].forEach(([key, label]) => {
+        if (tagStr.includes(key) && !langs.includes(label)) langs.push(label);
+      });
+      if (entry && entry.la && entry.la !== 'N/A') {
+        entry.la.split(',').forEach(l => {
+          const clean = l.trim();
+          if (clean && !langs.some(x => x.toLowerCase() === clean.toLowerCase())) {
+            langs.push(clean);
+          }
+        });
+      }
+      return langs.length > 0 ? langs.join(' · ') : 'Original Audio';
+    }
+
     function fillDetails(m, entry) {
       const plot = document.getElementById('detPlot');
       plot.classList.remove('animate-pulse');
+      document.getElementById('detLanguages').textContent = getMovieLanguages(m, entry);
       if (!entry) {
         plot.textContent = 'Details are unavailable right now. Please try again later.';
         return;
@@ -3089,6 +3152,7 @@
       document.getElementById('detChips').innerHTML = isWatched
         ? `<span class="bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[11px] font-bold px-2 py-0.5 rounded-md">✓ Watched</span>`
         : '';
+      document.getElementById('detLanguages').textContent = getMovieLanguages(m, null);
       const plot = document.getElementById('detPlot');
       plot.textContent = 'Loading details…';
       plot.classList.add('animate-pulse');
@@ -3618,6 +3682,13 @@
       }
     }
 
+    function getTelegramMessageId(url) {
+      if (!url) return '';
+      const cleanUrl = String(url).trim().replace(/\/+$/, '');
+      const match = cleanUrl.match(/\/(\d+)$/);
+      return match ? match[1] : '';
+    }
+
     function openTelegramFile(url, title) {
       const movieObj = allMovies.find(m => m.title === title);
       const movieLinks = movieObj ? movieObj.links : {};
@@ -3634,10 +3705,13 @@
         refreshResultsView();
       }
 
-      if (tg && tg.openTelegramLink) {
-        tg.openTelegramLink(url);
+      const msgId = getTelegramMessageId(url);
+      const targetUrl = msgId ? `https://t.me/${BOT_USERNAME}?start=f_${msgId}` : url;
+
+      if (tg && tg.openTelegramLink && /^https?:\/\/t\.me\//i.test(targetUrl)) {
+        tg.openTelegramLink(targetUrl);
       } else {
-        window.open(url, "_blank");
+        window.open(targetUrl, "_blank");
       }
     }
 
@@ -3725,6 +3799,7 @@
     }
 
     // Boot Sequence
+    evaluateLocalAvatarUnlocks();
     updateProfileUI();
     checkAdminAccess();
     checkChannelJoinStatus();
