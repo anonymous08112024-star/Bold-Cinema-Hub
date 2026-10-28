@@ -503,7 +503,7 @@
         <!-- GENRE FILTER PILLS BAR -->
         <div id="genrePillsBar" class="flex items-center space-x-2 overflow-x-auto py-1 scrollbar-none no-scrollbar">
           <button onclick="filterByGenre('All')" class="genre-pill bg-red-600 text-white font-bold px-3.5 py-1.5 rounded-full text-[11px] whitespace-nowrap shadow-md cursor-pointer transition-all">&#x1F525; All</button>
-         <!-- <button onclick="showTopRated()" data-genre="TOP" class="genre-pill bg-[#16181d] text-gray-300 border border-gray-800 font-semibold px-3.5 py-1.5 rounded-full text-[11px] whitespace-nowrap cursor-pointer hover:border-gray-700 transition-all">&#x2B50; Top Rated</button> -->
+         <!--  <button onclick="showTopRated()" data-genre="TOP" class="genre-pill bg-[#16181d] text-gray-300 border border-gray-800 font-semibold px-3.5 py-1.5 rounded-full text-[11px] whitespace-nowrap cursor-pointer hover:border-gray-700 transition-all">&#x2B50; Top Rated</button> -->
           <button onclick="filterByGenre('Action')" class="genre-pill bg-[#16181d] text-gray-300 border border-gray-800 font-semibold px-3.5 py-1.5 rounded-full text-[11px] whitespace-nowrap cursor-pointer hover:border-gray-700 transition-all">Action</button>
           <button onclick="filterByGenre('Horror')" class="genre-pill bg-[#16181d] text-gray-300 border border-gray-800 font-semibold px-3.5 py-1.5 rounded-full text-[11px] whitespace-nowrap cursor-pointer hover:border-gray-700 transition-all">Horror</button>
           <button onclick="filterByGenre('Sci-Fi')" class="genre-pill bg-[#16181d] text-gray-300 border border-gray-800 font-semibold px-3.5 py-1.5 rounded-full text-[11px] whitespace-nowrap cursor-pointer hover:border-gray-700 transition-all">Sci-Fi</button>
@@ -952,7 +952,7 @@
     const SHEET_ID = '1nxx-Mn7zQ9u02Bc8NhiEsBMyNrZ_Vx9_7QL-EgHH7Nc'; 
     const SHEET_NAME = 'Live Catalog';
     const CHANNEL_INVITE_LINK = 'https://t.me/+-HxYFImrFsU3OGZl';
-    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx0qLUPjZ3HqPX6DiS1m6KI0TKy94HSMBbZn2ZffYLDUHc_gcfYDBAn7qkZPlNwDmGR9w/exec';
+    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby-OpHblBqh5iZEyJG_MItuRtx8Ib2MYz7dHsAn4pxhNsxWl6ann8T3MSRzWGAglJyc7w/exec';
     
     
     const tg = window.Telegram?.WebApp;
@@ -3820,13 +3820,22 @@
         const data = await res.json();
 
         if (data && data.success) {
-          showToast(episodeLabel ? `\u2705 Episode ${episodeLabel} sent directly to your bot chat!` : '\u2705 File sent directly to your bot chat!', 'emerald');
-          const botChatUrl = `https://t.me/${BOT_USERNAME}`;
-          if (tg && tg.openTelegramLink) {
-            tg.openTelegramLink(botChatUrl);
-          } else {
-            window.open(botChatUrl, '_blank');
-          }
+          showToast(episodeLabel ? `\u2705 Episode ${episodeLabel} sent! Opening bot chat...` : '\u2705 Sent! Opening bot chat...', 'emerald');
+          try {
+            if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+          } catch (hapticErr) { /* haptics are optional */ }
+
+          // Strict auto-close: reveals the bot chat on every send, not just the first
+          setTimeout(() => {
+            if (tg && typeof tg.close === 'function') {
+              tg.close();
+            } else if (window.Telegram?.WebApp?.close) {
+              window.Telegram.WebApp.close();
+            } else {
+              // Fallback for desktop browser testing
+              window.open(`https://t.me/${BOT_USERNAME}`, '_blank');
+            }
+          }, 350);
         } else {
           const reason = data && data.error ? ` ${esc(data.error)}` : '';
           showToast(`\u26A0\uFE0F Couldn't send the file.${reason} Make sure you've started @${BOT_USERNAME}, then try again.`, 'red');
