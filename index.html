@@ -319,6 +319,13 @@
           <div class="text-[10px] font-bold text-amber-400 tracking-widest uppercase mb-0.5">&#127760; Languages &amp; Audio</div>
           <div id="detLanguages" class="text-[12px] font-semibold text-gray-200">&#x2014;</div>
         </div>
+        <div id="detEpisodesSection" class="hidden mt-5">
+          <div class="flex items-center justify-between gap-2 mb-2">
+            <div class="text-[10px] font-bold text-amber-400 tracking-widest uppercase">&#128250; Episodes <span id="detEpisodeCount" class="text-gray-500 normal-case tracking-normal font-semibold"></span></div>
+            <div id="detEpisodeQuality" class="flex space-x-1.5"></div>
+          </div>
+          <div id="detEpisodeGrid" class="grid grid-cols-4 min-[400px]:grid-cols-5 gap-2 max-h-60 overflow-y-auto no-scrollbar"></div>
+        </div>
         <div class="mt-5">
           <div class="text-[10px] font-bold text-amber-400 tracking-widest uppercase mb-1.5">Plot Synopsis</div>
           <p id="detPlot" class="text-[13px] text-gray-300 leading-relaxed"></p>
@@ -2435,6 +2442,8 @@
         if (movie.links['720p']) qualityButtons += `<button onclick="playClickSound(); openTelegramFile(${jsq(movie.links['720p'])}, ${jsq(movie.title)})" class="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-2 rounded-xl text-xs shadow-lg cursor-pointer">720p</button>`;
         if (movie.links['1080p']) qualityButtons += `<button onclick="playClickSound(); openTelegramFile(${jsq(movie.links['1080p'])}, ${jsq(movie.title)})" class="flex-1 bg-amber-600 hover:bg-amber-700 text-white font-bold py-2 rounded-xl text-xs shadow-lg cursor-pointer">1080p</button>`;
 
+        if (isSeries(movie)) qualityButtons = viewEpisodesButtonHtml(movie.title, 'py-2');
+
         card.innerHTML = `
           <div class="flex gap-3 flex-1">
             ${posterBoxHtml('w-24', isWatched)}
@@ -3033,19 +3042,112 @@
       });
     }
 
+    // ===================== TV SERIES / EPISODE SUPPORT =====================
+    const MAX_EPISODES = 1000;
+
+    function parseEpisodeLinks(linkStr) {
+      const clean = v => String(v == null ? '' : v).trim().split('?')[0].replace(/\/+$/, '');
+      const rangeRe = /(\d+)\s*[-\u2013]\s*(\d+)$/;
+      const expandRange = t => {
+        const r = t.match(rangeRe);
+        if (!r) return null;
+        const a = parseInt(r[1], 10), b = parseInt(r[2], 10);
+        if (b < a || (b - a + 1) > MAX_EPISODES) return [];
+        const ids = [];
+        for (let i = a; i <= b; i++) ids.push(i);
+        return ids;
+      };
+
+      const raw = clean(linkStr);
+      if (!raw) return [];
+
+      let ids = [];
+      if (raw.indexOf(',') === -1) {
+        ids = expandRange(raw) || [];
+      } else {
+        raw.split(',').forEach(tok => {
+          const t = clean(tok);
+          if (!t) return;
+          const rng = expandRange(t);
+          if (rng) { ids = ids.concat(rng); return; }
+          const one = t.match(/(\d+)$/);
+          if (one) ids.push(parseInt(one[1], 10));
+        });
+      }
+      return ids.slice(0, MAX_EPISODES).map((msgId, i) => ({ ep: i + 1, msgId }));
+    }
+
+    function getSeriesEpisodes(movie) {
+      const out = {};
+      ['480p', '720p', '1080p'].forEach(q => {
+        const eps = parseEpisodeLinks(movie && movie.links ? movie.links[q] : '');
+        if (eps.length) out[q] = eps;
+      });
+      return out;
+    }
+
+    function isSeries(movie) {
+      return Object.keys(getSeriesEpisodes(movie)).length > 0;
+    }
+
+    function viewEpisodesButtonHtml(title, py = 'py-2.5') {
+      return `<button onclick="playClickSound(); openDetailsByTitle(${jsq(title)})" class="w-full bg-gradient-to-r from-red-600 to-amber-600 text-white font-extrabold ${py} rounded-xl text-xs flex items-center justify-center space-x-1.5 shadow-lg cursor-pointer"><span>&#128250; View Episodes</span></button>`;
+    }
+
+    function openDetailsByTitle(title) {
+      const m = allMovies.find(x => x.title === title);
+      if (m) openDetails(m);
+    }
+
     // ===================== CINEMATIC DETAILS SHEET =====================
     let detailsMovie = null;
+    let detailsQuality = '';
 
-    function qualityButtonsHtml(m) {
+    function qualityButtonsHtml(m, exclude = []) {
       const t = jsq(m.title);
       const defs = [
         ['480p', 'bg-gray-800 hover:bg-gray-700 text-gray-200 border border-gray-700/60'],
         ['720p', 'bg-red-600 hover:bg-red-700 text-white shadow-lg shadow-red-900/30'],
         ['1080p', 'bg-amber-600 hover:bg-amber-700 text-white shadow-lg shadow-amber-900/30']
       ];
-      return defs.filter(([q]) => m.links && m.links[q]).map(([q, c]) =>
+      return defs.filter(([q]) => m.links && m.links[q] && !exclude.includes(q)).map(([q, c]) =>
         `<button onclick="playClickSound(); openTelegramFile(${jsq(m.links[q])}, ${t})" class="flex-1 ${c} font-bold py-3 rounded-xl text-xs transition-all active:scale-[0.97] cursor-pointer">${q}</button>`
       ).join('');
+    }
+
+    function setDetailsQuality(q) {
+      if (!detailsMovie) return;
+      playClickSound();
+      detailsQuality = q;
+      renderDetailsActions(detailsMovie);
+    }
+
+    function renderDetailsActions(m) {
+      const actions = document.getElementById('detActions');
+      const sec = document.getElementById('detEpisodesSection');
+      const eps = getSeriesEpisodes(m);
+      const quals = ['720p', '1080p', '480p'].filter(q => eps[q]);
+
+      if (quals.length === 0) {
+        if (sec) sec.classList.add('hidden');
+        actions.innerHTML = qualityButtonsHtml(m);
+        return;
+      }
+
+      if (!quals.includes(detailsQuality)) detailsQuality = quals[0];
+      const list = eps[detailsQuality];
+
+      document.getElementById('detEpisodeCount').textContent = `(${list.length})`;
+      document.getElementById('detEpisodeQuality').innerHTML = quals.length > 1
+        ? quals.map(q => `<button onclick="setDetailsQuality('${q}')" class="px-3 py-1 rounded-lg text-[11px] font-bold border transition-all cursor-pointer ${q === detailsQuality ? 'bg-red-600 border-red-500 text-white' : 'bg-gray-800 border-gray-700/60 text-gray-300 hover:bg-gray-700'}">${q}</button>`).join('')
+        : '';
+      document.getElementById('detEpisodeGrid').innerHTML = list.map(ep =>
+        `<button onclick="playClickSound(); openTelegramFile(${ep.msgId}, ${jsq(m.title + ' - EP ' + ep.ep)})" class="bg-[#14161b] hover:bg-red-600/30 border border-gray-800 hover:border-red-500 text-gray-200 hover:text-white font-bold py-2 rounded-xl text-xs transition-all active:scale-[0.95] cursor-pointer">EP ${String(ep.ep).padStart(2, '0')}</button>`
+      ).join('');
+      if (sec) sec.classList.remove('hidden');
+
+      const extra = qualityButtonsHtml(m, quals);
+      actions.innerHTML = extra || `<span class="self-center text-[11px] font-bold text-gray-400">&#128250; ${list.length} episodes &bull; ${detailsQuality}</span>`;
     }
 
     function setHero(url) {
@@ -3142,7 +3244,8 @@
       if (detLangEl) detLangEl.textContent = getMovieLanguages(m, null) || '\u2014';
       document.getElementById('detailsHero').style.backgroundImage = '';
       document.getElementById('detGenres').innerHTML = genrePillsHtml(m.genres, 'red', 6);
-      document.getElementById('detActions').innerHTML = qualityButtonsHtml(m);
+      detailsQuality = '';
+      renderDetailsActions(m);
       const posterWrap = document.getElementById('detPoster');
       posterWrap.innerHTML = posterBoxHtml('w-32', isWatched);
       renderDetailsBookmark();
@@ -3256,6 +3359,8 @@
         qualityButtons += `<button onclick="playClickSound(); openTelegramFile(${jsq(movie.links['1080p'])}, ${t})" class="flex-1 bg-amber-600 hover:bg-amber-700 text-white font-bold py-2.5 rounded-xl text-xs shadow-lg shadow-amber-900/20 transition-all cursor-pointer">1080p</button>`;
       }
 
+      if (isSeries(movie)) qualityButtons = viewEpisodesButtonHtml(movie.title);
+
       card.innerHTML = `
         ${posterBoxHtml('w-20', isWatched)}
         <div class="flex-1 min-w-0 flex flex-col justify-between">
@@ -3312,6 +3417,8 @@
       if (selectedMovie.links['480p']) qualityButtons += `<button onclick="playClickSound(); openTelegramFile(${jsq(selectedMovie.links['480p'])}, ${jsq(selectedMovie.title)})" class="flex-1 bg-gray-800 hover:bg-gray-700 text-gray-200 font-bold py-2.5 rounded-xl text-xs border border-gray-700/60 transition-all cursor-pointer">480p</button>`;
       if (selectedMovie.links['720p']) qualityButtons += `<button onclick="playClickSound(); openTelegramFile(${jsq(selectedMovie.links['720p'])}, ${jsq(selectedMovie.title)})" class="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-2.5 rounded-xl text-xs transition-all cursor-pointer">720p</button>`;
       if (selectedMovie.links['1080p']) qualityButtons += `<button onclick="playClickSound(); openTelegramFile(${jsq(selectedMovie.links['1080p'])}, ${jsq(selectedMovie.title)})" class="flex-1 bg-amber-600 hover:bg-amber-700 text-white font-bold py-2.5 rounded-xl text-xs transition-all cursor-pointer">1080p</button>`;
+
+      if (isSeries(selectedMovie)) qualityButtons = viewEpisodesButtonHtml(selectedMovie.title);
 
       spotlightEl.innerHTML = `
         <div class="spotlight-card p-4 rounded-2xl relative">
@@ -3665,12 +3772,17 @@
     }
 
     function getTelegramMessageId(url) {
-      const clean = String(url).trim().split('?')[0].replace(/\/+$/, '');
+      const rawId = String(url).trim();
+      if (/^\d+$/.test(rawId)) return parseInt(rawId, 10);
+      const clean = rawId.split('?')[0].replace(/\/+$/, '');
       const match = clean.match(/\/(\d+)$/);
       return match ? parseInt(match[1], 10) : null;
     }
 
     async function openTelegramFile(url, title) {
+      const epMatch = String(title).match(/^(.*) - EP (\d+)$/);
+      const episodeLabel = epMatch ? String(epMatch[2]).padStart(2, '0') : '';
+      if (epMatch) title = epMatch[1];
       const movieObj = allMovies.find(m => m.title === title);
       const movieLinks = movieObj ? movieObj.links : {};
       const movieYear = movieObj ? movieObj.year : '';
@@ -3692,7 +3804,7 @@
         return;
       }
 
-      showToast('\u23F3 Sending file to your bot chat...', 'amber');
+      showToast(episodeLabel ? `\u23F3 Sending Episode ${episodeLabel} to your bot chat...` : '\u23F3 Sending file to your bot chat...', 'amber');
 
       try {
         const res = await fetch(APPS_SCRIPT_URL, {
@@ -3708,7 +3820,7 @@
         const data = await res.json();
 
         if (data && data.success) {
-          showToast('\u2705 File sent directly to your bot chat!', 'emerald');
+          showToast(episodeLabel ? `\u2705 Episode ${episodeLabel} sent directly to your bot chat!` : '\u2705 File sent directly to your bot chat!', 'emerald');
           const botChatUrl = `https://t.me/${BOT_USERNAME}`;
           if (tg && tg.openTelegramLink) {
             tg.openTelegramLink(botChatUrl);
