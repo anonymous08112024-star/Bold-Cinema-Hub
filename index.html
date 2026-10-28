@@ -3820,22 +3820,13 @@
         const data = await res.json();
 
         if (data && data.success) {
-          showToast(episodeLabel ? `\u2705 Episode ${episodeLabel} sent! Opening bot chat...` : '\u2705 Sent! Opening bot chat...', 'emerald');
-          try {
-            if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
-          } catch (hapticErr) { /* haptics are optional */ }
-
-          // Strict auto-close: reveals the bot chat on every send, not just the first
-          setTimeout(() => {
-            if (tg && typeof tg.close === 'function') {
-              tg.close();
-            } else if (window.Telegram?.WebApp?.close) {
-              window.Telegram.WebApp.close();
-            } else {
-              // Fallback for desktop browser testing
-              window.open(`https://t.me/${BOT_USERNAME}`, '_blank');
-            }
-          }, 350);
+          showToast(episodeLabel ? `\u2705 Episode ${episodeLabel} sent directly to your bot chat!` : '\u2705 File sent directly to your bot chat!', 'emerald');
+          const botChatUrl = `https://t.me/${BOT_USERNAME}`;
+          if (tg && tg.openTelegramLink) {
+            tg.openTelegramLink(botChatUrl);
+          } else {
+            window.open(botChatUrl, '_blank');
+          }
         } else {
           const reason = data && data.error ? ` ${esc(data.error)}` : '';
           showToast(`\u26A0\uFE0F Couldn't send the file.${reason} Make sure you've started @${BOT_USERNAME}, then try again.`, 'red');
