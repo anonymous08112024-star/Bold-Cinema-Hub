@@ -503,7 +503,7 @@
         <!-- GENRE FILTER PILLS BAR -->
         <div id="genrePillsBar" class="flex items-center space-x-2 overflow-x-auto py-1 scrollbar-none no-scrollbar">
           <button onclick="filterByGenre('All')" class="genre-pill bg-red-600 text-white font-bold px-3.5 py-1.5 rounded-full text-[11px] whitespace-nowrap shadow-md cursor-pointer transition-all">&#x1F525; All</button>
-         <!--  <button onclick="showTopRated()" data-genre="TOP" class="genre-pill bg-[#16181d] text-gray-300 border border-gray-800 font-semibold px-3.5 py-1.5 rounded-full text-[11px] whitespace-nowrap cursor-pointer hover:border-gray-700 transition-all">&#x2B50; Top Rated</button> -->
+          <!-- <button onclick="showTopRated()" data-genre="TOP" class="genre-pill bg-[#16181d] text-gray-300 border border-gray-800 font-semibold px-3.5 py-1.5 rounded-full text-[11px] whitespace-nowrap cursor-pointer hover:border-gray-700 transition-all">&#x2B50; Top Rated</button> -->
           <button onclick="filterByGenre('Action')" class="genre-pill bg-[#16181d] text-gray-300 border border-gray-800 font-semibold px-3.5 py-1.5 rounded-full text-[11px] whitespace-nowrap cursor-pointer hover:border-gray-700 transition-all">Action</button>
           <button onclick="filterByGenre('Horror')" class="genre-pill bg-[#16181d] text-gray-300 border border-gray-800 font-semibold px-3.5 py-1.5 rounded-full text-[11px] whitespace-nowrap cursor-pointer hover:border-gray-700 transition-all">Horror</button>
           <button onclick="filterByGenre('Sci-Fi')" class="genre-pill bg-[#16181d] text-gray-300 border border-gray-800 font-semibold px-3.5 py-1.5 rounded-full text-[11px] whitespace-nowrap cursor-pointer hover:border-gray-700 transition-all">Sci-Fi</button>
@@ -952,7 +952,7 @@
     const SHEET_ID = '1nxx-Mn7zQ9u02Bc8NhiEsBMyNrZ_Vx9_7QL-EgHH7Nc'; 
     const SHEET_NAME = 'Live Catalog';
     const CHANNEL_INVITE_LINK = 'https://t.me/+-HxYFImrFsU3OGZl';
-    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx1fntWoyusfTcs_MjPwsSvJPkEWgd5o2aoc35bgsciTZ38LF859_N_pojkR2XZWtHXGA/exec';
+    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby-OpHblBqh5iZEyJG_MItuRtx8Ib2MYz7dHsAn4pxhNsxWl6ann8T3MSRzWGAglJyc7w/exec';
     
     
     const tg = window.Telegram?.WebApp;
@@ -3145,6 +3145,7 @@
         `<button onclick="playClickSound(); openTelegramFile(${ep.msgId}, ${jsq(m.title + ' - EP ' + ep.ep)})" class="bg-[#14161b] hover:bg-red-600/30 border border-gray-800 hover:border-red-500 text-gray-200 hover:text-white font-bold py-2 rounded-xl text-xs transition-all active:scale-[0.95] cursor-pointer">EP ${String(ep.ep).padStart(2, '0')}</button>`
       ).join('');
       if (sec) sec.classList.remove('hidden');
+      reapplySentMarks(document.getElementById('detEpisodeGrid'));
 
       const extra = qualityButtonsHtml(m, quals);
       actions.innerHTML = extra || `<span class="self-center text-[11px] font-bold text-gray-400">&#128250; ${list.length} episodes &bull; ${detailsQuality}</span>`;
@@ -3779,7 +3780,67 @@
       return match ? parseInt(match[1], 10) : null;
     }
 
+    const sentFileSigs = new Set();
+
+    function applySentStyle(btn) {
+      if (!btn || btn.dataset.sent === '1') return;
+      btn.dataset.sent = '1';
+      btn.style.background = 'rgba(16, 185, 129, 0.22)';
+      btn.style.color = '#6ee7b7';
+      btn.style.boxShadow = 'inset 0 0 0 1.5px #10b981';
+      if (btn.children.length === 0) {
+        const label = btn.textContent.trim();
+        if (label.charAt(0) !== '\u2713') btn.textContent = '\u2713 ' + label;
+      }
+    }
+
+    function markFileSent(sig, clickedEl) {
+      if (sig) {
+        sentFileSigs.add(sig);
+        document.querySelectorAll('button[onclick]').forEach(b => {
+          if (b.getAttribute('onclick') === sig) applySentStyle(b);
+        });
+      }
+      if (clickedEl && clickedEl.isConnected) applySentStyle(clickedEl);
+    }
+
+    function reapplySentMarks(root) {
+      if (!root || sentFileSigs.size === 0) return;
+      root.querySelectorAll('button[onclick]').forEach(b => {
+        if (sentFileSigs.has(b.getAttribute('onclick'))) applySentStyle(b);
+      });
+    }
+
+    // Feed/search/details re-render their buttons; re-apply "sent" marks after any re-render
+    let sentMarksQueued = false;
+    new MutationObserver(() => {
+      if (sentMarksQueued || sentFileSigs.size === 0) return;
+      sentMarksQueued = true;
+      requestAnimationFrame(() => {
+        sentMarksQueued = false;
+        reapplySentMarks(document.body);
+      });
+    }).observe(document.body || document.documentElement, { childList: true, subtree: true });
+
+    function showSentBanner(label) {
+      const container = document.getElementById('toastContainer');
+      if (!container) return;
+      container.querySelectorAll('.sent-banner').forEach(el => el.remove());
+      const banner = document.createElement('div');
+      banner.className = 'sent-banner bg-[#0f1a16]/95 border border-emerald-500/60 text-emerald-300 backdrop-blur-xl px-4 py-3 rounded-2xl shadow-2xl ring-1 ring-emerald-400/20 text-xs font-bold flex items-center justify-between animate-pop pointer-events-auto';
+      banner.innerHTML = `<span>&#9989; ${esc(label)}</span> <button onclick="tg && tg.openTelegramLink ? tg.openTelegramLink('https://t.me/' + BOT_USERNAME) : window.open('https://t.me/' + BOT_USERNAME, '_blank')" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-2.5 py-1 rounded-lg text-[10px] ml-2 shrink-0 cursor-pointer">Open Chat &#8599;</button>`;
+      container.appendChild(banner);
+      setTimeout(() => {
+        banner.style.opacity = '0';
+        banner.style.transition = 'opacity 0.3s ease';
+        setTimeout(() => banner.remove(), 300);
+      }, 7000);
+    }
+
     async function openTelegramFile(url, title) {
+      const evt = window.event;
+      const clickedEl = (evt && evt.target && evt.target.closest) ? evt.target.closest('button') : null;
+      const clickedSig = clickedEl ? clickedEl.getAttribute('onclick') : '';
       const epMatch = String(title).match(/^(.*) - EP (\d+)$/);
       const episodeLabel = epMatch ? String(epMatch[2]).padStart(2, '0') : '';
       if (epMatch) title = epMatch[1];
@@ -3820,13 +3881,17 @@
         const data = await res.json();
 
         if (data && data.success) {
-          showToast(episodeLabel ? `\u2705 Episode ${episodeLabel} sent directly to your bot chat!` : '\u2705 File sent directly to your bot chat!', 'emerald');
-          const botChatUrl = `https://t.me/${BOT_USERNAME}`;
-          if (tg && tg.openTelegramLink) {
-            tg.openTelegramLink(botChatUrl);
-          } else {
-            window.open(botChatUrl, '_blank');
-          }
+          // 1) Instant visual feedback on the tapped button(s)
+          markFileSent(clickedSig, clickedEl);
+
+          // 2) Prominent banner with a manual jump to the bot chat
+          showSentBanner(episodeLabel ? `EP ${episodeLabel} sent to your chat!` : 'File sent to your chat!');
+          try {
+            if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+          } catch (hapticErr) { /* haptics are optional */ }
+
+          // 3) Best-effort focus switch; the banner button covers repeat taps
+          if (tg && tg.openTelegramLink) tg.openTelegramLink('https://t.me/' + BOT_USERNAME);
         } else {
           const reason = data && data.error ? ` ${esc(data.error)}` : '';
           showToast(`\u26A0\uFE0F Couldn't send the file.${reason} Make sure you've started @${BOT_USERNAME}, then try again.`, 'red');
