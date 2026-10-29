@@ -142,7 +142,7 @@
   <div id="toastContainer" class="fixed top-4 left-1/2 -translate-x-1/2 z-[100] w-full max-w-xs px-4 space-y-2 pointer-events-none"></div>
 
   <!-- FORCE JOIN OVERLAY -->
-  <div id="joinModal" class="fixed inset-0 z-[90] bg-[#0b0c0e]/95 backdrop-blur-xl flex flex-col items-center justify-center p-6 text-center">
+  <div id="joinModal" class="fixed inset-0 z-[105] bg-[#0b0c0e]/95 backdrop-blur-xl flex flex-col items-center justify-center p-6 text-center">
     <div class="relative mb-6">
       <div class="w-28 h-28 rounded-full overflow-hidden border-2 border-red-600/80 shadow-2xl shadow-red-900/40 flex items-center justify-center bg-[#14161b]">
         <div class="w-full h-full bg-gradient-to-tr from-red-600 via-orange-600 to-amber-700 flex items-center justify-center text-white font-black text-3xl font-impact tracking-wider shadow-inner">
@@ -152,14 +152,20 @@
       <span class="absolute bottom-0 right-0 w-7 h-7 bg-red-600 border-2 border-[#0b0c0e] rounded-full flex items-center justify-center text-white text-xs font-bold"><svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg></span>
     </div>
 
-    <h2 class="text-3xl font-bold text-white font-impact tracking-wide mb-2">JOIN OUR CHANNEL</h2>
-    <p class="text-xs text-gray-400 max-w-xs leading-relaxed mb-8">
+    <h2 id="joinTitle" class="text-3xl font-bold text-white font-impact tracking-wide mb-2">JOIN OUR CHANNEL</h2>
+    <p id="joinDesc" class="text-xs text-gray-400 max-w-xs leading-relaxed mb-8">
       To unlock the movie catalog and access direct Telegram download links, please join our official updates channel first.
     </p>
     <p id="joinStatus" class="hidden text-[11px] font-semibold text-amber-300 max-w-xs leading-relaxed mb-5"></p>
 
     <div class="w-full space-y-3 max-w-xs relative z-50">
+      <a id="joinLaunchBtn" href="https://t.me/boldcinema_bot/BoldCinemaHub" target="_blank" rel="noopener noreferrer"
+        class="hidden w-full bg-red-600 hover:bg-red-700 active:scale-[0.98] transition-all text-white font-bold py-3 px-4 rounded-xl text-xs items-center justify-center space-x-2 shadow-lg shadow-red-900/30 cursor-pointer">
+        <span>&#128640; Launch in Telegram</span>
+      </a>
+
       <button 
+        id="joinChannelBtn"
         onclick="openChannel()" 
         class="w-full bg-red-600 hover:bg-red-700 active:scale-[0.98] transition-all text-white font-bold py-3 px-4 rounded-xl text-xs flex items-center justify-center space-x-2 shadow-lg shadow-red-900/30 cursor-pointer">
         <span>&#128227; Join Channel Now</span>
@@ -3602,13 +3608,12 @@
     // The server (Apps Script -> Telegram getChatMember) is the real gate for files.
     // This layer re-checks on open, on return to the app, every few minutes and before sends,
     // and shows the join modal again whenever the user is not (or no longer) a member.
-    const MEMBER_CACHE_KEY = 'bold_cinema_member_ok';
-    const MEMBER_CACHE_TTL_MS = 12 * 60 * 60 * 1000;  // UI fast-path only (avoids a flash of the modal)
+    const MEMBER_CACHE_KEY = 'bold_cinema_member_ok';   // legacy key, only ever deleted (a cached flag must never unlock the UI)
     const MEMBER_FRESH_MS = 3 * 60 * 1000;            // re-check before a send if the last check is older
     const MEMBER_RECHECK_MS = 5 * 60 * 1000;          // background re-check while the app is visible
     const JOIN_CHECKING_MSG = 'Checking your channel membership...';
-    const JOIN_LEFT_MSG = 'You left our channel. Please rejoin to keep using Bold Cinema Hub.';
-    let membershipState = 'unknown';                  // 'member' | 'not_member' | 'unknown'
+    const JOIN_LEFT_MSG = 'You left our channel. Please rejoin to continue using Bold Cinema Hub.';
+    let membershipState = 'unknown';                  // 'member' | 'not_member' | 'guest' | 'unknown'
     let membershipCheckedAt = 0;
     let membershipInflight = null;
     let joinPollTimer = null;
@@ -3621,17 +3626,56 @@
       else { el.textContent = ''; el.classList.add('hidden'); }
     }
 
+    function isGuestSession() {
+      return !isInsideTelegram || !getCurrentUserObj().id;
+    }
+
+    // While the gate is up, nothing underneath can be clicked, tabbed to or scrolled.
+    function setAppInert(locked) {
+      try {
+        document.body.style.overflow = locked ? 'hidden' : '';
+        Array.from(document.body.children).forEach(el => {
+          if (el.tagName === 'SCRIPT') return;
+          if (el.id === 'joinModal' || el.id === 'tgRequiredModal' || el.id === 'toastContainer') return;
+          if (locked) el.setAttribute('inert', ''); else el.removeAttribute('inert');
+        });
+      } catch (e) {}
+    }
+
     function showJoinGate(msg) {
       const modal = document.getElementById('joinModal');
       if (modal) modal.classList.remove('hidden');
+      setAppInert(true);
       if (msg !== undefined) setJoinStatus(msg);
     }
 
+    // Only ever called after the server confirmed membership (data.success && data.member === true).
+    // Refuses to close for guest / browser sessions no matter who calls it.
     function hideJoinGate() {
+      if (isGuestSession()) return;
       const modal = document.getElementById('joinModal');
       if (modal) modal.classList.add('hidden');
+      setAppInert(false);
       setJoinStatus('');
       stopJoinPolling();
+    }
+
+    // Permanent hard lock for external browsers: the gate stays open and only offers a Telegram launch link.
+    function lockGateForGuest() {
+      membershipState = 'guest';
+      stopJoinPolling();
+      try { localStorage.removeItem(MEMBER_CACHE_KEY); } catch (e) {}
+      const setText = (id, t) => { const el = document.getElementById(id); if (el) el.textContent = t; };
+      setText('joinTitle', 'OPEN IN TELEGRAM');
+      setText('joinDesc', 'Bold Cinema Hub is exclusively available on Telegram. Open the app via @boldcinema_bot to verify your channel membership and browse the catalog.');
+      const launch = document.getElementById('joinLaunchBtn');
+      const joinBtn = document.getElementById('joinChannelBtn');
+      const confirmBtn = document.getElementById('joinConfirmBtn');
+      if (launch) { launch.classList.remove('hidden'); launch.classList.add('flex'); }
+      if (joinBtn) joinBtn.classList.add('hidden');
+      if (confirmBtn) confirmBtn.classList.add('hidden');
+      setJoinStatus('');
+      showJoinGate();
     }
 
     function markNotMember(msg) {
@@ -3644,8 +3688,7 @@
       // Never verify a guest / browser-only session.
       const checkUser = getCurrentUserObj();
       if (!isInsideTelegram || !checkUser || !checkUser.id) {
-        membershipState = 'guest';
-        try { localStorage.removeItem(MEMBER_CACHE_KEY); } catch (e) {}
+        lockGateForGuest();
         return 'unauthenticated';
       }
       try {
@@ -3663,9 +3706,8 @@
         const gateWasVisible = !!modal && !modal.classList.contains('hidden');
         const wasMember = membershipState === 'member';
 
-        if (data.member) {
+        if (data.success === true && data.member === true) {
           membershipState = 'member';
-          try { localStorage.setItem(MEMBER_CACHE_KEY, String(Date.now())); } catch (e) {}
           hideJoinGate();
           if (gateWasVisible) showToast('\u2705 Membership verified. Enjoy!', 'emerald');
           return 'member';
@@ -3695,6 +3737,7 @@
     // While the join modal is up, quietly re-check so it closes by itself once the user has joined
     function startJoinPolling() {
       stopJoinPolling();
+      if (isGuestSession()) return;
       let ticks = 0;
       joinPollTimer = setInterval(() => {
         if (document.hidden) return;
@@ -3704,7 +3747,7 @@
     }
 
     function startMembershipWatch() {
-      if (membershipWatchStarted) return;
+      if (membershipWatchStarted || isGuestSession()) return;
       membershipWatchStarted = true;
       const recheck = () => {
         if (document.hidden) return;
@@ -3717,21 +3760,12 @@
     }
 
     function checkChannelJoinStatus() {
-      if (!isInsideTelegram || !getCurrentUserObj().id) {
-        // Guest: not verified, not a member. Browsing is read-only; every action is blocked by requireTelegram().
-        membershipState = 'guest';
-        try { localStorage.removeItem(MEMBER_CACHE_KEY); } catch (e) {}
-        hideJoinGate();
+      if (isGuestSession()) {
+        lockGateForGuest();   // permanent lock: never closes outside Telegram
         return;
       }
-      let cachedAt = 0;
-      try { cachedAt = parseInt(localStorage.getItem(MEMBER_CACHE_KEY) || '0', 10) || 0; } catch (e) {}
-      if (cachedAt && (Date.now() - cachedAt) < MEMBER_CACHE_TTL_MS) {
-        membershipState = 'member';
-        hideJoinGate();
-      } else {
-        showJoinGate(JOIN_CHECKING_MSG);
-      }
+      // Inside Telegram: the gate stays up until the server confirms membership.
+      showJoinGate(JOIN_CHECKING_MSG);
       startMembershipWatch();
       verifyMembership().then(r => {
         if (r === 'error' && membershipState !== 'member') {
@@ -3764,7 +3798,7 @@
         setJoinStatus('We couldn\u2019t find you in the channel yet. Join first, then tap again.');
         startJoinPolling();
       } else if (result === 'unauthenticated') {
-        showTelegramRequired();
+        lockGateForGuest();
       } else if (result === 'error') {
         setJoinStatus('Couldn\u2019t verify right now. Check your connection and try again.');
       }
