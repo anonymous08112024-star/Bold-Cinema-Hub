@@ -174,6 +174,22 @@
     </div>
   </div>
 
+  <!-- TELEGRAM REQUIRED (shown to browser-only / guest visitors) -->
+  <div id="tgRequiredModal" class="hidden fixed inset-0 z-[110] bg-black/80 backdrop-blur-sm flex items-center justify-center p-6" onclick="if (event.target === this) hideTelegramRequired()">
+    <div class="w-full max-w-xs bg-[#16181d] border border-amber-500/40 rounded-3xl p-6 text-center shadow-2xl">
+      <p class="text-sm text-gray-200 leading-relaxed mb-5">
+        &#9888;&#65039; <b class="text-amber-300">Telegram Required:</b> Please open Bold Cinema Hub inside Telegram via @boldcinema_bot to stream movies and receive files.
+      </p>
+      <a href="https://t.me/boldcinema_bot/BoldCinemaHub" target="_blank" rel="noopener noreferrer"
+         class="block w-full bg-red-600 hover:bg-red-700 active:scale-[0.98] transition-all text-white font-bold py-3 px-4 rounded-xl text-xs shadow-lg shadow-red-900/30 cursor-pointer">
+        &#9992;&#65039; Open in Telegram
+      </a>
+      <button onclick="hideTelegramRequired()" class="mt-3 w-full bg-gray-800 hover:bg-gray-700 text-gray-300 font-semibold py-2.5 rounded-xl text-xs border border-gray-700/60 cursor-pointer">
+        Close
+      </button>
+    </div>
+  </div>
+
   <!-- AVATAR UNLOCK CELEBRATION POPUP MODAL -->
   <div id="avatarUnlockModal" class="fixed inset-0 z-[95] bg-black/85 backdrop-blur-lg hidden flex items-center justify-center p-5">
     <div class="glass-card gold-glow w-full max-w-xs p-6 rounded-3xl border border-amber-500/50 text-center relative overflow-hidden animate-pop">
@@ -954,10 +970,50 @@
     const SHEET_ID = '1nxx-Mn7zQ9u02Bc8NhiEsBMyNrZ_Vx9_7QL-EgHH7Nc'; 
     const SHEET_NAME = 'Live Catalog';
     const CHANNEL_INVITE_LINK = 'https://t.me/+-HxYFImrFsU3OGZl';
-    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxXJVwCOTcHf9DPe6L0ajjSaqLU5B1NXG9fPYzrkj1qosAcPJgPoBjaTiBTQns9XJmA/exec' ;
+    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzbLK35JN3fNIZB_gzHlgRw_-uyywMvGTd2R9TekxC5SRgW4dQRO8uKtYUb9m9HqjjqiA/exec';
+    const TG_MINIAPP_LINK = 'https://t.me/boldcinema_bot/BoldCinemaHub';
+    
     
     const tg = window.Telegram?.WebApp;
     if (tg) { tg.ready(); tg.expand(); }
+
+    // True ONLY when Telegram itself injected a real user (never for a plain browser tab).
+    const isInsideTelegram = Boolean(window.Telegram?.WebApp?.initDataUnsafe?.user?.id);
+
+    function showTelegramRequired() {
+      const m = document.getElementById('tgRequiredModal');
+      if (m) m.classList.remove('hidden');
+    }
+
+    function hideTelegramRequired() {
+      const m = document.getElementById('tgRequiredModal');
+      if (m) m.classList.add('hidden');
+    }
+
+    // Returns true if the session is a real Telegram session; otherwise shows the popup and returns false.
+    function requireTelegram() {
+      if (isInsideTelegram && getCurrentUserObj().id) return true;
+      showTelegramRequired();
+      return false;
+    }
+
+    // Single gateway for every call to the Apps Script backend.
+    // Guests never reach the network; real sessions also send the signed initData so the server can verify identity.
+    function backendFetch(url, opts) {
+      if (!isInsideTelegram || !getCurrentUserObj().id) {
+        return Promise.resolve(new Response(JSON.stringify({ success: false, error: 'no_user' }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' }
+        }));
+      }
+      let finalOpts = opts;
+      try {
+        const body = JSON.parse(opts.body);
+        body.initData = window.Telegram.WebApp.initData || '';
+        finalOpts = Object.assign({}, opts, { body: JSON.stringify(body) });
+      } catch (e) { /* send as-is */ }
+      return fetch(url, finalOpts);
+    }
 
     let allMovies = [];
     let activeGenreFilter = 'All';
@@ -1104,26 +1160,20 @@
     }
 
     function getCurrentUserObj() {
-      const tgUser = tg?.initDataUnsafe?.user;
-      if (tgUser && tgUser.id) return tgUser;
-      let localUser = readObjStore('bold_cinema_fallback_user', null);
-      if (!localUser || !localUser.id) {
-        localUser = {
-          id: 5527067319, // Allows full preview including Admin Panel in browser/Canvas when outside Telegram
-          first_name: 'Cinema',
-          last_name: 'Explorer',
-          username: 'bold_explorer'
-        };
-        writeStore('bold_cinema_fallback_user', localUser);
-      }
-      return localUser;
+      const tgUser = window.Telegram?.WebApp?.initDataUnsafe?.user;
+      if (isInsideTelegram && tgUser && tgUser.id) return tgUser;
+      // Unauthenticated guest: no id, no privileges, ever.
+      return { id: null, name: 'Guest', first_name: 'Guest', last_name: '', username: '' };
     }
+
+    // Purge the legacy insecure fallback identity that older builds saved in browsers.
+    try { localStorage.removeItem('bold_cinema_fallback_user'); } catch (e) {}
 
     let userProfile = (() => {
       const tk = getTimeKeysClient();
       const u = getCurrentUserObj();
-      const saved = readObjStore('bold_cinema_profile', {
-        id: String(u.id),
+      const profileDefaults = {
+        id: u.id ? String(u.id) : 'guest',
         name: ((u.first_name || '') + ' ' + (u.last_name || '')).trim() || 'Cinema Fan',
         username: u.username || '',
         avatar: 'rookie',
@@ -1139,7 +1189,9 @@
         surpriseCount: 0,
         shareCount: 0,
         referralsCount: 0
-      });
+      };
+      let saved = isInsideTelegram ? readObjStore('bold_cinema_profile', profileDefaults) : profileDefaults;
+      if (isInsideTelegram && String(saved.id) !== String(u.id)) saved = profileDefaults;
       if (saved.weekKey !== tk.weekKey) {
         saved.weeklyCoins = 0;
         saved.weekKey = tk.weekKey;
@@ -1155,7 +1207,7 @@
     let adminRequestsCache = [];
 
     function saveUserProfile() {
-      writeStore('bold_cinema_profile', userProfile);
+      if (isInsideTelegram) writeStore('bold_cinema_profile', userProfile);
       updateProfileUI();
     }
 
@@ -1288,6 +1340,7 @@
     // GAMIFICATION ANTI-CHEAT ENGINE & AVATAR UNLOCK CHECKER
     // ========================================================================
     function checkCooldownAndAward(actionType, uniqueKey = '') {
+      if (!isInsideTelegram) return 0;
       const tk = getTimeKeysClient();
       const logStore = readObjStore('bold_cinema_daily_limits', { day: tk.dayKey });
       if (logStore.day !== tk.dayKey) {
@@ -1438,7 +1491,7 @@
       if (localUnlocks.length > 0) queueAvatarUnlockPopup(localUnlocks);
 
       try {
-        const res = await fetch(APPS_SCRIPT_URL, {
+        const res = await backendFetch(APPS_SCRIPT_URL, {
           method: 'POST',
           redirect: 'follow',
           headers: { 'Content-Type': 'text/plain;charset=utf-8' },
@@ -1593,7 +1646,7 @@
       showToast(`${av.icon} ${av.name} equipped as your profile avatar!`, 'emerald');
 
       try {
-        await fetch(APPS_SCRIPT_URL, {
+        await backendFetch(APPS_SCRIPT_URL, {
           method: 'POST',
           redirect: 'follow',
           headers: { 'Content-Type': 'text/plain;charset=utf-8' },
@@ -1640,7 +1693,7 @@
     async function syncUserWithBackend() {
       const { refBy } = parseStartParam(getStartParam());
       try {
-        const res = await fetch(APPS_SCRIPT_URL, {
+        const res = await backendFetch(APPS_SCRIPT_URL, {
           method: 'POST',
           redirect: 'follow',
           headers: { 'Content-Type': 'text/plain;charset=utf-8' },
@@ -1750,7 +1803,7 @@
         writeStore('bold_cinema_notifications', userNotifications);
         updateNotifBadge(0);
         try {
-          await fetch(APPS_SCRIPT_URL, {
+          await backendFetch(APPS_SCRIPT_URL, {
             method: 'POST',
             redirect: 'follow',
             headers: { 'Content-Type': 'text/plain;charset=utf-8' },
@@ -1862,16 +1915,22 @@
     // ADMIN ACCESS & DYNAMIC BOTTOM NAVIGATION
     // ========================================================================
     function checkAdminAccess() {
+      const badge = document.getElementById('adminBadge');
+      const addBtn = document.getElementById('adminAddBtn');
+      const navAdminBtn = document.getElementById('navAdminBtn');
       const u = getCurrentUserObj();
-      if (u && ADMIN_TELEGRAM_IDS.includes(Number(u.id))) {
-        const badge = document.getElementById('adminBadge');
-        const addBtn = document.getElementById('adminAddBtn');
-        const navAdminBtn = document.getElementById('navAdminBtn');
+      const isAdmin = isInsideTelegram && !!u && u.id !== null && u.id !== undefined &&
+                      ADMIN_TELEGRAM_IDS.includes(Number(u.id));
+      if (isAdmin) {
         if (badge) badge.classList.remove('hidden');
         if (addBtn) addBtn.classList.remove('hidden');
         if (navAdminBtn) navAdminBtn.classList.remove('hidden');
         return true;
       }
+      // Guests / browser sessions / non-admins: keep every admin control hidden.
+      if (badge) badge.classList.add('hidden');
+      if (addBtn) addBtn.classList.add('hidden');
+      if (navAdminBtn) navAdminBtn.classList.add('hidden');
       return false;
     }
 
@@ -1897,6 +1956,7 @@
     function switchTab(tab) {
       playClickSound();
       if (tab === 'you') tab = 'library';
+      if (tab === 'admin' && !checkAdminAccess()) tab = 'home';
       currentTab = tab;
 
       const views = {
@@ -1964,7 +2024,7 @@
       }
 
       try {
-        const res = await fetch(APPS_SCRIPT_URL, {
+        const res = await backendFetch(APPS_SCRIPT_URL, {
           method: 'POST',
           redirect: 'follow',
           headers: { 'Content-Type': 'text/plain;charset=utf-8' },
@@ -2183,7 +2243,7 @@
       });
 
       try {
-        const res = await fetch(APPS_SCRIPT_URL, {
+        const res = await backendFetch(APPS_SCRIPT_URL, {
           method: 'POST',
           redirect: 'follow',
           headers: { 'Content-Type': 'text/plain;charset=utf-8' },
@@ -2301,7 +2361,7 @@
       btn.textContent = 'Sending...';
 
       try {
-        const res = await fetch(APPS_SCRIPT_URL, {
+        const res = await backendFetch(APPS_SCRIPT_URL, {
           method: 'POST',
           redirect: 'follow',
           headers: { 'Content-Type': 'text/plain;charset=utf-8' },
@@ -2382,7 +2442,7 @@
       btn.textContent = 'Broadcasting...';
 
       try {
-        const res = await fetch(APPS_SCRIPT_URL, {
+        const res = await backendFetch(APPS_SCRIPT_URL, {
           method: 'POST',
           redirect: 'follow',
           headers: { 'Content-Type': 'text/plain;charset=utf-8' },
@@ -3581,8 +3641,15 @@
     }
 
     async function runMembershipCheck() {
+      // Never verify a guest / browser-only session.
+      const checkUser = getCurrentUserObj();
+      if (!isInsideTelegram || !checkUser || !checkUser.id) {
+        membershipState = 'guest';
+        try { localStorage.removeItem(MEMBER_CACHE_KEY); } catch (e) {}
+        return 'unauthenticated';
+      }
       try {
-        const res = await fetch(APPS_SCRIPT_URL, {
+        const res = await backendFetch(APPS_SCRIPT_URL, {
           method: 'POST',
           redirect: 'follow',
           headers: { 'Content-Type': 'text/plain;charset=utf-8' },
@@ -3650,6 +3717,13 @@
     }
 
     function checkChannelJoinStatus() {
+      if (!isInsideTelegram || !getCurrentUserObj().id) {
+        // Guest: not verified, not a member. Browsing is read-only; every action is blocked by requireTelegram().
+        membershipState = 'guest';
+        try { localStorage.removeItem(MEMBER_CACHE_KEY); } catch (e) {}
+        hideJoinGate();
+        return;
+      }
       let cachedAt = 0;
       try { cachedAt = parseInt(localStorage.getItem(MEMBER_CACHE_KEY) || '0', 10) || 0; } catch (e) {}
       if (cachedAt && (Date.now() - cachedAt) < MEMBER_CACHE_TTL_MS) {
@@ -3689,6 +3763,8 @@
       if (result === 'not_member') {
         setJoinStatus('We couldn\u2019t find you in the channel yet. Join first, then tap again.');
         startJoinPolling();
+      } else if (result === 'unauthenticated') {
+        showTelegramRequired();
       } else if (result === 'error') {
         setJoinStatus('Couldn\u2019t verify right now. Check your connection and try again.');
       }
@@ -3709,6 +3785,7 @@
 
     async function submitRequest() {
       playClickSound();
+      if (!requireTelegram()) return;
       const inputEl = document.getElementById('movieRequestInput');
       const feedbackEl = document.getElementById('requestFeedback');
       const movieName = inputEl.value.trim();
@@ -3726,7 +3803,7 @@
       const coinsAwarded = checkCooldownAndAward('request', movieName);
 
       try {
-        const res = await fetch(APPS_SCRIPT_URL, {
+        const res = await backendFetch(APPS_SCRIPT_URL, {
           method: 'POST',
           redirect: 'follow',
           headers: { 'Content-Type': 'text/plain;charset=utf-8' },
@@ -3864,7 +3941,7 @@
       feedback.classList.add('text-amber-400');
 
       try {
-        const res = await fetch(APPS_SCRIPT_URL, {
+        const res = await backendFetch(APPS_SCRIPT_URL, {
           method: 'POST',
           redirect: 'follow',
           headers: { 'Content-Type': 'text/plain;charset=utf-8' },
@@ -3969,6 +4046,7 @@
     }
 
     async function openTelegramFile(url, title) {
+      if (!requireTelegram()) return;   // browser / guest: never fire deliver_file
       const evt = window.event;
       const clickedEl = (evt && evt.target && evt.target.closest) ? evt.target.closest('button') : null;
       const clickedSig = clickedEl ? clickedEl.getAttribute('onclick') : '';
@@ -4007,7 +4085,7 @@
       showToast(episodeLabel ? `\u23F3 Sending Episode ${episodeLabel} to your bot chat...` : '\u23F3 Sending file to your bot chat...', 'amber');
 
       try {
-        const res = await fetch(APPS_SCRIPT_URL, {
+        const res = await backendFetch(APPS_SCRIPT_URL, {
           method: 'POST',
           redirect: 'follow',
           headers: { 'Content-Type': 'text/plain;charset=utf-8' },
