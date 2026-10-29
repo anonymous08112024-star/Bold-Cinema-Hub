@@ -142,7 +142,7 @@
   <div id="toastContainer" class="fixed top-4 left-1/2 -translate-x-1/2 z-[100] w-full max-w-xs px-4 space-y-2 pointer-events-none"></div>
 
   <!-- FORCE JOIN OVERLAY -->
-  <div id="joinModal" class="fixed inset-0 z-50 bg-[#0b0c0e]/95 backdrop-blur-xl flex flex-col items-center justify-center p-6 text-center">
+  <div id="joinModal" class="fixed inset-0 z-[90] bg-[#0b0c0e]/95 backdrop-blur-xl flex flex-col items-center justify-center p-6 text-center">
     <div class="relative mb-6">
       <div class="w-28 h-28 rounded-full overflow-hidden border-2 border-red-600/80 shadow-2xl shadow-red-900/40 flex items-center justify-center bg-[#14161b]">
         <div class="w-full h-full bg-gradient-to-tr from-red-600 via-orange-600 to-amber-700 flex items-center justify-center text-white font-black text-3xl font-impact tracking-wider shadow-inner">
@@ -156,6 +156,7 @@
     <p class="text-xs text-gray-400 max-w-xs leading-relaxed mb-8">
       To unlock the movie catalog and access direct Telegram download links, please join our official updates channel first.
     </p>
+    <p id="joinStatus" class="hidden text-[11px] font-semibold text-amber-300 max-w-xs leading-relaxed mb-5"></p>
 
     <div class="w-full space-y-3 max-w-xs relative z-50">
       <button 
@@ -165,9 +166,10 @@
       </button>
 
       <button 
+        id="joinConfirmBtn"
         onclick="confirmJoined()" 
         class="w-full bg-gray-800 hover:bg-gray-700 active:scale-[0.98] transition-all text-gray-200 font-semibold py-3 px-4 rounded-xl text-xs border border-gray-700/60 cursor-pointer">
-        <span>Already Joined</span>
+        <span id="joinConfirmLabel">Already Joined</span>
       </button>
     </div>
   </div>
@@ -952,8 +954,7 @@
     const SHEET_ID = '1nxx-Mn7zQ9u02Bc8NhiEsBMyNrZ_Vx9_7QL-EgHH7Nc'; 
     const SHEET_NAME = 'Live Catalog';
     const CHANNEL_INVITE_LINK = 'https://t.me/+-HxYFImrFsU3OGZl';
-    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby-OpHblBqh5iZEyJG_MItuRtx8Ib2MYz7dHsAn4pxhNsxWl6ann8T3MSRzWGAglJyc7w/exec';
-    
+    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxXJVwCOTcHf9DPe6L0ajjSaqLU5B1NXG9fPYzrkj1qosAcPJgPoBjaTiBTQns9XJmA/exec' ;
     
     const tg = window.Telegram?.WebApp;
     if (tg) { tg.ready(); tg.expand(); }
@@ -3537,15 +3538,132 @@
       }
     });
 
-    function checkChannelJoinStatus() {
-      let isJoined = null;
-      try { isJoined = localStorage.getItem('bold_cinema_joined'); } catch (e) {}
+    // ===================== MANDATORY CHANNEL MEMBERSHIP =====================
+    // The server (Apps Script -> Telegram getChatMember) is the real gate for files.
+    // This layer re-checks on open, on return to the app, every few minutes and before sends,
+    // and shows the join modal again whenever the user is not (or no longer) a member.
+    const MEMBER_CACHE_KEY = 'bold_cinema_member_ok';
+    const MEMBER_CACHE_TTL_MS = 12 * 60 * 60 * 1000;  // UI fast-path only (avoids a flash of the modal)
+    const MEMBER_FRESH_MS = 3 * 60 * 1000;            // re-check before a send if the last check is older
+    const MEMBER_RECHECK_MS = 5 * 60 * 1000;          // background re-check while the app is visible
+    const JOIN_CHECKING_MSG = 'Checking your channel membership...';
+    const JOIN_LEFT_MSG = 'You left our channel. Please rejoin to keep using Bold Cinema Hub.';
+    let membershipState = 'unknown';                  // 'member' | 'not_member' | 'unknown'
+    let membershipCheckedAt = 0;
+    let membershipInflight = null;
+    let joinPollTimer = null;
+    let membershipWatchStarted = false;
+
+    function setJoinStatus(msg) {
+      const el = document.getElementById('joinStatus');
+      if (!el) return;
+      if (msg) { el.textContent = msg; el.classList.remove('hidden'); }
+      else { el.textContent = ''; el.classList.add('hidden'); }
+    }
+
+    function showJoinGate(msg) {
       const modal = document.getElementById('joinModal');
-      if (isJoined === 'true') {
-        modal.classList.add('hidden');
-      } else {
-        modal.classList.remove('hidden');
+      if (modal) modal.classList.remove('hidden');
+      if (msg !== undefined) setJoinStatus(msg);
+    }
+
+    function hideJoinGate() {
+      const modal = document.getElementById('joinModal');
+      if (modal) modal.classList.add('hidden');
+      setJoinStatus('');
+      stopJoinPolling();
+    }
+
+    function markNotMember(msg) {
+      membershipState = 'not_member';
+      try { localStorage.removeItem(MEMBER_CACHE_KEY); } catch (e) {}
+      showJoinGate(msg);
+    }
+
+    async function runMembershipCheck() {
+      try {
+        const res = await fetch(APPS_SCRIPT_URL, {
+          method: 'POST',
+          redirect: 'follow',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({ action: 'check_membership', user: getCurrentUserObj() })
+        });
+        const data = await res.json();
+        if (!data || !data.success) return 'error';
+
+        membershipCheckedAt = Date.now();
+        const modal = document.getElementById('joinModal');
+        const gateWasVisible = !!modal && !modal.classList.contains('hidden');
+        const wasMember = membershipState === 'member';
+
+        if (data.member) {
+          membershipState = 'member';
+          try { localStorage.setItem(MEMBER_CACHE_KEY, String(Date.now())); } catch (e) {}
+          hideJoinGate();
+          if (gateWasVisible) showToast('\u2705 Membership verified. Enjoy!', 'emerald');
+          return 'member';
+        }
+
+        const statusEl = document.getElementById('joinStatus');
+        const placeholder = !!statusEl && statusEl.textContent === JOIN_CHECKING_MSG;
+        markNotMember(wasMember ? JOIN_LEFT_MSG : (placeholder ? '' : undefined));
+        return 'not_member';
+      } catch (err) {
+        return 'error';
       }
+    }
+
+    function verifyMembership() {
+      if (membershipInflight) return membershipInflight;
+      const p = runMembershipCheck();
+      membershipInflight = p;
+      p.finally(() => { if (membershipInflight === p) membershipInflight = null; });
+      return p;
+    }
+
+    function stopJoinPolling() {
+      if (joinPollTimer) { clearInterval(joinPollTimer); joinPollTimer = null; }
+    }
+
+    // While the join modal is up, quietly re-check so it closes by itself once the user has joined
+    function startJoinPolling() {
+      stopJoinPolling();
+      let ticks = 0;
+      joinPollTimer = setInterval(() => {
+        if (document.hidden) return;
+        if (++ticks > 40) { stopJoinPolling(); return; }
+        verifyMembership();
+      }, 6000);
+    }
+
+    function startMembershipWatch() {
+      if (membershipWatchStarted) return;
+      membershipWatchStarted = true;
+      const recheck = () => {
+        if (document.hidden) return;
+        if (Date.now() - membershipCheckedAt < 60 * 1000) return;
+        verifyMembership();
+      };
+      document.addEventListener('visibilitychange', recheck);
+      try { if (tg && tg.onEvent) tg.onEvent('activated', recheck); } catch (e) {}
+      setInterval(() => { if (!document.hidden) verifyMembership(); }, MEMBER_RECHECK_MS);
+    }
+
+    function checkChannelJoinStatus() {
+      let cachedAt = 0;
+      try { cachedAt = parseInt(localStorage.getItem(MEMBER_CACHE_KEY) || '0', 10) || 0; } catch (e) {}
+      if (cachedAt && (Date.now() - cachedAt) < MEMBER_CACHE_TTL_MS) {
+        membershipState = 'member';
+        hideJoinGate();
+      } else {
+        showJoinGate(JOIN_CHECKING_MSG);
+      }
+      startMembershipWatch();
+      verifyMembership().then(r => {
+        if (r === 'error' && membershipState !== 'member') {
+          showJoinGate('Couldn\u2019t verify your membership right now. Check your connection, then tap "Already Joined" to retry.');
+        }
+      });
     }
 
     function openChannel() {
@@ -3555,12 +3673,25 @@
       } else {
         window.open(CHANNEL_INVITE_LINK, "_blank");
       }
+      startJoinPolling();
     }
 
-    function confirmJoined() {
+    async function confirmJoined() {
       playClickSound();
-      try { localStorage.setItem('bold_cinema_joined', 'true'); } catch (e) {}
-      document.getElementById('joinModal').classList.add('hidden');
+      const btn = document.getElementById('joinConfirmBtn');
+      const label = document.getElementById('joinConfirmLabel');
+      if (!btn || btn.disabled) return;
+      btn.disabled = true;
+      label.textContent = 'Checking...';
+      const result = await verifyMembership();
+      btn.disabled = false;
+      label.textContent = 'Already Joined';
+      if (result === 'not_member') {
+        setJoinStatus('We couldn\u2019t find you in the channel yet. Join first, then tap again.');
+        startJoinPolling();
+      } else if (result === 'error') {
+        setJoinStatus('Couldn\u2019t verify right now. Check your connection and try again.');
+      }
     }
 
     function toggleRequestModal(show) {
@@ -3841,6 +3972,14 @@
       const evt = window.event;
       const clickedEl = (evt && evt.target && evt.target.closest) ? evt.target.closest('button') : null;
       const clickedSig = clickedEl ? clickedEl.getAttribute('onclick') : '';
+
+      // Mandatory channel membership: no file is requested unless the user is (still) a member
+      if (membershipState === 'not_member') { showJoinGate(); return; }
+      if (Date.now() - membershipCheckedAt > MEMBER_FRESH_MS) {
+        const memberResult = await verifyMembership();
+        if (memberResult === 'not_member') return;   // join modal is now showing
+      }
+
       const epMatch = String(title).match(/^(.*) - EP (\d+)$/);
       const episodeLabel = epMatch ? String(epMatch[2]).padStart(2, '0') : '';
       if (epMatch) title = epMatch[1];
@@ -3892,6 +4031,9 @@
 
           // 3) Best-effort focus switch; the banner button covers repeat taps
           if (tg && tg.openTelegramLink) tg.openTelegramLink('https://t.me/' + BOT_USERNAME);
+        } else if (data && (data.code === 'NOT_MEMBER' || data.error === 'not_member')) {
+          markNotMember('You need to be a member of our channel to receive files. Join, then try again.');
+          startJoinPolling();
         } else {
           const reason = data && data.error ? ` ${esc(data.error)}` : '';
           showToast(`\u26A0\uFE0F Couldn't send the file.${reason} Make sure you've started @${BOT_USERNAME}, then try again.`, 'red');
